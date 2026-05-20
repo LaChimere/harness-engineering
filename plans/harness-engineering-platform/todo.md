@@ -1,0 +1,516 @@
+# Todo: Harness Engineering Platform
+
+## Planning gate readiness
+
+- [x] Confirm Gate 1 decisions in `design.md`.
+- [x] Confirm Stage 1 is the first implementation target.
+- [ ] Decide whether to implement as one agent or split with `plan-parallel-work`.
+- [x] Keep public docs honest about "available now" versus "planned".
+
+### Planning gate acceptance criteria
+
+- [x] The approved plan uses stage terminology consistently.
+- [x] Every implementation stage has explicit acceptance criteria in `plan.md` and this file.
+- [x] Stage 1 can start without unresolved design decisions beyond the Stage 1 decisions to document listed in `plan.md`.
+
+## Stage 1: Product identity, entrypoints, and distribution decisions
+
+- [ ] Update README to present `LaChimere/harness-engineering` as the canonical harness-as-code platform.
+- [ ] Add quickstart matrix:
+  - [ ] CLI-first path available now.
+  - [ ] Marketplace plugin paths planned pending Stage 8.
+  - [ ] `agent-coding` skill compatibility pending Stage 13.
+  - [ ] Optional CI after Stage 11.
+- [ ] Add or update AGENTS/contribution guidance for this clean-slate repo.
+- [ ] Pin package/bin naming: `@lachimere/harness-engineering` and `harness`, unless Stage 1 changes the decision.
+- [ ] Pin toolchain decision: Bun for repository package management, TypeScript 6 for implementation, Biome/Lefthook using user-provided configuration, explicit `tsc --noEmit` type checking, and Node-compatible public CLI output.
+- [ ] Document schema publication and compatibility policy.
+- [ ] Document `harness migrate` posture.
+- [ ] Document `agent-coding` disposition options.
+- [ ] Validate docs do not promise unavailable plugin, CI, or skills support.
+- [ ] Run `git diff --check`.
+
+### Stage 1 acceptance criteria
+
+- [ ] README includes a host/path quickstart matrix covering available CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
+- [ ] Docs state which paths exist now versus which are planned.
+- [ ] Package, binary, Bun package-manager choice, TypeScript 6 requirement, Biome/Lefthook requirement with user-provided configuration, Node-compatible runtime target, schema distribution, compatibility policy, and `harness migrate` posture are explicit enough for Stage 2 and Stage 3 to implement.
+
+## Stage 2: Harness schema substrate
+
+- [ ] Add `schemas/harness.schema.json`.
+- [ ] Add `schemas/approval-policy.schema.json`.
+- [ ] Add `schemas/sandbox-policy.schema.json`.
+- [ ] Add `schemas/environment.schema.json`.
+- [ ] Add `schemas/model-profile.schema.json`.
+- [ ] Add `schemas/failure-taxonomy.schema.json` with starter codes:
+  - [ ] `tool-error`
+  - [ ] `timeout`
+  - [ ] `loop-detected`
+  - [ ] `verification-failure`
+  - [ ] `context-loss`
+  - [ ] `routing-miss`
+  - [ ] `premature-completion`
+  - [ ] `no-progress-edit-churn`
+- [ ] Add `schemas/continuity-state.schema.json`.
+- [ ] Add `schemas/self-verification.schema.json`.
+- [ ] Add `schemas/doctor-result.schema.json`.
+- [ ] Add `schemas/eval-task.schema.json`.
+- [ ] Add `schemas/agent-runner.schema.json`.
+- [ ] Add `schemas/trace.schema.json`.
+- [ ] Add `schemas/run-result.schema.json`.
+- [ ] Add provisional `schemas/plugin-capability.schema.json`.
+- [ ] Add provisional `schemas/repair-action.schema.json`.
+- [ ] Add `schemas/gc-evidence.schema.json`.
+- [ ] Add `examples/harness.yaml` with no CI/plugin adapter keys.
+- [ ] Add valid and invalid fixtures for high-risk schemas.
+- [ ] Define per-schema semantic versioning and `engines.schemas` semantics.
+- [ ] Define trust/sandbox requirements for local checks, verifiers, and repair actions.
+- [ ] Define credential references and cost/token/request budgets in agent runner schema.
+- [ ] Ensure continuity and self-verification schemas cover startup verification, progress, evidence, and handoff state.
+- [ ] Run schema validation on examples and fixtures.
+- [ ] Run `git diff --check`.
+
+### Stage 2 acceptance criteria
+
+- [ ] External tools can validate artifacts against published or locally vendored schemas.
+- [ ] Every machine-readable artifact has `schema_version` and clear compatibility semantics, using per-schema semantic versions plus the `engines.schemas` range in `harness.yaml`.
+- [ ] The example `harness.yaml` validates and composes references rather than embedding all details.
+- [ ] `continuity-state.schema.json` and `self-verification.schema.json` are complete enough for Stage 10 without inventing new artifact shapes.
+- [ ] `agent-runner.schema.json` is complete enough for Stage 6 to enforce model invocation, credential references, budgets, sandbox, approval policy, trace output, and verifier binding without inventing new artifact shapes.
+- [ ] Local doctor checks, eval verifiers, and repair actions have declared trust/sandbox requirements.
+
+## Stage 3: CLI skeleton: init, validate, migrate, verify, report
+
+- [ ] Add package metadata for the npm CLI.
+- [ ] Add Bun-managed dependency setup and commit the Bun text lockfile.
+- [ ] Configure TypeScript 6.
+- [ ] Add explicit `tsc --noEmit` type-check script.
+- [ ] Add Biome using user-provided configuration.
+- [ ] Add Lefthook using user-provided configuration.
+- [ ] Configure build output as a Node-compatible npm binary rather than a Bun-only executable.
+- [ ] Implement `harness init`.
+- [ ] Ensure `init` does not emit CI/plugin-specific adapter keys.
+- [ ] Implement `harness validate`.
+- [ ] Scope `validate` to schema, schema publication references, version compatibility, and currently composed reference files.
+- [ ] Implement `harness migrate`.
+- [ ] Make early `migrate` support dry-run/no-op migration evidence.
+- [ ] Implement `harness verify`.
+- [ ] Ensure `verify` consumes explicit verification specs or acceptance checks and does not do structural harness inspection.
+- [ ] Document verification spec format.
+- [ ] Add example verification spec showing non-structural acceptance verification distinct from `doctor` and `eval`.
+- [ ] Implement `harness report`.
+- [ ] Document command exit semantics.
+- [ ] Add command-level tests and output fixtures.
+- [ ] Run CLI tests.
+- [ ] Run `git diff --check`.
+
+### Stage 3 acceptance criteria
+
+- [ ] A user can bootstrap and validate a harness baseline from the terminal.
+- [ ] CLI project uses TypeScript 6, Bun-managed dependencies, Biome, and Lefthook while producing a Node-compatible npm binary.
+- [ ] CLI exit semantics are documented for future plugin and CI adapters.
+- [ ] Reports cite the artifact paths they summarized.
+- [ ] `verify` documentation defines the verification spec or acceptance-check input format and includes an example that distinguishes self-verification from structural `doctor` checks and behavioral `eval` runs.
+- [ ] `verify` does not perform structural harness inspection that belongs to `doctor`.
+
+## Stage 4: Harness doctor MVP
+
+- [ ] Define doctor check contract:
+  - [ ] `id`
+  - [ ] `version`
+  - [ ] `category`
+  - [ ] `inputs`
+  - [ ] `determinism`
+  - [ ] `severity`
+  - [ ] `evidence`
+  - [ ] `remediation`
+  - [ ] `fixtures`
+  - [ ] `false_positive_policy`
+  - [ ] `exit_semantics`
+- [ ] Implement `harness doctor`.
+- [ ] Add downstream check registration through `harness.yaml`.
+- [ ] Add built-in `schema-validity` check.
+- [ ] Add built-in `reference-exists` check.
+- [ ] Add passing and failing fixtures.
+- [ ] Emit JSON conforming to `doctor-result.schema.json`.
+- [ ] Emit Markdown report.
+- [ ] Document doctor/verify/eval command boundaries.
+- [ ] Confirm no subjective "AI slop" scoring.
+- [ ] Run doctor tests.
+- [ ] Run `git diff --check`.
+
+### Stage 4 acceptance criteria
+
+- [ ] Doctor output conforms to `doctor-result.schema.json`.
+- [ ] Passing and failing fixtures validate with zero schema errors.
+- [ ] Exit code semantics are documented for plugin and CI consumption.
+- [ ] Doctor checks remain deterministic structural checks and do not claim task acceptance, self-verification status, or subjective "AI slop" scores.
+
+## Stage 5: Eval task contract and deterministic verifier runner
+
+- [ ] Define minimal eval task/run format inspired by Harbor, Terminal-Bench, SWE-bench, and OpenAI Evals.
+- [ ] Implement verifier-only eval execution.
+- [ ] Define verifier trust/sandbox requirement contract.
+- [ ] Add verifier trust declaration to self-test fixture.
+- [ ] Implement or specify `harness eval validate`.
+- [ ] Add task versioning.
+- [ ] Add dataset hash handling.
+- [ ] Add optimization/holdout split creation and validation.
+- [ ] Add resource/time limit semantics.
+- [ ] Add result semantics.
+- [ ] Add harness self-test fixture with oracle pass.
+- [ ] Add broken twin fixture that fails deterministically.
+- [ ] Record run results with suite/task version, dataset hash, and split designation.
+- [ ] Add tests proving oracle pass and broken twin fail.
+- [ ] Run eval/verifier tests.
+- [ ] Run `git diff --check`.
+
+### Stage 5 acceptance criteria
+
+- [ ] The self-test proves the verifier can pass and fail deterministically.
+- [ ] Run results include suite/task version and dataset hash.
+- [ ] A reviewer can distinguish agent failure from harness/verifier failure.
+- [ ] Verifiers declare trust level, sandbox requirements, allowed inputs/outputs, and network/secret/host-file access before execution.
+- [ ] Eval task and run-result schemas support optimization/holdout split designation and record which split was used.
+
+## Stage 6: Agent runner, first behavioral eval, and trace normalization
+
+- [ ] Implement or specify `harness run <task>`.
+- [ ] Bind `agent-runner.schema.json` to:
+  - [ ] model profile,
+  - [ ] credential reference,
+  - [ ] cost/token/request budgets,
+  - [ ] sandbox,
+  - [ ] approval policy,
+  - [ ] trace output,
+  - [ ] verifier binding.
+- [ ] Refuse agent runs without explicit credential references and budgets.
+- [ ] Add failing fixture or test for missing credential references and budgets.
+- [ ] Add deterministic stub runner or recorded-response runner.
+- [ ] Document stub/recorded runner architecture and local/CI usage.
+- [ ] Ensure stub/recorded runs use explicit non-secret stub credential references and budgets.
+- [ ] Implement `harness eval run` as an end-to-end behavioral eval.
+- [ ] Add at least one toy suite with baseline/oracle.
+- [ ] Ensure toy suite runs without live credentials.
+- [ ] Output trace artifacts.
+- [ ] Output run-result artifacts.
+- [ ] Output verifier result artifacts.
+- [ ] Output small scoreboard/trend report.
+- [ ] Ensure scoreboard distinguishes harness/verifier failure from agent/model failure.
+- [ ] Distinguish optimization and holdout splits in output.
+- [ ] Link run results to the trace and artifacts that produced them.
+- [ ] Associate multiple runs with one long-running session.
+- [ ] Implement or specify `harness trace validate/import`.
+- [ ] Add examples for imported external traces and native CLI traces.
+- [ ] Validate trace examples against schema.
+- [ ] Run end-to-end toy eval in local/CI-safe mode.
+- [ ] Run `git diff --check`.
+
+### Stage 6 acceptance criteria
+
+- [ ] A user can run a toy task through a configured model/harness and receive trace, run-result, verifier result, and report artifacts.
+- [ ] The toy suite can run with the deterministic stub/recorded runner and does not require live credentials.
+- [ ] The stub/recorded runner satisfies the credential-reference and budget contract with non-secret fixture values rather than bypassing it.
+- [ ] Agent runs refuse to execute without explicit credential references and cost/token/request budgets, with fixtures or tests covering the refusal.
+- [ ] Eval output distinguishes optimization and holdout splits.
+- [ ] The first scoreboard distinguishes harness/verifier failure from agent/model failure.
+- [ ] Trace examples validate against schema.
+- [ ] A run result links to the trace and artifacts that produced it.
+- [ ] Long-running continuity can associate multiple runs with one session.
+- [ ] Review docs explain how to run the toy eval locally and in CI-safe mode without credentials.
+
+## Stage 7: LLM-judge and inferential-review policy
+
+- [ ] Define LLM-judge policy.
+- [ ] Require rubric.
+- [ ] Require labeled sample minimum.
+- [ ] Define agreement metric and numeric blocking threshold.
+- [ ] Define uncertainty notes.
+- [ ] Define below-threshold consequence.
+- [ ] Document example agreement calculation with passing/failing threshold examples.
+- [ ] Store judge outputs distinctly from deterministic verifier results.
+- [ ] Add fixtures for calibrated blocking, advisory-only, and below-threshold judge cases.
+- [ ] Mark uncalibrated judge outputs advisory-only.
+- [ ] Add report validation for judge blocking/advisory semantics.
+- [ ] Run judge-policy fixtures.
+- [ ] Run `git diff --check`.
+
+### Stage 7 acceptance criteria
+
+- [ ] No LLM-judge result can be marked blocking unless the calibration policy is satisfied.
+- [ ] The judge policy specifies rubric, labeled sample minimum, agreement metric, numeric blocking threshold, uncertainty notes, and below-threshold consequence.
+- [ ] Fixtures demonstrate calibrated blocking, advisory-only, and below-threshold judge cases.
+- [ ] Docs state how to treat low-agreement or stale judges.
+
+## Stage 8: Plugin marketplace/API feasibility and target selection
+
+- [ ] Define candidate host list.
+- [ ] Evaluate marketplace/extension distribution for each host.
+- [ ] Evaluate CLI bundling/bootstrap for each host.
+- [ ] Evaluate filesystem access.
+- [ ] Evaluate CLI report rendering.
+- [ ] Evaluate annotation APIs.
+- [ ] Evaluate background runs.
+- [ ] Evaluate repair-action UI.
+- [ ] Evaluate trace deep-links.
+- [ ] Define capability matrix schema or durable format for Stage 9 consumption.
+- [ ] Produce per-host capability matrix.
+- [ ] Revalidate provisional plugin-capability schema against matrix.
+- [ ] Revalidate provisional repair-action schema against matrix.
+- [ ] Choose first plugin target or explicitly document CLI-first until plugin exists.
+- [ ] Update docs to avoid unavailable plugin promises.
+- [ ] Run `git diff --check`.
+
+### Stage 8 acceptance criteria
+
+- [ ] Capability matrix covers marketplace distribution, CLI bundling/bootstrap, filesystem access, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
+- [ ] Capability matrix has a durable format that Stage 9 can consume or cite.
+- [ ] Provisional plugin-capability and repair-action schemas from Stage 2 are revalidated against host APIs.
+- [ ] Chosen plugin target has documented marketplace/extension distribution evidence and API evidence for the required UX.
+- [ ] If a plugin target is feasible, proceed to Stage 9.
+- [ ] If no rich plugin target is feasible, skip Stage 9, update docs to make CLI-first the default until a plugin exists, and do not promise an unavailable plugin.
+
+## Stage 9: Conditional plugin adapter MVP
+
+- [ ] Implement selected plugin or plugin-style adapter only if Stage 8 finds a feasible target.
+- [ ] Package through selected host marketplace/extension mechanism when available.
+- [ ] Discover repo-local `harness.yaml`.
+- [ ] Initialize through CLI substrate.
+- [ ] Render doctor/eval/trace reports from CLI JSON/Markdown outputs.
+- [ ] Create supported annotations.
+- [ ] Implement supported repair actions through CLI-backed init/migrate/repair flows only.
+- [ ] Bundle, pin, or bootstrap CLI dependency.
+- [ ] Implement CLI resolution order: repo-pinned compatible CLI, plugin-bundled CLI, then user-installed CLI.
+- [ ] Detect repo-pinned CLI version from `harness.yaml` `engines.cli`.
+- [ ] Refuse write actions on CLI/schema incompatibility.
+- [ ] Ensure plugin does not reimplement doctor checks or eval verifiers.
+- [ ] Ensure plugin-local cache is non-authoritative and reconstructible.
+- [ ] Ensure repair actions show preview diffs.
+- [ ] Ensure repair actions use approval policy.
+- [ ] Ensure repair actions declare risk class.
+- [ ] Ensure repair actions emit equivalent CLI commands.
+- [ ] Run plugin tests for supported host.
+- [ ] Run `git diff --check`.
+
+### Stage 9 acceptance criteria
+
+- [ ] A user can install from the selected host marketplace/extension surface and follow plugin-first setup without separately guessing CLI prerequisites.
+- [ ] The plugin bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance includes missing/incompatible CLI detection and repair prompts.
+- [ ] The plugin resolves CLI versions in this order: repo-pinned compatible CLI, plugin-bundled CLI, then user-installed CLI.
+- [ ] The plugin refuses write actions when no compatible CLI/schema version exists.
+- [ ] Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands.
+- [ ] Plugin does not create a second source of truth; plugin-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+
+## Stage 10: Native execution loop and continuity adapter
+
+- [ ] Define native implementation-loop contract or adapter.
+- [ ] Read `harness.yaml`.
+- [ ] Read approval policy.
+- [ ] Read sandbox policy.
+- [ ] Read continuity schema.
+- [ ] Read self-verification evidence schema.
+- [ ] Require original spec reread before completion.
+- [ ] Compare acceptance criteria before completion.
+- [ ] Run relevant CLI and doctor checks.
+- [ ] Capture evidence paths.
+- [ ] Update continuity state.
+- [ ] Define startup verification.
+- [ ] Run startup verification before work begins.
+- [ ] Record startup verification in continuity state.
+- [ ] Define handoff expectations.
+- [ ] Document how external `agent-coding` `execute-plan-loop` can consume the same evidence.
+- [ ] Add tests/fixtures for failed startup verification and failed completion gates.
+- [ ] Run `git diff --check`.
+
+### Stage 10 acceptance criteria
+
+- [ ] Execution loop cannot claim completion without substrate-aware verification evidence.
+- [ ] Approval/sandbox policy decisions are read and either followed or explicitly escalated.
+- [ ] Startup verification runs before work begins and records the result in continuity state.
+- [ ] Fixtures demonstrate the execution loop refusing to start or complete when startup verification or completion-gate evidence fails.
+
+## Stage 11: Optional CI adapters
+
+- [ ] Add generic CLI exit semantics for CI.
+- [ ] Add CI examples for schema validation.
+- [ ] Add CI examples for doctor checks.
+- [ ] Add CI examples for eval/trace validation.
+- [ ] Add report artifact upload example.
+- [ ] Include GitHub Actions as one optional example, not the CI contract.
+- [ ] Document blocking vs advisory checks.
+- [ ] Confirm shared schema/report artifacts support blocking/advisory status for downstream adapter consistency.
+- [ ] Ensure uncalibrated LLM-judge results are advisory-only by default.
+- [ ] Run CI examples locally where possible.
+- [ ] Run `git diff --check`.
+
+### Stage 11 acceptance criteria
+
+- [ ] A downstream repo can opt into objective CI feedback without needing a plugin or agent.
+- [ ] CI examples are clearly optional adapters.
+- [ ] Blocking/advisory status is represented in shared CLI/schema/report artifacts so CI, plugin, and skill adapters use consistent policy.
+- [ ] Uncalibrated LLM-judge results remain advisory-only by default.
+
+## Stage 12: Native agent-facing harness-engineering adapter
+
+- [ ] Choose adapter path, such as `skills/harness-engineering/`, or document a different native adapter path.
+- [ ] Add read-only assessment/design workflow.
+- [ ] Read `harness.yaml` when present.
+- [ ] Read doctor output.
+- [ ] Read eval plans.
+- [ ] Read traces.
+- [ ] Read run results.
+- [ ] Read reports.
+- [ ] Output maturity scorecard.
+- [ ] Output missing primitives.
+- [ ] Output rollout stage plan.
+- [ ] Output policy/eval/trace/continuity recommendations.
+- [ ] Document repair-action discovery/routing mechanism.
+- [ ] Route implementation to configured native repair actions, native execution-loop adapters, or documented external skills when available.
+- [ ] Add example showing adapter routing to at least one repair action or gracefully deferring to an external skill/fallback.
+- [ ] Ensure adapter does not assume `agent-coding` skills are installed or vendored.
+- [ ] Add trigger/behavior evals if using a skill format.
+- [ ] Run adapter tests/evals.
+- [ ] Run `git diff --check`.
+
+### Stage 12 acceptance criteria
+
+- [ ] The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
+- [ ] Adapter does not assume `agent-coding` skills are installed or vendored in this repo.
+- [ ] Adapter demonstrates routing implementation requests to available repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
+
+## Stage 13: `agent-coding` compatibility inventory and migration
+
+- [ ] Start inventory research after Stage 1.
+- [ ] Review `workflow-orchestrator`.
+- [ ] Review `execute-plan-loop`.
+- [ ] Review `decompose-feature`.
+- [ ] Review `plan-parallel-work`.
+- [ ] Review `ensure-atomic-pr`.
+- [ ] Review `refresh-related-docs`.
+- [ ] Review `achieve-goal`.
+- [ ] Review `scan-image-vulnerabilities`.
+- [ ] Classify each as:
+  - [ ] native-adapter candidate,
+  - [ ] external compatibility helper,
+  - [ ] optional utility,
+  - [ ] deprecation candidate,
+  - [ ] extraction candidate.
+- [ ] Decide whether each skill is copied, left external, replaced, extracted, or documentation-only.
+- [ ] Provide migration notes or compatibility shims for supported paths.
+- [ ] Provide replacement path and migration timeline for unsupported paths.
+- [ ] Include before/after workflow examples.
+- [ ] Ensure optional utilities are not described as core harness primitives.
+- [ ] Run `git diff --check`.
+
+### Stage 13 acceptance criteria
+
+- [ ] Each audited skill is classified with the Stage 13 taxonomy: native-adapter candidate, external compatibility helper, optional utility, deprecation candidate, or extraction candidate.
+- [ ] For every deprecated, moved, extracted, or unsupported skill path, docs include replacement path, breaking-change notice, migration timeline, and before/after workflow example.
+- [ ] Existing `agent-coding` skill users have a documented adoption path if compatibility remains supported.
+- [ ] README and skill docs do not imply optional utilities are core harness primitives.
+
+## Stage 14: GC framework and first deterministic categories
+
+- [ ] Implement `harness gc audit`.
+- [ ] Implement `harness gc validate`.
+- [ ] Add append-only GC evidence output.
+- [ ] Define append-only evidence format such as JSONL, timestamped files, or another durable format.
+- [ ] Document how multiple GC audits are preserved without overwriting.
+- [ ] Define first deterministic categories with explicit algorithms.
+- [ ] Add category for broken references.
+- [ ] Add category for duplicate IDs.
+- [ ] Add category for stale schema versions.
+- [ ] Add passing/failing fixtures for each category.
+- [ ] Document false-positive policy for each category.
+- [ ] Produce ranked atomic cleanup slices.
+- [ ] Include evidence refs and confidence.
+- [ ] Include blast radius and atomicity notes.
+- [ ] Prohibit fully automated cleanup.
+- [ ] Run GC tests.
+- [ ] Run `git diff --check`.
+
+### Stage 14 acceptance criteria
+
+- [ ] Users can run a GC audit and get reviewable cleanup slices tied to evidence.
+- [ ] GC evidence output is append-only and preserves historical audit runs.
+- [ ] Cleanup slices include evidence refs, confidence, blast radius, and atomicity notes; they do not mix unrelated concerns.
+- [ ] No GC category ships unless its inputs, algorithm, false-positive policy, and passing/failing fixtures are documented.
+
+## Stage 15: Evidence-driven GC expansion
+
+- [ ] Add tool/policy entropy categories when evidence exists.
+- [ ] Add verification entropy categories when evidence exists.
+- [ ] Add execution entropy categories when evidence exists.
+- [ ] Add eval entropy categories when evidence exists.
+- [ ] Add trace entropy categories when evidence exists.
+- [ ] Define thresholds for promoting repeated feedback.
+- [ ] Require holdout evidence for behavioral rule/eval promotion.
+- [ ] Require behavioral promotion to cite holdout results, not only optimization-suite improvement.
+- [ ] Define retirement rules for stale rules/templates/evals.
+- [ ] Ensure promotion/retirement cites evidence artifacts.
+- [ ] Ensure a single preference cannot become a durable rule.
+- [ ] Ensure LLM-judge evidence follows Stage 7 calibration policy.
+- [ ] Run GC expansion tests.
+- [ ] Run `git diff --check`.
+
+### Stage 15 acceptance criteria
+
+- [ ] Promotion/retirement cites evidence artifacts.
+- [ ] A single preference cannot become a durable rule.
+- [ ] LLM-judge evidence follows Stage 7 calibration policy.
+- [ ] Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
+
+## Stage 16: Skill-adapter GC and migration cleanup
+
+- [ ] Add checks only for skill adapters this repo chooses to support.
+- [ ] Add skill trigger/routing drift checks.
+- [ ] Add duplicated adapter guidance checks.
+- [ ] Add obsolete skill reference checks.
+- [ ] Add migration cleanup categories.
+- [ ] Connect findings to Stage 13 classification or migration docs.
+- [ ] Ensure no cleanup slice deletes behavior without documented replacement.
+- [ ] Run skill-adapter GC tests.
+- [ ] Run `git diff --check`.
+
+### Stage 16 acceptance criteria
+
+- [ ] Skill-specific GC findings cite Stage 13 classification or migration docs.
+- [ ] No skill cleanup slice deletes user-facing behavior without a documented replacement path.
+
+## Stage 17: Recurring profiles and scheduled maintenance
+
+- [ ] Add entropy-auditor profile.
+- [ ] Add doc-gardener profile.
+- [ ] Add eval-curator profile.
+- [ ] Add trace-reviewer profile.
+- [ ] Document trigger for each profile.
+- [ ] Document inputs for each profile.
+- [ ] Document state artifacts for each profile.
+- [ ] Document allowed actions for each profile.
+- [ ] Document measurable stop condition for each profile.
+- [ ] Document handoff artifact for each profile.
+- [ ] Add plugin- or scheduler-driven examples if useful.
+- [ ] Ensure profiles consume substrate artifacts and add value beyond one-shot summaries.
+- [ ] Add fixtures or examples demonstrating profile stopping when condition is met.
+- [ ] Run profile tests/evals where available.
+- [ ] Run `git diff --check`.
+
+### Stage 17 acceptance criteria
+
+- [ ] Profiles consume substrate artifacts and add behavior beyond one-shot summaries.
+- [ ] The initial shipped profile set includes entropy-auditor, doc-gardener, eval-curator, and trace-reviewer profiles.
+- [ ] Each profile has a measurable stop condition and handoff artifact.
+- [ ] Fixtures or examples demonstrate each profile stopping when its condition is met.
+
+## Cross-cutting checks before each stage
+
+- [ ] Confirm the stage has one logical purpose.
+- [ ] Confirm intermediate repo state remains useful and not misleading.
+- [ ] Confirm docs separate current capability from planned capability.
+- [ ] Confirm schema/CLI/plugin/adapter changes do not create a second source of truth.
+- [ ] Confirm no secrets, credentials, or unbounded model spend are introduced.
+- [ ] Confirm any local check/verifier/repair action declares trust and sandbox requirements.
+- [ ] Confirm touched stage acceptance criteria are satisfied.
+- [ ] Run appropriate tests for touched code.
+- [ ] Run `git diff --check`.

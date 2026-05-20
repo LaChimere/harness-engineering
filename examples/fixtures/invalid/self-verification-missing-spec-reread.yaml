@@ -1,0 +1,12 @@
+schema_version: "0.1.0"
+verification_id: missing-spec-reread
+spec_ref: plans/harness-engineering-platform/plan.md#stage-2-harness-schema-substrate
+acceptance_checks:
+  - id: schema-versioning
+    expected: Every machine-readable artifact declares schema_version.
+    actual: This fixture omits spec_reread and must fail validation.
+    status: blocked
+checks_run: []
+artifacts: []
+unresolved_risks: []
+evidence_links: []

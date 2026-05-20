@@ -1,0 +1,22 @@
+schema_version: "0.1.0"
+policy_id: default-sandbox
+tier: worktree
+enforcement:
+  mechanism: harness-cli
+  notes: Worktree isolation is lower assurance than container or VM isolation.
+network:
+  mode: restricted
+  allowlist:
+    - registry.npmjs.org
+filesystem:
+  allowed_paths:
+    - .
+    - .harness
+  denied_paths:
+    - ~/.ssh
+process:
+  allow_spawn: true
+  max_processes: 32
+secrets:
+  allowed_env_vars: []
+  allowed_secret_refs: []

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/doctor-result.schema.json",
+  "title": "Doctor result",
+  "type": "object",
+  "required": ["schema_version", "run_id", "harness_version", "status", "checks"],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "warning"]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "category",
+          "inputs",
+          "determinism",
+          "severity",
+          "outcome",
+          "evidence",
+          "remediation",
+          "fixtures",
+          "false_positive_policy",
+          "exit_semantics",
+          "trust_requirements"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "version": {
+            "$ref": "common.schema.json#/$defs/semver"
+          },
+          "category": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/artifactRef"
+            }
+          },
+          "determinism": {
+            "type": "string",
+            "enum": ["deterministic"]
+          },
+          "severity": {
+            "$ref": "common.schema.json#/$defs/severity"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["passed", "failed", "skipped"]
+          },
+          "evidence": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          },
+          "remediation": {
+            "type": "string"
+          },
+          "fixtures": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/artifactRef"
+            }
+          },
+          "false_positive_policy": {
+            "type": "string"
+          },
+          "exit_semantics": {
+            "type": "object",
+            "required": ["pass", "warn", "fail"],
+            "properties": {
+              "pass": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "warn": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "fail": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "trust_requirements": {
+            "$ref": "common.schema.json#/$defs/trustRequirements"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

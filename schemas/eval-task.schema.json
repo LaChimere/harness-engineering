@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/eval-task.schema.json",
+  "title": "Eval task",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "suite_id",
+    "task_id",
+    "task_version",
+    "dataset_hash",
+    "split",
+    "confidence",
+    "instruction",
+    "environment",
+    "verifier",
+    "timeout_seconds"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "suite_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "task_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "task_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "dataset_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-fA-F0-9]{64}$"
+    },
+    "split": {
+      "type": "string",
+      "enum": ["optimization", "holdout"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["validated-oracle", "human-labeled", "experimental"]
+    },
+    "instruction": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "environment": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "verifier": {
+      "type": "object",
+      "required": ["kind", "command", "trust_requirements"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["command", "script", "container"]
+        },
+        "command": {
+          "$ref": "common.schema.json#/$defs/command"
+        },
+        "image": {
+          "type": "string"
+        },
+        "trust_requirements": {
+          "$ref": "common.schema.json#/$defs/trustRequirements"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "container"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["image"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "oracle": {
+      "type": "object",
+      "required": ["kind", "artifact"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["expected-output", "patch", "state"]
+        },
+        "artifact": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "baseline": {
+      "type": "object",
+      "required": ["kind", "artifact"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["expected-failure", "recorded-run"]
+        },
+        "artifact": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "confidence": {
+            "const": "validated-oracle"
+          }
+        },
+        "required": ["confidence"]
+      },
+      "then": {
+        "required": ["oracle"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "suite_id": {
+            "const": "harness-self-test"
+          }
+        },
+        "required": ["suite_id"]
+      },
+      "then": {
+        "required": ["baseline"]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

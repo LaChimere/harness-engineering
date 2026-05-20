@@ -39,47 +39,47 @@
 
 ## Stage 2: Harness schema substrate
 
-- [ ] Add `schemas/harness.schema.json`.
-- [ ] Add `schemas/approval-policy.schema.json`.
-- [ ] Add `schemas/sandbox-policy.schema.json`.
-- [ ] Add `schemas/environment.schema.json`.
-- [ ] Add `schemas/model-profile.schema.json`.
-- [ ] Add `schemas/failure-taxonomy.schema.json` with starter codes:
-  - [ ] `tool-error`
-  - [ ] `timeout`
-  - [ ] `loop-detected`
-  - [ ] `verification-failure`
-  - [ ] `context-loss`
-  - [ ] `routing-miss`
-  - [ ] `premature-completion`
-  - [ ] `no-progress-edit-churn`
-- [ ] Add `schemas/continuity-state.schema.json`.
-- [ ] Add `schemas/self-verification.schema.json`.
-- [ ] Add `schemas/doctor-result.schema.json`.
-- [ ] Add `schemas/eval-task.schema.json`.
-- [ ] Add `schemas/agent-runner.schema.json`.
-- [ ] Add `schemas/trace.schema.json`.
-- [ ] Add `schemas/run-result.schema.json`.
-- [ ] Add provisional `schemas/plugin-capability.schema.json`.
-- [ ] Add provisional `schemas/repair-action.schema.json`.
-- [ ] Add `schemas/gc-evidence.schema.json`.
-- [ ] Add `examples/harness.yaml` with no CI/plugin adapter keys.
-- [ ] Add valid and invalid fixtures for high-risk schemas.
-- [ ] Define per-schema semantic versioning and `engines.schemas` semantics.
-- [ ] Define trust/sandbox requirements for local checks, verifiers, and repair actions.
-- [ ] Define credential references and cost/token/request budgets in agent runner schema.
-- [ ] Ensure continuity and self-verification schemas cover startup verification, progress, evidence, and handoff state.
-- [ ] Run schema validation on examples and fixtures.
-- [ ] Run `git diff --check`.
+- [x] Add `schemas/harness.schema.json`.
+- [x] Add `schemas/approval-policy.schema.json`.
+- [x] Add `schemas/sandbox-policy.schema.json`.
+- [x] Add `schemas/environment.schema.json`.
+- [x] Add `schemas/model-profile.schema.json`.
+- [x] Add `schemas/failure-taxonomy.schema.json` with starter codes:
+  - [x] `tool-error`
+  - [x] `timeout`
+  - [x] `loop-detected`
+  - [x] `verification-failure`
+  - [x] `context-loss`
+  - [x] `routing-miss`
+  - [x] `premature-completion`
+  - [x] `no-progress-edit-churn`
+- [x] Add `schemas/continuity-state.schema.json`.
+- [x] Add `schemas/self-verification.schema.json`.
+- [x] Add `schemas/doctor-result.schema.json`.
+- [x] Add `schemas/eval-task.schema.json`.
+- [x] Add `schemas/agent-runner.schema.json`.
+- [x] Add `schemas/trace.schema.json`.
+- [x] Add `schemas/run-result.schema.json`.
+- [x] Add provisional `schemas/plugin-capability.schema.json`.
+- [x] Add provisional `schemas/repair-action.schema.json`.
+- [x] Add `schemas/gc-evidence.schema.json`.
+- [x] Add `examples/harness.yaml` with no CI/plugin adapter keys.
+- [x] Add valid and invalid fixtures for high-risk schemas.
+- [x] Define per-schema semantic versioning and `engines.schemas` semantics.
+- [x] Define trust/sandbox requirements for local checks, verifiers, and repair actions.
+- [x] Define credential references and cost/token/request budgets in agent runner schema.
+- [x] Ensure continuity and self-verification schemas cover startup verification, progress, evidence, and handoff state.
+- [x] Run schema validation on examples and fixtures.
+- [x] Run `git diff --check`.
 
 ### Stage 2 acceptance criteria
 
-- [ ] External tools can validate artifacts against published or locally vendored schemas.
-- [ ] Every machine-readable artifact has `schema_version` and clear compatibility semantics, using per-schema semantic versions plus the `engines.schemas` range in `harness.yaml`.
-- [ ] The example `harness.yaml` validates and composes references rather than embedding all details.
-- [ ] `continuity-state.schema.json` and `self-verification.schema.json` are complete enough for Stage 10 without inventing new artifact shapes.
-- [ ] `agent-runner.schema.json` is complete enough for Stage 6 to enforce model invocation, credential references, budgets, sandbox, approval policy, trace output, and verifier binding without inventing new artifact shapes.
-- [ ] Local doctor checks, eval verifiers, and repair actions have declared trust/sandbox requirements.
+- [x] External tools can validate artifacts against published or locally vendored schemas.
+- [x] Every machine-readable artifact has `schema_version` and clear compatibility semantics, using per-schema semantic versions plus the `engines.schemas` range in `harness.yaml`.
+- [x] The example `harness.yaml` validates and composes references rather than embedding all details.
+- [x] `continuity-state.schema.json` and `self-verification.schema.json` are complete enough for Stage 10 without inventing new artifact shapes.
+- [x] `agent-runner.schema.json` is complete enough for Stage 6 to enforce model invocation, credential references, budgets, sandbox, approval policy, trace output, and verifier binding without inventing new artifact shapes.
+- [x] Local doctor checks, eval verifiers, and repair actions have declared trust/sandbox requirements.
 
 ## Stage 3: CLI skeleton: init, validate, migrate, verify, report
 

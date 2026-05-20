@@ -51,7 +51,7 @@ Fix with agent
 Optional: add CI enforcement
 ```
 
-Until Stage 8 verifies and Stage 9 ships a real marketplace/extension plugin, user-facing docs must lead with the CLI-first path and describe plugin-first as the intended UX, not as an available install path. If no plugin exists for the user's host, the universal fallback is the CLI path. This is not a lesser contract; it is the same substrate without the guided UI:
+Until Stage 8 verifies and Stage 9 ships a real marketplace/extension plugin, user-facing docs must lead with the CLI-first path and describe plugin-first as the intended UX, not as an available install path. If no plugin exists for the user's host, the universal fallback is the CLI path. This is not a lesser contract; it is the same substrate without the guided UI. The commands below are target CLI commands for Stage 3+ implementation; Stage 2 only defines the schemas and examples they will consume:
 
 ```text
 npx @lachimere/harness-engineering init
@@ -99,10 +99,10 @@ Plugin packages should also pin the CLI/schema compatibility range they support.
 
 ## Research-driven principles
 
-The second research report is saved at:
+The research report for this design lives in the repository at:
 
 ```text
-/Users/lachimere/.copilot/workspaces/cc38a0ae-41bd-4f56-a970-7a3e1faa605f/artifacts/research/harness-engineering-harness-engineering.md
+plans/harness-engineering-platform/research.md
 ```
 
 Design principles incorporated from the research:
@@ -185,80 +185,60 @@ This does not require every directory to land in the first Stage. It defines the
 Stage 2 should refine this shape, but the design assumes a repo-local spec like:
 
 ```yaml
-schema_version: "0.1"
+schema_version: "0.1.0"
 harness:
   name: harness-engineering
-  failure_taxonomy: schemas/failure-taxonomy.schema.json
+  failure_taxonomy: examples/failure-taxonomy.yaml
 engines:
   cli: ">=0.1 <0.2"
-  schemas: ">=0.1 <0.2"
+  schemas:
+    harness: ">=0.1 <0.2"
+    agent-runner: ">=0.1 <0.2"
+    trace: ">=0.1 <0.2"
+    eval-task: ">=0.1 <0.2"
 context:
   maps:
     - AGENTS.md
     - README.md
-environment:
-  kind: container
-  image: ghcr.io/example/harness-runner@sha256:...
-  resources:
-    cpu: 2
-    memory: 4GiB
-    timeout_seconds: 1800
-  dependencies:
-    lockfiles:
-      - package-lock.json
-    tools:
-      - name: node
-        version: ">=20 <21"
-  startup:
-    commands:
-      - npm ci
-  health_check:
-    commands:
-      - npm test -- --help
-  teardown:
-    commands:
-      - git clean -fdX .harness/tmp
+environment: examples/environments/container.yaml
 approval_policy: examples/policies/approval-policy.yaml
-sandbox:
-  tier: container
-  network:
-    mode: restricted
-    allowlist:
-      - registry.npmjs.org
-  filesystem:
-    allowed_paths:
-      - .
-      - .harness
-    denied_paths:
-      - ~/.ssh
-  secrets:
-    allowed_env_vars: []
+sandbox: examples/policies/sandbox-policy.yaml
 model_profiles:
-  default: examples/model-profiles/default.yaml
+  default: examples/model-profiles/stub.yaml
 agent_runners:
-  default:
-    model_profile: default
-    sandbox: container
-    trace_output: .harness/traces
+  default: examples/agent-runners/stub.yaml
 traces:
-  schema: schemas/trace.schema.json
   output_dir: .harness/traces
 evals:
   suites:
     - id: harness-self-test
       version: "1.0.0"
       tasks: examples/evals/harness-self-test/v1.0.0/
-      dataset_hash: sha256:...
   run_results: .harness/run-results.jsonl
 doctor:
   checks:
     - builtin:schema-validity
     - builtin:reference-exists
-    - local:.harness/checks/*.yaml
+    - id: local-doc-link-check
+      path: .harness/checks/doc-links.yaml
+      trust_requirements:
+        trust_level: sandboxed
+        sandbox_required: process
+        network_access: false
+        secret_access: false
+        host_file_access: false
+        allowed_inputs:
+          - README.md
+          - AGENTS.md
+        allowed_outputs:
+          - .harness/doctor/doc-links.json
 continuity:
-  session_id: "${HARNESS_SESSION_ID}"
   state_dir: .harness/continuity
-  startup_smoke_test: npx @lachimere/harness-engineering verify --scope continuity
+  startup_smoke_test:
+    command: npx @lachimere/harness-engineering verify --scope continuity
+    timeout_seconds: 300
+  handoff_dir: .harness/handoffs
+  session_id_env: HARNESS_SESSION_ID
 gc:
   evidence_dir: .harness/gc
 ```
@@ -285,11 +265,11 @@ The key point is composition: the spec points to policies, eval suites, trace lo
    - The plugin shows harness health: schema validity, doctor findings, eval status, trace coverage, policy/sandbox gaps, and GC suggestions.
    - The plugin offers **Fix with Agent** for changes that require design, decomposition, or implementation; those actions must use the repair-action contract.
 
-2. **CLI-first mechanical baseline (available before plugins)**
-   - User runs `harness init`.
-   - The tool creates `harness.yaml`, starter policies, example evals, trace examples, and optional CI snippets.
-   - User runs `harness validate`, `harness doctor`, `harness run`, `harness eval run`, `harness trace validate`, `harness verify`, and `harness report`.
-   - The CLI can produce run-result and report artifacts without an agent by executing deterministic verifiers and configured local commands.
+2. **CLI-first mechanical baseline (available before plugins after the relevant CLI stages land)**
+   - User runs `harness init` after Stage 3 implements the initial CLI.
+   - The tool creates `harness.yaml`, starter policies, example evals, and trace examples without creating CI or plugin adapter keys before those adapters exist.
+   - After the relevant stages land, users run `harness validate`, `harness doctor`, `harness run`, `harness eval run`, `harness trace validate`, `harness verify`, and `harness report`.
+   - The CLI can produce run-result and report artifacts without an agent by executing deterministic verifiers and configured local commands once Stages 4-6 provide those capabilities.
 
 3. **Agent-assisted rollout**
    - User asks for harness engineering through a plugin chat surface when supported, through a native portable adapter when available, or through a documented `agent-coding` compatibility path after the compatibility audit.

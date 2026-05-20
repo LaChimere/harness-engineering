@@ -1,0 +1,25 @@
+schema_version: "0.1.0"
+environment_id: container-example
+isolation:
+  kind: container
+  assurance: high
+  image: ghcr.io/lachimere/harness-runner@example
+resources:
+  cpu: 2
+  memory_mb: 4096
+  timeout_seconds: 1800
+dependencies:
+  lockfiles: []
+  tools:
+    - name: node
+      version: ">=20 <21"
+startup:
+  - command: test -f examples/harness.yaml
+    timeout_seconds: 30
+health_check:
+  - command: git --no-pager status --short
+    timeout_seconds: 30
+teardown:
+  - command: git clean -fdX .harness/tmp
+    timeout_seconds: 60
+sandbox_policy: examples/policies/sandbox-policy.yaml

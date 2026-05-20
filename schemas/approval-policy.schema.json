@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/approval-policy.schema.json",
+  "title": "Approval policy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy_id",
+    "risk_classes",
+    "approval_modes",
+    "transports",
+    "decisions",
+    "state_machine",
+    "escalation",
+    "modify_logging",
+    "terminate_behavior"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "policy_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "risk_classes": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/riskClass"
+      },
+      "minItems": 4,
+      "uniqueItems": true
+    },
+    "approval_modes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["auto", "interactive", "file-drop", "disabled"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "transports": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["cli-interactive", "file-drop", "host-ui", "api"]
+      },
+      "contains": {
+        "const": "cli-interactive"
+      },
+      "allOf": [
+        {
+          "contains": {
+            "const": "file-drop"
+          }
+        }
+      ],
+      "uniqueItems": true
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["approve", "modify", "reject", "escalate", "terminate"]
+      },
+      "minItems": 5,
+      "uniqueItems": true
+    },
+    "escalation": {
+      "type": "object",
+      "required": ["target", "timeout_seconds"],
+      "properties": {
+        "target": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "state_machine": {
+      "type": "object",
+      "required": ["initial_state", "terminal_states", "transitions"],
+      "properties": {
+        "initial_state": {
+          "type": "string",
+          "enum": ["pending"]
+        },
+        "terminal_states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["approved", "rejected", "terminated"]
+          },
+          "minItems": 3,
+          "uniqueItems": true
+        },
+        "transitions": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "required": ["from", "decision", "to"],
+            "properties": {
+              "from": {
+                "type": "string",
+                "enum": ["pending", "modified", "escalated"]
+              },
+              "decision": {
+                "type": "string",
+                "enum": ["approve", "modify", "reject", "escalate", "terminate"]
+              },
+              "to": {
+                "type": "string",
+                "enum": ["approved", "modified", "rejected", "escalated", "terminated"]
+              },
+              "requires_log": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "modify_logging": {
+      "type": "object",
+      "required": ["required", "log_path"],
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "const": true
+        },
+        "log_path": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "terminate_behavior": {
+      "type": "string",
+      "enum": ["cleanup-and-exit", "save-state-and-exit", "abort-immediately"]
+    }
+  },
+  "additionalProperties": false
+}

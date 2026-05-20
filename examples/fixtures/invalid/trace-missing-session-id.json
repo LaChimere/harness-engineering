@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "run-missing-session",
+  "harness_version": "0.1.0",
+  "inputs": {
+    "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
+    "runner": "examples/agent-runners/stub.yaml"
+  },
+  "environment_snapshot": {
+    "environment": "examples/environments/local.yaml",
+    "sandbox": "examples/policies/sandbox-policy.yaml",
+    "approval_policy": "examples/policies/approval-policy.yaml",
+    "model_profile": "examples/model-profiles/stub.yaml",
+    "runner": "examples/agent-runners/stub.yaml"
+  },
+  "started_at": "2026-05-20T00:00:00Z",
+  "completed_at": "2026-05-20T00:00:01Z",
+  "duration_ms": 1000,
+  "exit_code": 0,
+  "determinism_level": "recorded",
+  "usage": {
+    "billed_model_id": "stub-v1",
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "requests": 0,
+    "incurred_cost_usd": 0,
+    "source": "stub"
+  },
+  "actions": [],
+  "logs": [],
+  "artifact_links": []
+}

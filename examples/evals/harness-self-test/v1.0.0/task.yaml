@@ -1,0 +1,35 @@
+schema_version: "0.1.0"
+suite_id: harness-self-test
+task_id: schema-smoke
+task_version: "1.0.0"
+dataset_hash: sha256:a24aec6c89366e103dec4e2f26c0dc6efabccb8157bca47a7ee417119a58923b
+split: optimization
+confidence: validated-oracle
+instruction: Validate that the harness schema substrate can describe a deterministic self-test task.
+environment: examples/environments/local.yaml
+verifier:
+  kind: command
+  command:
+    command: test -f examples/harness.yaml
+    timeout_seconds: 30
+  trust_requirements:
+    trust_level: sandboxed
+    sandbox_required: process
+    network_access: false
+    secret_access: false
+    host_file_access: false
+    allowed_inputs:
+      - examples/harness.yaml
+    allowed_outputs:
+      - .harness/run-results.jsonl
+timeout_seconds: 300
+oracle:
+  kind: expected-output
+  artifact: examples/evals/harness-self-test/v1.0.0/oracle.txt
+baseline:
+  kind: expected-failure
+  artifact: examples/evals/harness-self-test/v1.0.0/broken-twin.txt
+artifacts:
+  - path: examples/harness.yaml
+    media_type: application/yaml
+    description: Harness example under validation.

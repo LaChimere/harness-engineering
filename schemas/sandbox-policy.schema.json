@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/sandbox-policy.schema.json",
+  "title": "Sandbox policy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy_id",
+    "tier",
+    "enforcement",
+    "network",
+    "filesystem",
+    "process",
+    "secrets"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "policy_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "tier": {
+      "$ref": "common.schema.json#/$defs/sandboxTier"
+    },
+    "enforcement": {
+      "type": "object",
+      "required": ["mechanism", "notes"],
+      "properties": {
+        "mechanism": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "network": {
+      "type": "object",
+      "required": ["mode", "allowlist"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["none", "restricted", "allowlist", "unrestricted"]
+        },
+        "allowlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "enum": ["restricted", "allowlist"]
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "allowlist": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "enum": ["none", "unrestricted"]
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "allowlist": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "filesystem": {
+      "type": "object",
+      "required": ["allowed_paths", "denied_paths"],
+      "properties": {
+        "allowed_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/artifactRef"
+          }
+        },
+        "denied_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/artifactRef"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "process": {
+      "type": "object",
+      "required": ["allow_spawn", "max_processes"],
+      "properties": {
+        "allow_spawn": {
+          "type": "boolean"
+        },
+        "max_processes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "secrets": {
+      "type": "object",
+      "required": ["allowed_env_vars", "allowed_secret_refs"],
+      "properties": {
+        "allowed_env_vars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_secret_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

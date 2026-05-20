@@ -1,0 +1,6 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "schema-smoke",
+  "status": "passed",
+  "summary": "The recorded schema smoke verifier passed."
+}

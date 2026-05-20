@@ -1,0 +1,1 @@
+schema-smoke fails when the harness file is missing or invalid.

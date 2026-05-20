@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/gc-evidence.schema.json",
+  "title": "GC evidence",
+  "type": "object",
+  "required": ["schema_version", "audit_id", "generated_at", "findings"],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "audit_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "severity",
+          "confidence",
+          "evidence_refs",
+          "proposed_cleanup_slice",
+          "blast_radius",
+          "atomicity_notes",
+          "promotion_decision_refs",
+          "retirement_decision_refs"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["broken-reference", "duplicate-id", "stale-schema-version"]
+          },
+          "severity": {
+            "$ref": "common.schema.json#/$defs/severity"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evidence_refs": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          },
+          "proposed_cleanup_slice": {
+            "type": "object",
+            "required": ["id", "description", "target_files"],
+            "properties": {
+              "id": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "description": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "target_files": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/artifactRef"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "blast_radius": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "atomicity_notes": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "promotion_decision_refs": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          },
+          "retirement_decision_refs": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "previous_audit_ref": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    }
+  },
+  "additionalProperties": false
+}

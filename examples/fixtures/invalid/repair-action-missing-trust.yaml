@@ -1,0 +1,20 @@
+schema_version: "0.1.0"
+x-stability: provisional
+action_id: missing-trust
+target_files:
+  - examples/harness.yaml
+risk_class: low
+preview_diff: |
+  diff --git a/examples/harness.yaml b/examples/harness.yaml
+  --- a/examples/harness.yaml
+  +++ b/examples/harness.yaml
+  @@ -1 +1 @@
+  -schema_version: "0.0.0"
+  +schema_version: "0.1.0"
+equivalent_cli_command:
+  command: npx @lachimere/harness-engineering migrate --dry-run --repair-action examples/fixtures/invalid/repair-action-missing-trust.yaml
+  timeout_seconds: 300
+approval_state: proposed
+sandbox_requirement: worktree
+rollback_notes: Restore the previewed diff if the repair is rejected.
+evidence_links: []

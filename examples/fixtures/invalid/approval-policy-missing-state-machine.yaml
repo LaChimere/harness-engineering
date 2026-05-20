@@ -1,0 +1,25 @@
+schema_version: "0.1.0"
+policy_id: missing-state-machine
+risk_classes:
+  - low
+  - medium
+  - high
+  - critical
+approval_modes:
+  - interactive
+transports:
+  - cli-interactive
+  - file-drop
+decisions:
+  - approve
+  - modify
+  - reject
+  - escalate
+  - terminate
+escalation:
+  target: repository-owner
+  timeout_seconds: 900
+modify_logging:
+  required: true
+  log_path: .harness/approvals/modify-log.jsonl
+terminate_behavior: save-state-and-exit

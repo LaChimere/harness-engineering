@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/run-result.schema.json",
+  "title": "Run result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "kind",
+    "model_profile",
+    "harness_version",
+    "status",
+    "usage",
+    "trace",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["eval", "ad-hoc"]
+    },
+    "suite_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "task_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "task_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "dataset_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-fA-F0-9]{64}$"
+    },
+    "split": {
+      "type": "string",
+      "enum": ["optimization", "holdout"]
+    },
+    "model_profile": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "error", "skipped"]
+    },
+    "failure_code": {
+      "$ref": "common.schema.json#/$defs/failureCode"
+    },
+    "trace": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "verifier_result": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "usage": {
+      "$ref": "common.schema.json#/$defs/usageAccounting"
+    },
+    "artifacts": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "eval"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "required": [
+          "suite_id",
+          "task_id",
+          "task_version",
+          "dataset_hash",
+          "split",
+          "verifier_result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "ad-hoc"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": ["suite_id"]
+            },
+            {
+              "required": ["task_id"]
+            },
+            {
+              "required": ["task_version"]
+            },
+            {
+              "required": ["dataset_hash"]
+            },
+            {
+              "required": ["split"]
+            },
+            {
+              "required": ["verifier_result"]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["failed", "error"]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["failure_code"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "not": {
+          "required": ["failure_code"]
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

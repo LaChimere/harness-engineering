@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/plugin-capability.schema.json",
+  "title": "Plugin capability",
+  "$comment": "provisional; Stage 8 must revalidate this shape against host marketplace and runtime APIs before Stage 9 consumes it.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "x-stability",
+    "capability_id",
+    "host",
+    "distribution_surface",
+    "cli_management_mode",
+    "supported_actions",
+    "unsupported_action_fallbacks",
+    "annotation_support",
+    "background_run_support",
+    "repair_action_support"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "x-stability": {
+      "const": "provisional"
+    },
+    "capability_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "host": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "distribution_surface": {
+      "type": "string",
+      "enum": ["marketplace", "extension-gallery", "manual", "unknown"]
+    },
+    "cli_management_mode": {
+      "type": "string",
+      "enum": ["repo-pinned", "bundled", "bootstrap", "user-installed", "unsupported"]
+    },
+    "supported_actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["init", "report", "doctor", "eval", "trace", "annotate", "repair"]
+      },
+      "uniqueItems": true
+    },
+    "unsupported_action_fallbacks": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "common.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "annotation_support": {
+      "type": "boolean"
+    },
+    "background_run_support": {
+      "type": "boolean"
+    },
+    "repair_action_support": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/agent-runner.schema.json",
+  "title": "Agent runner",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "runner_id",
+    "model_profile",
+    "prompt_adapter",
+    "tool_adapter",
+    "task_input",
+    "sandbox",
+    "approval_policy",
+    "trace_output",
+    "credential_reference",
+    "budgets",
+    "timeout_seconds",
+    "verifier_binding"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "runner_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "model_profile": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "prompt_adapter": {
+      "type": "object",
+      "required": ["kind", "template"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["native", "mcp", "raw"]
+        },
+        "template": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "tool_adapter": {
+      "type": "object",
+      "required": ["kind", "policy"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["native", "mcp", "none"]
+        },
+        "policy": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "task_input": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "sandbox": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "approval_policy": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "trace_output": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "credential_reference": {
+      "$ref": "common.schema.json#/$defs/credentialReference"
+    },
+    "budgets": {
+      "$ref": "common.schema.json#/$defs/agentBudgets"
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verifier_binding": {
+      "type": "object",
+      "required": ["eval_task", "verifier"],
+      "properties": {
+        "eval_task": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "verifier": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

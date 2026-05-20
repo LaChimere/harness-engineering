@@ -1,0 +1,26 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "doctor-missing-trust",
+  "harness_version": "0.1.0",
+  "status": "failed",
+  "checks": [
+    {
+      "id": "schema-validity",
+      "version": "0.1.0",
+      "category": "schema",
+      "inputs": ["examples/harness.yaml"],
+      "determinism": "deterministic",
+      "severity": "error",
+      "outcome": "failed",
+      "evidence": [],
+      "remediation": "Add trust requirements.",
+      "fixtures": [],
+      "false_positive_policy": "None.",
+      "exit_semantics": {
+        "pass": 0,
+        "warn": 1,
+        "fail": 2
+      }
+    }
+  ]
+}

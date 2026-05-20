@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "capability_id": "unknown-host-provisional",
+  "host": "unknown",
+  "distribution_surface": "unknown",
+  "cli_management_mode": "unsupported",
+  "supported_actions": ["report"],
+  "unsupported_action_fallbacks": {
+    "init": "Use CLI-first setup until Stage 8 verifies a host plugin target.",
+    "repair": "Use CLI-backed repair actions only after Stage 9 defines them."
+  },
+  "annotation_support": false,
+  "background_run_support": false,
+  "repair_action_support": false
+}

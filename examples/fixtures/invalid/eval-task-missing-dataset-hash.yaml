@@ -1,0 +1,30 @@
+schema_version: "0.1.0"
+suite_id: harness-self-test
+task_id: missing-dataset-hash
+task_version: "1.0.0"
+split: optimization
+confidence: validated-oracle
+instruction: This fixture is missing dataset_hash and must fail validation.
+environment: examples/environments/local.yaml
+verifier:
+  kind: command
+  command:
+    command: test -f examples/harness.yaml
+    timeout_seconds: 30
+  trust_requirements:
+    trust_level: sandboxed
+    sandbox_required: process
+    network_access: false
+    secret_access: false
+    host_file_access: false
+    allowed_inputs:
+      - examples/harness.yaml
+    allowed_outputs:
+      - .harness/run-results.jsonl
+timeout_seconds: 300
+oracle:
+  kind: expected-output
+  artifact: examples/evals/harness-self-test/v1.0.0/oracle.txt
+baseline:
+  kind: expected-failure
+  artifact: examples/evals/harness-self-test/v1.0.0/broken-twin.txt

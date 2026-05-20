@@ -1,0 +1,1 @@
+schema-smoke passes when examples/harness.yaml exists and validates.

@@ -1,0 +1,45 @@
+schema_version: "0.1.0"
+taxonomy_id: missing-starter
+codes:
+  - code: tool-error
+    category: tooling
+    description: Tool error is present, but other required starter codes are missing.
+  - code: timeout
+    category: execution
+    description: Timeout is present.
+  - code: loop-detected
+    category: progress
+    description: Loop detection is present.
+  - code: verification-failure
+    category: verification
+    description: Verification failure is present.
+  - code: context-loss
+    category: context
+    description: Context loss is present.
+  - code: routing-miss
+    category: routing
+    description: Routing miss is present.
+  - code: premature-completion
+    category: progress
+    description: Premature completion is present.
+  - code: no-progress-edit-churn
+    category: progress
+    description: No-progress edit churn is present.
+  - code: harness-error
+    category: harness
+    description: Harness error is present.
+  - code: verifier-error
+    category: verification
+    description: Verifier error is present.
+  - code: environment-error
+    category: environment
+    description: Environment error is present.
+  - code: budget-exceeded
+    category: budget
+    description: Budget exceeded is present.
+  - code: sandbox-violation
+    category: sandbox
+    description: Sandbox violation is present.
+  - code: custom-extra
+    category: harness
+    description: Extra code keeps this fixture focused on the missing starter code.

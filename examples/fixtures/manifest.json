@@ -1,0 +1,231 @@
+{
+  "valid": [
+    {
+      "path": "examples/harness.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
+      "path": "examples/policies/approval-policy.yaml",
+      "schema": "schemas/approval-policy.schema.json"
+    },
+    {
+      "path": "examples/policies/sandbox-policy.yaml",
+      "schema": "schemas/sandbox-policy.schema.json"
+    },
+    {
+      "path": "examples/environments/local.yaml",
+      "schema": "schemas/environment.schema.json"
+    },
+    {
+      "path": "examples/environments/container.yaml",
+      "schema": "schemas/environment.schema.json"
+    },
+    {
+      "path": "examples/model-profiles/stub.yaml",
+      "schema": "schemas/model-profile.schema.json"
+    },
+    {
+      "path": "examples/failure-taxonomy.yaml",
+      "schema": "schemas/failure-taxonomy.schema.json"
+    },
+    {
+      "path": "examples/agent-runners/stub.yaml",
+      "schema": "schemas/agent-runner.schema.json"
+    },
+    {
+      "path": "examples/evals/harness-self-test/v1.0.0/task.yaml",
+      "schema": "schemas/eval-task.schema.json"
+    },
+    {
+      "path": "examples/continuity/state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/verification/self-verification.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/doctor/results/pass.json",
+      "schema": "schemas/doctor-result.schema.json"
+    },
+    {
+      "path": "examples/traces/native-cli-trace.json",
+      "schema": "schemas/trace.schema.json"
+    },
+    {
+      "path": "examples/run-results/run-result.json",
+      "schema": "schemas/run-result.schema.json"
+    },
+    {
+      "path": "examples/run-results/ad-hoc-run-result.json",
+      "schema": "schemas/run-result.schema.json"
+    },
+    {
+      "path": "examples/run-results/failed-run-result.json",
+      "schema": "schemas/run-result.schema.json"
+    },
+    {
+      "path": "examples/plugin-capabilities/provisional-host.json",
+      "schema": "schemas/plugin-capability.schema.json"
+    },
+    {
+      "path": "examples/repair-actions/proposed-schema-fix.yaml",
+      "schema": "schemas/repair-action.schema.json"
+    },
+    {
+      "path": "examples/gc/evidence.json",
+      "schema": "schemas/gc-evidence.schema.json"
+    }
+  ],
+  "invalid": [
+    {
+      "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml",
+      "schema": "schemas/harness.schema.json",
+      "reason": "Stage 2 harness roots must reject plugin-only source-of-truth keys.",
+      "expected_keyword": "unevaluatedProperties",
+      "expected_path": []
+    },
+    {
+      "path": "examples/fixtures/invalid/agent-runner-missing-budgets.yaml",
+      "schema": "schemas/agent-runner.schema.json",
+      "reason": "Agent runs must require cost, token, and request budgets.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'budgets'"
+    },
+    {
+      "path": "examples/fixtures/invalid/agent-runner-inline-secret.yaml",
+      "schema": "schemas/agent-runner.schema.json",
+      "reason": "Agent runners must reference credentials without inline secret material.",
+      "expected_keyword": "additionalProperties",
+      "expected_path": ["credential_reference"]
+    },
+    {
+      "path": "examples/fixtures/invalid/agent-runner-budget-missing-token.yaml",
+      "schema": "schemas/agent-runner.schema.json",
+      "reason": "Budget blocks must include at least one token limit.",
+      "expected_keyword": "anyOf",
+      "expected_path": ["budgets"]
+    },
+    {
+      "path": "examples/fixtures/invalid/agent-runner-budget-missing-cost.yaml",
+      "schema": "schemas/agent-runner.schema.json",
+      "reason": "Budget blocks must include a cost limit.",
+      "expected_keyword": "required",
+      "expected_path": ["budgets"],
+      "expected_message_contains": "'max_cost_usd'"
+    },
+    {
+      "path": "examples/fixtures/invalid/agent-runner-budget-missing-requests.yaml",
+      "schema": "schemas/agent-runner.schema.json",
+      "reason": "Budget blocks must include a request limit.",
+      "expected_keyword": "required",
+      "expected_path": ["budgets"],
+      "expected_message_contains": "'max_requests'"
+    },
+    {
+      "path": "examples/fixtures/invalid/eval-task-missing-dataset-hash.yaml",
+      "schema": "schemas/eval-task.schema.json",
+      "reason": "Eval tasks must identify the dataset version they belong to.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'dataset_hash'"
+    },
+    {
+      "path": "examples/fixtures/invalid/eval-task-verifier-missing-trust.yaml",
+      "schema": "schemas/eval-task.schema.json",
+      "reason": "Eval verifiers must declare trust and sandbox requirements.",
+      "expected_keyword": "required",
+      "expected_path": ["verifier"],
+      "expected_message_contains": "'trust_requirements'"
+    },
+    {
+      "path": "examples/fixtures/invalid/trace-missing-session-id.json",
+      "schema": "schemas/trace.schema.json",
+      "reason": "Traces must identify the long-running session they belong to.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'session_id'"
+    },
+    {
+      "path": "examples/fixtures/invalid/repair-action-missing-trust.yaml",
+      "schema": "schemas/repair-action.schema.json",
+      "reason": "Repair actions must declare trust and sandbox requirements.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'trust_requirements'"
+    },
+    {
+      "path": "examples/fixtures/invalid/self-verification-missing-spec-reread.yaml",
+      "schema": "schemas/self-verification.schema.json",
+      "reason": "Self-verification evidence must record that the spec was reread.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'spec_reread'"
+    },
+    {
+      "path": "examples/fixtures/invalid/continuity-usage-count-without-aggregate.yaml",
+      "schema": "schemas/continuity-state.schema.json",
+      "reason": "Continuity usage counts and aggregate usage must be recorded together.",
+      "expected_keyword": "dependentRequired",
+      "expected_path": [],
+      "expected_message_contains": "'usage_aggregate'"
+    },
+    {
+      "path": "examples/fixtures/invalid/doctor-result-check-missing-trust.json",
+      "schema": "schemas/doctor-result.schema.json",
+      "reason": "Doctor checks must declare trust and sandbox requirements.",
+      "expected_keyword": "required",
+      "expected_path": ["checks", 0],
+      "expected_message_contains": "'trust_requirements'"
+    },
+    {
+      "path": "examples/fixtures/invalid/approval-policy-missing-state-machine.yaml",
+      "schema": "schemas/approval-policy.schema.json",
+      "reason": "Approval policies must declare a decision state machine.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'state_machine'"
+    },
+    {
+      "path": "examples/fixtures/invalid/environment-container-missing-image.yaml",
+      "schema": "schemas/environment.schema.json",
+      "reason": "Container and VM environments must name an image.",
+      "expected_keyword": "required",
+      "expected_path": ["isolation"],
+      "expected_message_contains": "'image'"
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-failed-without-code.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Failed run results must include a failure_code.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'failure_code'"
+    }
+  ],
+  "failure_taxonomy_required_codes": [
+    "tool-error",
+    "timeout",
+    "loop-detected",
+    "verification-failure",
+    "context-loss",
+    "routing-miss",
+    "premature-completion",
+    "no-progress-edit-churn",
+    "harness-error",
+    "verifier-error",
+    "environment-error",
+    "budget-exceeded",
+    "sandbox-violation",
+    "approval-denied"
+  ],
+  "custom_invalid": [
+    {
+      "path": "examples/fixtures/invalid/failure-taxonomy-missing-starter.yaml",
+      "check": "failure_taxonomy_required_codes",
+      "reason": "Starter failure taxonomy data must include every required starter code.",
+      "expected_missing_code": "approval-denied"
+    }
+  ]
+}

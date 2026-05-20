@@ -1,0 +1,32 @@
+schema_version: "0.1.0"
+verification_id: stage2-schema-substrate
+spec_ref: plans/harness-engineering-platform/plan.md#stage-2-harness-schema-substrate
+spec_reread:
+  ref: plans/harness-engineering-platform/plan.md#stage-2-harness-schema-substrate
+  timestamp: "2026-05-20T00:00:00Z"
+  digest: sha256:d4bafe7d022d54172884fafc7e9c5696e2a3aa17b685228a900f407e245e6e53
+  status: matched
+acceptance_checks:
+  - id: schema-versioning
+    expected: Every machine-readable artifact declares schema_version.
+    actual: Stage 2 examples and schemas require schema_version.
+    status: passed
+checks_run:
+  - command:
+      command: python3 -m pip install --target /tmp/harness-schema-validation -r examples/fixtures/requirements.txt && PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py
+      timeout_seconds: 120
+    status: passed
+    evidence:
+      - path: examples/fixtures/manifest.json
+        media_type: application/json
+        description: Fixture validation manifest.
+artifacts:
+  - path: schemas/
+    media_type: inode/directory
+    description: Stage 2 schema directory.
+unresolved_risks:
+  - CLI verify command is not implemented until Stage 3.
+evidence_links:
+  - path: examples/fixtures/manifest.json
+    media_type: application/json
+    description: Fixture validation manifest.

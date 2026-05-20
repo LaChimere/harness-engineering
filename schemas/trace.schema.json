@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/trace.schema.json",
+  "title": "Trace",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "session_id",
+    "run_id",
+    "harness_version",
+    "inputs",
+    "environment_snapshot",
+    "started_at",
+    "completed_at",
+    "duration_ms",
+    "exit_code",
+    "determinism_level",
+    "usage",
+    "actions",
+    "logs",
+    "artifact_links"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "session_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["task"],
+      "properties": {
+        "task": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "runner": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "environment_snapshot": {
+      "type": "object",
+      "required": ["environment", "sandbox", "approval_policy", "model_profile", "runner"],
+      "properties": {
+        "environment": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "sandbox": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "approval_policy": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "model_profile": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "runner": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "dependencies_hash": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exit_code": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "determinism_level": {
+      "type": "string",
+      "enum": ["deterministic", "recorded", "live-model", "external-import"]
+    },
+    "usage": {
+      "$ref": "common.schema.json#/$defs/usageAccounting"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "timestamp", "summary"],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["model", "tool", "approval", "verifier", "system"]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "tool_call": {
+            "type": "object",
+            "required": ["name", "arguments"],
+            "properties": {
+              "name": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "arguments": {
+                "type": "object"
+              },
+              "exit_code": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "model_call": {
+            "type": "object",
+            "required": ["model_id", "request_id", "usage"],
+            "properties": {
+              "model_id": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "request_id": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "usage": {
+                "$ref": "common.schema.json#/$defs/usageAccounting"
+              },
+              "latency_ms": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "approval_decision": {
+            "type": "object",
+            "required": ["decision", "risk_class", "from_state", "to_state", "transport"],
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": ["approve", "modify", "reject", "escalate", "terminate"]
+              },
+              "risk_class": {
+                "$ref": "common.schema.json#/$defs/riskClass"
+              },
+              "from_state": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "to_state": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "transport": {
+                "type": "string",
+                "enum": ["cli-interactive", "file-drop", "host-ui", "api"]
+              },
+              "modification_diff": {
+                "type": "string"
+              },
+              "log_ref": {
+                "$ref": "common.schema.json#/$defs/artifactRef"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "decision": {
+                      "const": "modify"
+                    }
+                  },
+                  "required": ["decision"]
+                },
+                "then": {
+                  "required": ["modification_diff", "log_ref"]
+                }
+              }
+            ],
+            "additionalProperties": false
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["failure_code", "message"],
+              "properties": {
+                "failure_code": {
+                  "$ref": "common.schema.json#/$defs/failureCode"
+                },
+                "message": {
+                  "$ref": "common.schema.json#/$defs/nonEmptyString"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "artifacts": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "logs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/artifactRef"
+      }
+    },
+    "artifact_links": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "additionalProperties": false
+}

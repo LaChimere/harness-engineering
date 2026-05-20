@@ -1,0 +1,55 @@
+schema_version: "0.1.0"
+policy_id: default-approval
+risk_classes:
+  - low
+  - medium
+  - high
+  - critical
+approval_modes:
+  - interactive
+  - file-drop
+transports:
+  - cli-interactive
+  - file-drop
+decisions:
+  - approve
+  - modify
+  - reject
+  - escalate
+  - terminate
+state_machine:
+  initial_state: pending
+  terminal_states:
+    - approved
+    - rejected
+    - terminated
+  transitions:
+    - from: pending
+      decision: approve
+      to: approved
+    - from: pending
+      decision: modify
+      to: modified
+      requires_log: true
+    - from: modified
+      decision: approve
+      to: approved
+    - from: pending
+      decision: reject
+      to: rejected
+    - from: pending
+      decision: escalate
+      to: escalated
+    - from: escalated
+      decision: approve
+      to: approved
+    - from: pending
+      decision: terminate
+      to: terminated
+escalation:
+  target: repository-owner
+  timeout_seconds: 900
+modify_logging:
+  required: true
+  log_path: .harness/approvals/modify-log.jsonl
+terminate_behavior: save-state-and-exit

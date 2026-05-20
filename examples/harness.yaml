@@ -1,0 +1,69 @@
+schema_version: "0.1.0"
+harness:
+  name: harness-engineering
+  description: Harness-as-code platform for AI coding agents.
+  failure_taxonomy: examples/failure-taxonomy.yaml
+engines:
+  cli: ">=0.1 <0.2"
+  schemas:
+    harness: ">=0.1 <0.2"
+    approval-policy: ">=0.1 <0.2"
+    sandbox-policy: ">=0.1 <0.2"
+    environment: ">=0.1 <0.2"
+    model-profile: ">=0.1 <0.2"
+    failure-taxonomy: ">=0.1 <0.2"
+    continuity-state: ">=0.1 <0.2"
+    self-verification: ">=0.1 <0.2"
+    doctor-result: ">=0.1 <0.2"
+    eval-task: ">=0.1 <0.2"
+    agent-runner: ">=0.1 <0.2"
+    trace: ">=0.1 <0.2"
+    run-result: ">=0.1 <0.2"
+    gc-evidence: ">=0.1 <0.2"
+context:
+  maps:
+    - AGENTS.md
+    - README.md
+environment: examples/environments/local.yaml
+approval_policy: examples/policies/approval-policy.yaml
+sandbox: examples/policies/sandbox-policy.yaml
+model_profiles:
+  default: examples/model-profiles/stub.yaml
+agent_runners:
+  default: examples/agent-runners/stub.yaml
+traces:
+  output_dir: .harness/traces
+  examples:
+    - examples/traces/native-cli-trace.json
+evals:
+  suites:
+    - id: harness-self-test
+      version: "1.0.0"
+      tasks: examples/evals/harness-self-test/v1.0.0/
+  run_results: .harness/run-results.jsonl
+doctor:
+  checks:
+    - builtin:schema-validity
+    - builtin:reference-exists
+    - id: local-doc-link-check
+      path: .harness/checks/doc-links.yaml
+      trust_requirements:
+        trust_level: sandboxed
+        sandbox_required: process
+        network_access: false
+        secret_access: false
+        host_file_access: false
+        allowed_inputs:
+          - README.md
+          - AGENTS.md
+        allowed_outputs:
+          - .harness/doctor/doc-links.json
+continuity:
+  state_dir: .harness/continuity
+  startup_smoke_test:
+    command: npx @lachimere/harness-engineering verify --scope continuity
+    timeout_seconds: 300
+  handoff_dir: .harness/handoffs
+  session_id_env: HARNESS_SESSION_ID
+gc:
+  evidence_dir: .harness/gc

@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "doctor-stage2-example",
+  "harness_version": "0.1.0",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "schema-validity",
+      "version": "0.1.0",
+      "category": "schema",
+      "inputs": ["examples/harness.yaml"],
+      "determinism": "deterministic",
+      "severity": "error",
+      "outcome": "passed",
+      "evidence": [
+        {
+          "path": "examples/harness.yaml",
+          "media_type": "application/yaml",
+          "description": "Validated harness example."
+        }
+      ],
+      "remediation": "Fix schema validation errors and re-run doctor.",
+      "fixtures": ["examples/fixtures/invalid/harness-with-plugin-key.yaml"],
+      "false_positive_policy": "Schema failures are considered true positives unless the schema version is outside engines.schemas.",
+      "exit_semantics": {
+        "pass": 0,
+        "warn": 1,
+        "fail": 2
+      },
+      "trust_requirements": {
+        "trust_level": "sandboxed",
+        "sandbox_required": "process",
+        "network_access": false,
+        "secret_access": false,
+        "host_file_access": false,
+        "allowed_inputs": ["examples/harness.yaml"],
+        "allowed_outputs": [".harness/doctor/schema-validity.json"]
+      }
+    }
+  ]
+}

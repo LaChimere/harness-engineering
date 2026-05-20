@@ -1,0 +1,40 @@
+schema_version: "0.1.0"
+session_id: harness-stage2-example
+feature_list:
+  - id: schema-substrate
+    title: Define the Stage 2 schema substrate.
+    status: in-progress
+    refs:
+      - path: plans/harness-engineering-platform/todo.md
+        media_type: text/markdown
+        description: Stage 2 execution checklist.
+progress_log:
+  - timestamp: "2026-05-20T00:00:00Z"
+    event: Stage 2 schema substrate initialized.
+    refs:
+      - path: examples/harness.yaml
+        media_type: application/yaml
+        description: Composed harness example.
+startup_verification:
+  status: not-run
+  command:
+    command: npx @lachimere/harness-engineering verify --scope continuity
+    timeout_seconds: 300
+  evidence: []
+  self_verification_ref: examples/verification/self-verification.yaml
+git_checkpoint_sha: 28c51be
+handoff_artifacts:
+  - path: plans/harness-engineering-platform/todo.md
+    media_type: text/markdown
+    description: Execution status for future sessions.
+usage_aggregate:
+  billed_model_id: stub-v1
+  input_tokens: 0
+  output_tokens: 0
+  total_tokens: 0
+  requests: 0
+  incurred_cost_usd: 0
+  source: stub
+runs_counted: 0
+unresolved_risks:
+  - CLI support for continuity validation begins in Stage 3.

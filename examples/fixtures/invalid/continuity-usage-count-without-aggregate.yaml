@@ -1,0 +1,14 @@
+schema_version: "0.1.0"
+session_id: continuity-bad-usage
+feature_list: []
+progress_log: []
+startup_verification:
+  status: not-run
+  command:
+    command: npx @lachimere/harness-engineering verify --scope continuity
+    timeout_seconds: 300
+  evidence: []
+git_checkpoint_sha: 28c51be
+handoff_artifacts: []
+runs_counted: 1
+unresolved_risks: []

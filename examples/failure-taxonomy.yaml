@@ -1,0 +1,45 @@
+schema_version: "0.1.0"
+taxonomy_id: default-failures
+codes:
+  - code: tool-error
+    category: tooling
+    description: A tool invocation failed or returned an invalid result.
+  - code: timeout
+    category: execution
+    description: A run, verifier, tool, or approval wait exceeded its configured time limit.
+  - code: loop-detected
+    category: progress
+    description: The runner repeated actions without measurable progress.
+  - code: verification-failure
+    category: verification
+    description: Explicit acceptance or verifier checks failed.
+  - code: context-loss
+    category: context
+    description: Required task, plan, or repository context was missing or stale.
+  - code: routing-miss
+    category: routing
+    description: Work was routed to the wrong adapter, agent, tool, or stage.
+  - code: premature-completion
+    category: progress
+    description: The run claimed completion before required evidence existed.
+  - code: no-progress-edit-churn
+    category: progress
+    description: Edits repeated or churned without improving the checked outcome.
+  - code: harness-error
+    category: harness
+    description: The harness implementation, schema loader, or artifact writer failed.
+  - code: verifier-error
+    category: verification
+    description: The verifier failed independently of the agent-produced answer.
+  - code: environment-error
+    category: environment
+    description: The configured environment could not be prepared or executed.
+  - code: budget-exceeded
+    category: budget
+    description: A run exceeded an explicit cost, token, or request budget.
+  - code: sandbox-violation
+    category: sandbox
+    description: A run attempted an action outside its declared sandbox policy.
+  - code: approval-denied
+    category: approval
+    description: A required approval was rejected, denied, or terminated.

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/continuity-state.schema.json",
+  "title": "Continuity state",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "session_id",
+    "feature_list",
+    "progress_log",
+    "startup_verification",
+    "git_checkpoint_sha",
+    "handoff_artifacts",
+    "unresolved_risks"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "session_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "feature_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status"],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "title": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in-progress", "done", "blocked"]
+          },
+          "refs": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "progress_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "event", "refs"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "refs": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "startup_verification": {
+      "type": "object",
+      "required": ["status", "command", "evidence"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["not-run", "passed", "failed"]
+        },
+        "command": {
+          "$ref": "common.schema.json#/$defs/command"
+        },
+        "evidence": {
+          "$ref": "common.schema.json#/$defs/evidenceLinks"
+        },
+        "self_verification_ref": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "git_checkpoint_sha": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{7,40}$"
+    },
+    "handoff_artifacts": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    },
+    "usage_aggregate": {
+      "$ref": "common.schema.json#/$defs/usageAccounting"
+    },
+    "runs_counted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unresolved_risks": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/nonEmptyString"
+      }
+    }
+  },
+  "dependentRequired": {
+    "usage_aggregate": ["runs_counted"],
+    "runs_counted": ["usage_aggregate"]
+  },
+  "additionalProperties": false
+}

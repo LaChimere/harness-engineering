@@ -1,0 +1,38 @@
+schema_version: "0.1.0"
+x-stability: provisional
+action_id: fix-schema-example
+target_files:
+  - examples/fixtures/invalid/harness-with-plugin-key.yaml
+risk_class: low
+preview_diff: |
+  diff --git a/examples/fixtures/invalid/harness-with-plugin-key.yaml b/examples/fixtures/invalid/harness-with-plugin-key.yaml
+  --- a/examples/fixtures/invalid/harness-with-plugin-key.yaml
+  +++ b/examples/fixtures/invalid/harness-with-plugin-key.yaml
+  @@ -55,6 +55,3 @@
+   continuity:
+     state_dir: .harness/continuity
+   gc:
+     evidence_dir: .harness/gc
+  -plugins:
+  -  copilot:
+  -    enabled: true
+equivalent_cli_command:
+  command: npx @lachimere/harness-engineering migrate --dry-run --repair-action examples/repair-actions/proposed-schema-fix.yaml
+  timeout_seconds: 300
+approval_state: proposed
+sandbox_requirement: worktree
+trust_requirements:
+  trust_level: sandboxed
+  sandbox_required: worktree
+  network_access: false
+  secret_access: false
+  host_file_access: false
+  allowed_inputs:
+    - examples/fixtures/invalid/harness-with-plugin-key.yaml
+  allowed_outputs:
+    - .harness/repairs/fix-schema-example.json
+rollback_notes: Restore the previewed diff if the repair is rejected or fails validation.
+evidence_links:
+  - path: examples/fixtures/invalid/harness-with-plugin-key.yaml
+    media_type: application/yaml
+    description: Target invalid harness fixture.

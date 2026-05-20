@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/self-verification.schema.json",
+  "title": "Self-verification evidence",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "verification_id",
+    "spec_ref",
+    "spec_reread",
+    "acceptance_checks",
+    "checks_run",
+    "artifacts",
+    "unresolved_risks",
+    "evidence_links"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "verification_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "spec_ref": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "spec_reread": {
+      "type": "object",
+      "required": ["ref", "timestamp", "digest", "status"],
+      "properties": {
+        "ref": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-fA-F0-9]{64}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["matched", "changed", "missing"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "acceptance_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "expected", "actual", "status"],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "expected": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "actual": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "blocked"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "checks_run": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "status"],
+        "properties": {
+          "command": {
+            "$ref": "common.schema.json#/$defs/command"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "skipped"]
+          },
+          "evidence": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "artifacts": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    },
+    "unresolved_risks": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "evidence_links": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "additionalProperties": false
+}

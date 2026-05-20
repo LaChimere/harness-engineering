@@ -65,7 +65,7 @@ Implementation has not started. The next implementation target is Stage 1: produ
 
 ### Stage 1: Product identity, entrypoints, and distribution decisions
 
-- README includes a host/path quickstart matrix: available CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
+- README includes a host/path quickstart matrix: current documented CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
 - Docs state which paths exist now versus which are planned.
 - Package, binary, Bun package-manager choice, TypeScript 6 requirement, Biome/Lefthook requirement with user-provided configuration, Node-compatible runtime target, schema distribution, compatibility policy, and `harness migrate` posture are explicit enough for Stage 2 and Stage 3 to implement.
 
@@ -267,7 +267,7 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
   - extract selected behavior into separate extension points,
   - deprecate only after replacement paths exist.
 - Host/path quickstart matrix wording:
-  - CLI-first available now,
+  - CLI-first documented as the current default path, with implementation planned for Stage 3,
   - marketplace plugins planned pending Stage 8,
   - skills compatibility pending Stage 13,
   - CI optional after Stage 11.

@@ -393,7 +393,7 @@ Skills should be classified after the substrate and execution loop are defined. 
   - Define marketplace plugin-support language: "host marketplace plugin-first after a supported plugin exists; CLI-first until then."
   - Add a Gate 1 disposition for `agent-coding`: whether it stays a separate skills distribution, becomes a compatibility package, is gradually folded in, or is deprecated after replacement paths exist.
 - **Acceptance criteria:**
-  - README includes a host/path quickstart matrix: available CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
+  - README includes a host/path quickstart matrix: current documented CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
   - The docs state which paths exist now versus which are planned.
   - The package/schema distribution choice is explicit enough for Stage 2 and Stage 3 to implement.
 
@@ -703,7 +703,7 @@ Status: approved by the user on 2026-05-20. Treat these decisions as the approve
 2. Canonical source of truth: `harness.yaml` plus versioned schemas.
 3. Best user entry strategy: host marketplace/extension plugin-first guided UX after a supported host is verified; CLI-first is the current universal path until then; skills are audited portable fallback adapters; CI is optional enforcement.
 4. CLI distribution and toolchain: first implementation via TypeScript 6, Bun for repository package management, Biome/Lefthook with user-provided configuration, and a Node-compatible npm CLI with package `@lachimere/harness-engineering`, binary `harness`, explicit schema publication mechanism, compatibility policy, and `harness migrate` strategy.
-5. First plugin target: defer selection to Stage 8; no plugin path is promised at Gate 1 until marketplace/extension distribution and host APIs are verified.
+5. First plugin target: defer selection to Stage 8; no plugin install path or specific host target is promised as available at Gate 1 until marketplace/extension distribution and host APIs are verified.
 6. `agent-coding` disposition: keep it as separate skills distribution, create a compatibility package, fold selected behavior into this repo, or deprecate only after replacement paths exist.
 7. Canonical locations: `schemas/`, `tools/harness/`, `examples/`, `plugins/`, native adapter paths such as `skills/`, and compatibility docs under `adapters/`; optional enforcement examples live under adapter docs, not as a required `.github/workflows/` path.
 8. Shared primitives: harness spec, schemas, context map, environment, approval/sandbox policy, agent runner, trace, eval task, run-result log, doctor result, plugin capability, repair action, continuity, self-verification evidence, model profile, failure taxonomy, and GC evidence.

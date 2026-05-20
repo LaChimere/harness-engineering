@@ -4,7 +4,8 @@
 
 - [x] Confirm Gate 1 decisions in `design.md`.
 - [x] Confirm Stage 1 is the first implementation target.
-- [ ] Decide whether to implement as one agent or split with `plan-parallel-work`.
+- [x] Decide whether to implement as one agent or split with `plan-parallel-work`.
+  - Decision: Stage 1 is a documentation-only slice and was implemented by one agent; no parallel split needed.
 - [x] Keep public docs honest about "available now" versus "planned".
 
 ### Planning gate acceptance criteria
@@ -15,26 +16,26 @@
 
 ## Stage 1: Product identity, entrypoints, and distribution decisions
 
-- [ ] Update README to present `LaChimere/harness-engineering` as the canonical harness-as-code platform.
-- [ ] Add quickstart matrix:
-  - [ ] CLI-first path available now.
-  - [ ] Marketplace plugin paths planned pending Stage 8.
-  - [ ] `agent-coding` skill compatibility pending Stage 13.
-  - [ ] Optional CI after Stage 11.
-- [ ] Add or update AGENTS/contribution guidance for this clean-slate repo.
-- [ ] Pin package/bin naming: `@lachimere/harness-engineering` and `harness`, unless Stage 1 changes the decision.
-- [ ] Pin toolchain decision: Bun for repository package management, TypeScript 6 for implementation, Biome/Lefthook using user-provided configuration, explicit `tsc --noEmit` type checking, and Node-compatible public CLI output.
-- [ ] Document schema publication and compatibility policy.
-- [ ] Document `harness migrate` posture.
-- [ ] Document `agent-coding` disposition options.
-- [ ] Validate docs do not promise unavailable plugin, CI, or skills support.
-- [ ] Run `git diff --check`.
+- [x] Update README to present `LaChimere/harness-engineering` as the canonical harness-as-code platform.
+- [x] Add quickstart matrix:
+  - [x] CLI-first path documented as the current default; implementation planned for Stage 3.
+  - [x] Marketplace plugin paths planned pending Stage 8.
+  - [x] `agent-coding` skill compatibility pending Stage 13.
+  - [x] Optional CI after Stage 11.
+- [x] Add or update AGENTS/contribution guidance for this clean-slate repo.
+- [x] Pin package/bin naming: `@lachimere/harness-engineering` and `harness`, unless Stage 1 changes the decision.
+- [x] Pin toolchain decision: Bun for repository package management, TypeScript 6 for implementation, Biome/Lefthook using user-provided configuration, explicit `tsc --noEmit` type checking, and Node-compatible public CLI output.
+- [x] Document schema publication and compatibility policy.
+- [x] Document `harness migrate` posture.
+- [x] Document `agent-coding` disposition options.
+- [x] Validate docs do not promise unavailable plugin, CI, or skills support.
+- [x] Run `git diff --check`.
 
 ### Stage 1 acceptance criteria
 
-- [ ] README includes a host/path quickstart matrix covering available CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
-- [ ] Docs state which paths exist now versus which are planned.
-- [ ] Package, binary, Bun package-manager choice, TypeScript 6 requirement, Biome/Lefthook requirement with user-provided configuration, Node-compatible runtime target, schema distribution, compatibility policy, and `harness migrate` posture are explicit enough for Stage 2 and Stage 3 to implement.
+- [x] README includes a host/path quickstart matrix covering the current documented CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
+- [x] Docs state which paths exist now versus which are planned.
+- [x] Package, binary, Bun package-manager choice, TypeScript 6 requirement, Biome/Lefthook requirement with user-provided configuration, Node-compatible runtime target, schema distribution, compatibility policy, and `harness migrate` posture are explicit enough for Stage 2 and Stage 3 to implement.
 
 ## Stage 2: Harness schema substrate
 

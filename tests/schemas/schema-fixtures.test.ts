@@ -1,14 +1,20 @@
 import { expect, test } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 
-import { loadDocument } from '../src/lib/files.ts';
-import { getArray, getString, isObject } from '../src/lib/json.ts';
-import { loadSchemaRegistry } from '../src/lib/schema-registry.ts';
+import { loadDocument } from '../../src/lib/files.ts';
+import { getArray, getString, isObject } from '../../src/lib/json.ts';
+import { loadSchemaRegistry } from '../../src/lib/schema-registry.ts';
 
 interface Manifest {
+  readonly valid: readonly ValidFixture[];
   readonly invalid: readonly InvalidFixture[];
   readonly custom_invalid?: readonly CustomInvalidFixture[];
   readonly failure_taxonomy_required_codes: readonly string[];
+}
+
+interface ValidFixture {
+  readonly path: string;
+  readonly schema: string;
 }
 
 interface InvalidFixture {
@@ -52,6 +58,17 @@ test('schema-invalid fixtures fail with their manifest-declared reason', async (
     if (fixture.expected_message_contains !== undefined) {
       expect(messageMatches(issue.message, fixture.expected_message_contains)).toBe(true);
     }
+  }
+});
+
+test('schema-valid fixtures pass their declared schemas', async () => {
+  const manifest = await loadManifest();
+  const schemas = await loadSchemaRegistry(process.cwd());
+
+  for (const fixture of manifest.valid) {
+    const document = await loadDocument(fixture.path);
+    const schemaName = schemaNameFromPath(fixture.schema);
+    expect(schemas.validate(schemaName, document)).toEqual([]);
   }
 });
 

@@ -21,7 +21,7 @@ checks_run:
       timeout_seconds: 120
     status: passed
     evidence:
-      - path: tests/cli.test.ts
+      - path: tests/cli/cli.test.ts
         media_type: text/x-typescript
         description: Command-level CLI tests.
 artifacts:

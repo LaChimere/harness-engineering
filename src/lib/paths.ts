@@ -25,3 +25,10 @@ export function resolveInsideRoot(root: string, path: string, description: strin
 
   throw new CliError(`${description} escapes root: ${path}`, ExitCode.usageError);
 }
+
+export function relativePathFromRoot(root: string, path: string, description: string): string {
+  const resolvedRoot = resolve(root);
+  const resolvedPath = resolveInsideRoot(resolvedRoot, path, description);
+  const relativePath = relative(resolvedRoot, resolvedPath);
+  return relativePath === '' ? '.' : relativePath.split(sep).join('/');
+}

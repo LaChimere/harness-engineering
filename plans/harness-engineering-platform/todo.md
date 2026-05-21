@@ -117,42 +117,43 @@
 
 ## Stage 4: Harness doctor MVP
 
-- [ ] Define doctor check contract:
-  - [ ] `id`
-  - [ ] `version`
-  - [ ] `category`
-  - [ ] `inputs`
-  - [ ] `determinism`
-  - [ ] `severity`
-  - [ ] `evidence`
-  - [ ] `remediation`
-  - [ ] `fixtures`
-  - [ ] `false_positive_policy`
-  - [ ] `exit_semantics`
-- [ ] Implement `harness doctor`.
-- [ ] Add downstream check registration through `harness.yaml`.
-- [ ] Add built-in `schema-validity` check.
-- [ ] Add built-in `reference-exists` check.
-- [ ] Add passing and failing fixtures.
-- [ ] Emit JSON conforming to `doctor-result.schema.json`.
-- [ ] Emit Markdown report.
-- [ ] Document doctor/verify/eval command boundaries.
-- [ ] Confirm no subjective "AI slop" scoring.
-- [ ] Run Stage 4 entropy pass:
-  - [ ] Confirm docs do not describe planned `doctor`, `eval`, `run`, `gc`, plugin, or CI behavior as currently available.
-  - [ ] Confirm doctor fixtures and artifacts are referenced by tests, manifests, docs, or `harness.yaml`.
-  - [ ] Confirm doctor implementation reuses shared validation/reference helpers instead of creating a duplicate source of truth.
-  - [ ] Confirm `doctor` does not drift into `validate`, `verify`, `eval`, `run`, or GC responsibilities.
-- [ ] Run doctor tests.
-- [ ] Run `git diff --check`.
+- [x] Define doctor check contract:
+  - [x] `id`
+  - [x] `version`
+  - [x] `category`
+  - [x] `inputs`
+  - [x] `determinism`
+  - [x] `severity`
+  - [x] `evidence`
+  - [x] `remediation`
+  - [x] `fixtures`
+  - [x] `false_positive_policy`
+  - [x] `exit_semantics`
+- [x] Implement `harness doctor`.
+- [x] Add downstream check registration through `harness.yaml`.
+- [x] Add built-in `schema-validity` check.
+- [x] Add built-in `engine-compatibility` check.
+- [x] Add built-in `reference-exists` check.
+- [x] Add passing and failing fixtures.
+- [x] Emit JSON conforming to `doctor-result.schema.json`.
+- [x] Emit Markdown report.
+- [x] Document doctor/verify/eval command boundaries.
+- [x] Confirm no subjective "AI slop" scoring.
+- [x] Run Stage 4 entropy pass:
+  - [x] Confirm docs distinguish current doctor MVP from planned expanded doctor behavior and do not describe planned `eval`, `run`, `gc`, plugin, or CI behavior as currently available.
+  - [x] Confirm doctor fixtures and artifacts are referenced by tests, manifests, docs, or `harness.yaml`.
+  - [x] Confirm doctor implementation reuses shared validation/reference helpers instead of creating a duplicate source of truth.
+  - [x] Confirm `doctor` does not drift into `validate`, `verify`, `eval`, `run`, or GC responsibilities.
+- [x] Run doctor tests.
+- [x] Run `git diff --check`.
 
 ### Stage 4 acceptance criteria
 
-- [ ] Doctor output conforms to `doctor-result.schema.json`.
-- [ ] Passing and failing fixtures validate with zero schema errors.
-- [ ] Exit code semantics are documented for plugin and CI consumption.
-- [ ] Doctor checks remain deterministic structural checks and do not claim task acceptance, self-verification status, or subjective "AI slop" scores.
-- [ ] Entropy pass has no unresolved stale docs, orphan doctor fixtures/artifacts, duplicate source-of-truth logic, or command-boundary drift.
+- [x] Doctor output conforms to `doctor-result.schema.json`.
+- [x] Passing and failing fixtures validate with zero schema errors.
+- [x] Exit code semantics are documented for plugin and CI consumption.
+- [x] Doctor checks remain deterministic structural checks and do not claim task acceptance, self-verification status, or subjective "AI slop" scores.
+- [x] Entropy pass has no unresolved stale docs, orphan doctor fixtures/artifacts, duplicate source-of-truth logic, or command-boundary drift.
 
 ## Stage 5: Eval task contract and deterministic verifier runner
 

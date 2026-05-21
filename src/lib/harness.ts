@@ -13,7 +13,7 @@ import {
   type JsonObject,
   objectEntries,
 } from './json.ts';
-import { resolveInsideRoot } from './paths.ts';
+import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
 import {
   formatValidationIssue,
   type SchemaRegistry,
@@ -22,6 +22,7 @@ import {
 
 export interface HarnessValidationResult {
   readonly harnessPath: string;
+  readonly document?: JsonObject;
   readonly schemaIssues: readonly string[];
   readonly compatibilityIssues: readonly string[];
   readonly referenceIssues: readonly string[];
@@ -71,6 +72,7 @@ export async function validateHarnessConfiguration(input: {
 
   return {
     harnessPath: input.harnessPath,
+    document,
     schemaIssues,
     compatibilityIssues,
     referenceIssues: referenceResult.issues,
@@ -147,7 +149,8 @@ async function checkHarnessReferences(
       throw error;
     }
     const kind = await pathKind(absolutePath);
-    checked.push(localPath);
+    const checkedPath = relativePathFromRoot(root, absolutePath, reference.description);
+    checked.push(checkedPath);
     if (kind === undefined) {
       issues.push(`${reference.description} not found: ${localPath}`);
       continue;
@@ -161,7 +164,9 @@ async function checkHarnessReferences(
         continue;
       }
       for (const target of validationTargets) {
-        const relativeTarget = target.startsWith(root) ? target.slice(root.length + 1) : target;
+        const relativeTarget = target.startsWith(root)
+          ? relativePathFromRoot(root, target, reference.description)
+          : target;
         const document = await loadDocument(target);
         const validationIssues = schemas.validate(reference.schemaName, document);
         issues.push(...formatReferenceIssues(relativeTarget, validationIssues));

@@ -3,8 +3,10 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { runCli } from '../src/cli.ts';
-import { ExitCode } from '../src/lib/exit-codes.ts';
+import { runCli } from '../../src/cli.ts';
+import { ExitCode } from '../../src/lib/exit-codes.ts';
+import { getArray, getObject, getString, isObject, type JsonObject } from '../../src/lib/json.ts';
+import { loadSchemaRegistry } from '../../src/lib/schema-registry.ts';
 
 interface RunResult {
   readonly code: number;
@@ -160,7 +162,7 @@ test('validate rejects composed references that escape root', async () => {
 });
 
 test('verify consumes explicit verification evidence without requiring harness.yaml', async () => {
-  const result = await run(['verify', '--spec', 'tests/fixtures/verification-failed.yaml']);
+  const result = await run(['verify', '--spec', 'tests/cli/fixtures/verification-failed.yaml']);
   expect(result.code).toBe(ExitCode.validationError);
   expect(result.stdout).toContain('harness verify failed');
   expect(result.stdout).toContain('scope: consumed explicit self-verification evidence only');
@@ -168,14 +170,14 @@ test('verify consumes explicit verification evidence without requiring harness.y
 });
 
 test('verify treats blocked acceptance checks as validation failures', async () => {
-  const result = await run(['verify', '--spec', 'tests/fixtures/verification-blocked.yaml']);
+  const result = await run(['verify', '--spec', 'tests/cli/fixtures/verification-blocked.yaml']);
   expect(result.code).toBe(ExitCode.validationError);
   expect(result.stdout).toContain('0 passed, 0 failed, 1 blocked');
 });
 
 test('verify does not execute checks or require harness structure', async () => {
   const root = await tempRoot();
-  const spec = await readFile('tests/fixtures/verification-with-unexecuted-check.yaml', 'utf8');
+  const spec = await readFile('tests/cli/fixtures/verification-with-unexecuted-check.yaml', 'utf8');
   await writeFile(join(root, 'verification.yaml'), spec);
 
   const result = await run(['verify', '--spec', 'verification.yaml'], root);
@@ -229,16 +231,176 @@ test('migrate refuses to write output through symlinks', async () => {
   expect(result.stderr).toContain('Refusing to write through symlink');
 });
 
+test('doctor emits schema-valid JSON for a healthy harness', async () => {
+  const result = await run(['doctor', '--format', 'json', '--file', 'examples/harness.yaml']);
+  expect(result.code).toBe(ExitCode.ok);
+  const doctorResult = JSON.parse(result.stdout);
+  expect(doctorResult.status).toBe('passed');
+  expect(checkOutcome(doctorResult, 'schema-validity')).toBe('passed');
+  expect(checkOutcome(doctorResult, 'engine-compatibility')).toBe('passed');
+  expect(checkOutcome(doctorResult, 'reference-exists')).toBe('passed');
+  expect(checkOutcome(doctorResult, 'local-doc-link-check')).toBe('skipped');
+  const localCheck = doctorCheck(doctorResult, 'local-doc-link-check');
+  expect(
+    localCheck === undefined ? undefined : getObject(localCheck, 'trust_requirements'),
+  ).toEqual({
+    trust_level: 'sandboxed',
+    sandbox_required: 'process',
+    network_access: false,
+    secret_access: false,
+    host_file_access: false,
+    allowed_inputs: ['README.md', 'AGENTS.md'],
+    allowed_outputs: ['.harness/doctor/doc-links.json'],
+  });
+
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('doctor-result', doctorResult).length).toBe(0);
+});
+
+test('doctor emits markdown by default', async () => {
+  const result = await run(['doctor', '--file', 'examples/harness.yaml']);
+  expect(result.code).toBe(ExitCode.ok);
+  expect(result.stdout).toContain('# Harness doctor report');
+  expect(result.stdout).toContain(
+    '| schema-validity | passed | error | No remediation required. |',
+  );
+  expect(result.stdout).toContain('| local-doc-link-check | skipped | info |');
+});
+
+test('doctor canonicalizes harness paths for deterministic output', async () => {
+  const first = await run(['doctor', '--format', 'json', '--file', 'examples/harness.yaml']);
+  const second = await run(['doctor', '--format', 'json', '--file', './examples/./harness.yaml']);
+  expect(first.code).toBe(ExitCode.ok);
+  expect(second.code).toBe(ExitCode.ok);
+  expect(second.stdout).toBe(first.stdout);
+});
+
+test('doctor accepts explicit non-empty run ids', async () => {
+  const result = await run([
+    'doctor',
+    '--format',
+    'json',
+    '--file',
+    'examples/harness.yaml',
+    '--run-id',
+    'manual-run',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  expect(JSON.parse(result.stdout).run_id).toBe('manual-run');
+});
+
+test('doctor rejects empty run ids as usage errors', async () => {
+  const result = await run([
+    'doctor',
+    '--format',
+    'json',
+    '--file',
+    'examples/harness.yaml',
+    '--run-id=',
+  ]);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('doctor --run-id must not be empty');
+});
+
+test('doctor reports reference failures without leaving validate source of truth', async () => {
+  const result = await run([
+    'doctor',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/doctor/missing-reference.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  const doctorResult = JSON.parse(result.stdout);
+  expect(doctorResult.status).toBe('failed');
+  expect(checkOutcome(doctorResult, 'schema-validity')).toBe('passed');
+  expect(checkOutcome(doctorResult, 'reference-exists')).toBe('failed');
+
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('doctor-result', doctorResult).length).toBe(0);
+});
+
+test('doctor reports incompatible engines as doctor evidence', async () => {
+  const result = await run([
+    'doctor',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/doctor/incompatible-engine.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  const doctorResult = JSON.parse(result.stdout);
+  expect(doctorResult.status).toBe('failed');
+  expect(checkOutcome(doctorResult, 'engine-compatibility')).toBe('failed');
+
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('doctor-result', doctorResult).length).toBe(0);
+});
+
+test('doctor rejects unsupported builtin registrations deterministically', async () => {
+  const result = await run([
+    'doctor',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/doctor/unsupported-builtin.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  const doctorResult = JSON.parse(result.stdout);
+  expect(checkOutcome(doctorResult, 'builtin-check-supported')).toBe('failed');
+  expect(result.stdout).toContain('builtin:unknown-check');
+});
+
+test('doctor writes output inside root and report can summarize it', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const doctor = await run(
+    ['doctor', '--format', 'json', '--output', '.harness/doctor/result.json'],
+    root,
+  );
+  expect(doctor.code).toBe(ExitCode.ok);
+  expect(doctor.stdout).toContain('harness doctor passed: wrote .harness/doctor/result.json');
+
+  const report = await run(['report', '--doctor-result', '.harness/doctor/result.json'], root);
+  expect(report.code).toBe(ExitCode.ok);
+  expect(report.stdout).toContain('- doctor result: .harness/doctor/result.json');
+  expect(report.stdout).toContain('  status: passed');
+});
+
 test('report cites the artifact paths it summarizes', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const expectedReportPrefix = await readFile('tests/fixtures/expected-report.txt', 'utf8');
+  const expectedReportPrefix = await readFile('tests/cli/fixtures/expected-report.txt', 'utf8');
 
   const result = await run(['report'], root);
   expect(result.code).toBe(ExitCode.ok);
   expect(result.stdout).toContain(expectedReportPrefix.trimEnd());
   expect(result.stdout).toContain('- cited paths:');
   expect(result.stdout).toContain('  - harness.yaml');
+});
+
+test('doctor rejects output paths that escape root', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const result = await run(['doctor', '--output', '../doctor.json'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Doctor output escapes root');
+});
+
+test('doctor refuses to write output through symlinks', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  const sensitive = join(parent, 'sensitive');
+  await mkdir(root);
+  await mkdir(sensitive);
+  await run(['init'], root);
+  await symlink(join(sensitive, 'doctor.json'), join(root, 'doctor-link.json'));
+
+  const result = await run(['doctor', '--output', 'doctor-link.json'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Refusing to write through symlink');
 });
 
 test('usage and missing input errors use stable exit codes', async () => {
@@ -249,6 +411,11 @@ test('usage and missing input errors use stable exit codes', async () => {
   const missing = await run(['validate'], await tempRoot());
   expect(missing.code).toBe(ExitCode.notFound);
   expect(missing.stderr).toContain('Harness file not found');
+
+  const help = await run(['help']);
+  expect(help.code).toBe(ExitCode.ok);
+  expect(help.stdout).toContain('doctor     Run deterministic structural harness checks.');
+  expect(help.stdout).toContain('doctor status');
 });
 
 async function tempRoot(): Promise<string> {
@@ -274,4 +441,24 @@ async function run(args: readonly string[], cwd = process.cwd()): Promise<RunRes
     stdout: stdout.join('\n'),
     stderr: stderr.join('\n'),
   };
+}
+
+function checkOutcome(document: unknown, checkId: string): string | undefined {
+  return getString(doctorCheck(document, checkId) ?? {}, 'outcome');
+}
+
+function doctorCheck(document: unknown, checkId: string): JsonObject | undefined {
+  if (!isObject(document)) {
+    return undefined;
+  }
+  const checks = getArray(document, 'checks');
+  if (checks === undefined) {
+    return undefined;
+  }
+  for (const check of checks) {
+    if (isObject(check) && getString(check, 'id') === checkId) {
+      return check;
+    }
+  }
+  return undefined;
 }

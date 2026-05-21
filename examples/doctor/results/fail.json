@@ -1,20 +1,20 @@
 {
   "schema_version": "0.1.0",
-  "run_id": "doctor-a4b9d59c951a",
+  "run_id": "doctor-0558a10602ac",
   "harness_version": "0.1.0",
-  "status": "passed",
+  "status": "failed",
   "checks": [
     {
       "id": "schema-validity",
       "version": "0.1.0",
       "category": "schema",
-      "inputs": ["examples/harness.yaml"],
+      "inputs": ["examples/fixtures/doctor/missing-reference.yaml"],
       "determinism": "deterministic",
       "severity": "error",
       "outcome": "passed",
       "evidence": [
         {
-          "path": "examples/harness.yaml",
+          "path": "examples/fixtures/doctor/missing-reference.yaml",
           "media_type": "application/yaml",
           "description": "Harness schema validation passed."
         }
@@ -41,13 +41,13 @@
       "id": "engine-compatibility",
       "version": "0.1.0",
       "category": "compatibility",
-      "inputs": ["examples/harness.yaml"],
+      "inputs": ["examples/fixtures/doctor/missing-reference.yaml"],
       "determinism": "deterministic",
       "severity": "error",
       "outcome": "passed",
       "evidence": [
         {
-          "path": "examples/harness.yaml",
+          "path": "examples/fixtures/doctor/missing-reference.yaml",
           "media_type": "application/yaml",
           "description": "CLI and schema engine ranges are compatible with the local package."
         }
@@ -78,11 +78,10 @@
         "AGENTS.md",
         "README.md",
         "examples/agent-runners/stub.yaml",
-        "examples/checks/doc-links.yaml",
-        "examples/environments/local.yaml",
+        "examples/environments/missing.yaml",
         "examples/evals/harness-self-test/v1.0.0",
         "examples/failure-taxonomy.yaml",
-        "examples/harness.yaml",
+        "examples/fixtures/doctor/missing-reference.yaml",
         "examples/model-profiles/stub.yaml",
         "examples/policies/approval-policy.yaml",
         "examples/policies/sandbox-policy.yaml",
@@ -90,15 +89,15 @@
       ],
       "determinism": "deterministic",
       "severity": "error",
-      "outcome": "passed",
+      "outcome": "failed",
       "evidence": [
         {
-          "path": "examples/harness.yaml",
+          "path": "examples/fixtures/doctor/missing-reference.yaml",
           "media_type": "application/yaml",
-          "description": "11 composed reference(s) resolved and validated."
+          "description": "Reference checks failed with 1 issue(s): environment not found: examples/environments/missing.yaml"
         }
       ],
-      "remediation": "No remediation required.",
+      "remediation": "Restore missing referenced artifacts or update harness.yaml references.",
       "fixtures": ["examples/fixtures/doctor/missing-reference.yaml"],
       "false_positive_policy": "Doctor findings are deterministic structural findings. Treat false positives as schema/check contract bugs and fix the fixture or check definition before suppressing.",
       "exit_semantics": {
@@ -120,13 +119,13 @@
       "id": "builtin-check-supported",
       "version": "0.1.0",
       "category": "doctor-registration",
-      "inputs": ["examples/harness.yaml"],
+      "inputs": ["examples/fixtures/doctor/missing-reference.yaml"],
       "determinism": "deterministic",
       "severity": "error",
       "outcome": "passed",
       "evidence": [
         {
-          "path": "examples/harness.yaml",
+          "path": "examples/fixtures/doctor/missing-reference.yaml",
           "media_type": "application/yaml",
           "description": "Every declared builtin doctor check is supported by this CLI."
         }
@@ -147,39 +146,6 @@
         "host_file_access": false,
         "allowed_inputs": [],
         "allowed_outputs": []
-      }
-    },
-    {
-      "id": "local-doc-link-check",
-      "version": "0.1.0",
-      "category": "local-check-registration",
-      "inputs": ["AGENTS.md", "README.md", "examples/checks/doc-links.yaml"],
-      "determinism": "deterministic",
-      "severity": "info",
-      "outcome": "skipped",
-      "evidence": [
-        {
-          "path": "examples/checks/doc-links.yaml",
-          "media_type": "application/yaml",
-          "description": "Local doctor check is declared with trust requirements but is not executed in Stage 4."
-        }
-      ],
-      "remediation": "Keep the declaration for future local-check execution stages; Stage 4 validates registration only.",
-      "fixtures": ["examples/checks/doc-links.yaml"],
-      "false_positive_policy": "Doctor findings are deterministic structural findings. Treat false positives as schema/check contract bugs and fix the fixture or check definition before suppressing.",
-      "exit_semantics": {
-        "pass": 0,
-        "warn": 1,
-        "fail": 1
-      },
-      "trust_requirements": {
-        "trust_level": "sandboxed",
-        "sandbox_required": "process",
-        "network_access": false,
-        "secret_access": false,
-        "host_file_access": false,
-        "allowed_inputs": ["README.md", "AGENTS.md"],
-        "allowed_outputs": [".harness/doctor/doc-links.json"]
       }
     }
   ]

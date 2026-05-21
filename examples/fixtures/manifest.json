@@ -5,6 +5,18 @@
       "schema": "schemas/harness.schema.json"
     },
     {
+      "path": "examples/fixtures/doctor/missing-reference.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
+      "path": "examples/fixtures/doctor/unsupported-builtin.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
+      "path": "examples/fixtures/doctor/incompatible-engine.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
       "path": "examples/policies/approval-policy.yaml",
       "schema": "schemas/approval-policy.schema.json"
     },
@@ -50,6 +62,10 @@
     },
     {
       "path": "examples/doctor/results/pass.json",
+      "schema": "schemas/doctor-result.schema.json"
+    },
+    {
+      "path": "examples/doctor/results/fail.json",
       "schema": "schemas/doctor-result.schema.json"
     },
     {

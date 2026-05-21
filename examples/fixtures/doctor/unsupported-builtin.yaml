@@ -1,7 +1,7 @@
 schema_version: "0.1.0"
 harness:
   name: harness-engineering
-  description: Harness-as-code platform for AI coding agents.
+  description: Harness fixture with an unsupported builtin doctor check.
   failure_taxonomy: examples/failure-taxonomy.yaml
 engines:
   cli: ">=0.1 <0.2"
@@ -46,25 +46,11 @@ doctor:
     - builtin:schema-validity
     - builtin:engine-compatibility
     - builtin:reference-exists
-    - id: local-doc-link-check
-      path: examples/checks/doc-links.yaml
-      trust_requirements:
-        trust_level: sandboxed
-        sandbox_required: process
-        network_access: false
-        secret_access: false
-        host_file_access: false
-        allowed_inputs:
-          - README.md
-          - AGENTS.md
-        allowed_outputs:
-          - .harness/doctor/doc-links.json
+    - builtin:unknown-check
 continuity:
   state_dir: .harness/continuity
   startup_smoke_test:
     command: harness validate
     timeout_seconds: 300
-  handoff_dir: .harness/handoffs
-  session_id_env: HARNESS_SESSION_ID
 gc:
   evidence_dir: .harness/gc

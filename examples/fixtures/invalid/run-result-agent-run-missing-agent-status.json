@@ -1,23 +1,23 @@
 {
   "schema_version": "0.1.0",
-  "run_id": "run-failed-with-passed-verifier",
+  "run_id": "run-agent-missing-agent-status",
   "kind": "eval",
   "suite_id": "harness-self-test",
   "task_id": "schema-smoke",
   "task_version": "1.0.0",
   "dataset_hash": "sha256:017a04a2662fd3cfc3bcb47289dd51a7f7f0e1ed3322bfc1d01681f2856b29c8",
   "split": "optimization",
-  "model_profile": "harness://verifier-only/no-model",
+  "model_profile": "examples/model-profiles/stub.yaml",
   "harness_version": "0.1.0",
-  "status": "failed",
-  "failure_code": "verification-failure",
+  "status": "passed",
   "execution": {
-    "mode": "verifier-only",
+    "mode": "agent-run",
     "harness_status": "passed",
-    "verifier_status": "passed"
+    "verifier_status": "passed",
+    "model_status": "passed"
   },
   "usage": {
-    "billed_model_id": "verifier-only",
+    "billed_model_id": "stub-v1",
     "input_tokens": 0,
     "output_tokens": 0,
     "total_tokens": 0,
@@ -25,7 +25,7 @@
     "incurred_cost_usd": 0,
     "source": "stub"
   },
-  "trace": "harness://verifier-only/no-agent-trace",
+  "trace": "examples/traces/native-cli-trace.json",
   "verifier_result": "examples/verifier-results/schema-smoke.json",
   "artifacts": []
 }

@@ -18,6 +18,7 @@ engines:
     agent-runner: ">=0.1 <0.2"
     trace: ">=0.1 <0.2"
     run-result: ">=0.1 <0.2"
+    scoreboard: ">=0.1 <0.2"
     gc-evidence: ">=0.1 <0.2"
 context:
   maps:
@@ -31,12 +32,16 @@ agent_runners:
   default: examples/agent-runners/stub.yaml
 traces:
   output_dir: .harness/traces
+  examples:
+    - examples/traces/native-cli-trace.json
+    - examples/traces/external-import.json
 evals:
   suites:
     - id: harness-self-test
       version: "1.0.0"
       tasks: examples/evals/harness-self-test/v1.0.0/
   run_results: .harness/run-results.jsonl
+  scoreboards: .harness/scoreboards
 doctor:
   checks:
     - builtin:schema-validity

@@ -37,6 +37,15 @@ codes:
   - code: budget-exceeded
     category: budget
     description: Budget exceeded is present.
+  - code: credential-missing
+    category: credential
+    description: Credential missing is present.
+  - code: agent-failure
+    category: agent
+    description: Agent failure is present.
+  - code: model-failure
+    category: model
+    description: Model failure is present.
   - code: sandbox-violation
     category: sandbox
     description: Sandbox violation is present.

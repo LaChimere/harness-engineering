@@ -33,6 +33,7 @@ const starterFiles = [
   'examples/checks/doc-links.yaml',
   'examples/prompts/stub-task.md',
   'examples/traces/native-cli-trace.json',
+  'examples/traces/external-import.json',
   'examples/evals/harness-self-test/v1.0.0/task.yaml',
   'examples/evals/harness-self-test/v1.0.0/oracle.txt',
   'examples/evals/harness-self-test/v1.0.0/broken-twin.txt',
@@ -40,11 +41,13 @@ const starterFiles = [
 
 const starterDirectories = [
   '.harness/traces',
+  '.harness/agent-outputs',
   '.harness/continuity',
   '.harness/handoffs',
   '.harness/gc',
   '.harness/doctor',
   '.harness/verifier-results',
+  '.harness/scoreboards',
   '.harness/approvals',
 ] as const;
 

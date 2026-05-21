@@ -37,6 +37,15 @@ codes:
   - code: budget-exceeded
     category: budget
     description: A run exceeded an explicit cost, token, or request budget.
+  - code: credential-missing
+    category: credential
+    description: A run could not start because an explicit credential reference was missing or unsupported.
+  - code: agent-failure
+    category: agent
+    description: The agent-produced output failed the task verifier or did not satisfy the requested behavior.
+  - code: model-failure
+    category: model
+    description: The model call failed independently of harness, verifier, budget, approval, or sandbox handling.
   - code: sandbox-violation
     category: sandbox
     description: A run attempted an action outside its declared sandbox policy.

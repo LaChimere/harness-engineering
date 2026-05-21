@@ -15,6 +15,8 @@
     "duration_ms",
     "exit_code",
     "determinism_level",
+    "credential_reference",
+    "budgets",
     "usage",
     "actions",
     "logs",
@@ -93,6 +95,12 @@
     },
     "usage": {
       "$ref": "common.schema.json#/$defs/usageAccounting"
+    },
+    "credential_reference": {
+      "$ref": "common.schema.json#/$defs/credentialReference"
+    },
+    "budgets": {
+      "$ref": "common.schema.json#/$defs/agentBudgets"
     },
     "actions": {
       "type": "array",

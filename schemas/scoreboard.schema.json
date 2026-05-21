@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/scoreboard.schema.json",
+  "title": "Scoreboard",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scoreboard_id",
+    "run_id",
+    "session_id",
+    "harness_version",
+    "generated_at",
+    "status",
+    "splits",
+    "totals",
+    "run_results"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "scoreboard_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "session_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "error"]
+    },
+    "splits": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/splitSummary"
+      },
+      "minItems": 1
+    },
+    "totals": {
+      "$ref": "#/$defs/outcomeSummary"
+    },
+    "run_results": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "$defs": {
+    "outcomeSummary": {
+      "type": "object",
+      "required": ["total", "passed", "failed", "error", "failure_buckets"],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "error": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failure_buckets": {
+          "type": "object",
+          "required": [
+            "agent-failure",
+            "model-failure",
+            "harness-error",
+            "verifier-error",
+            "verification-failure",
+            "budget-exceeded",
+            "credential-missing"
+          ],
+          "properties": {
+            "agent-failure": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "model-failure": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "harness-error": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "verifier-error": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "verification-failure": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "budget-exceeded": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "credential-missing": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "splitSummary": {
+      "type": "object",
+      "required": ["split", "total", "passed", "failed", "error", "failure_buckets"],
+      "properties": {
+        "split": {
+          "type": "string",
+          "enum": ["optimization", "holdout"]
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "error": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failure_buckets": {
+          "$ref": "#/$defs/outcomeSummary/properties/failure_buckets"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

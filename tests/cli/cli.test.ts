@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
-import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -439,7 +439,7 @@ test('eval validate proves oracle pass and broken twin fail deterministically', 
     expect(getString(runResult, 'task_id')).toBe('schema-smoke');
     expect(getString(runResult, 'task_version')).toBe('1.0.0');
     expect(getString(runResult, 'dataset_hash')).toBe(
-      'sha256:9330054cc7ffef346ff5709de3a3b81b6e5177dcb1954510cd39eee2986c591d',
+      'sha256:017a04a2662fd3cfc3bcb47289dd51a7f7f0e1ed3322bfc1d01681f2856b29c8',
     );
     expect(getString(runResult, 'split')).toBe('optimization');
     expect(getString(runResult, 'model_profile')).toBe('harness://verifier-only/no-model');
@@ -731,6 +731,414 @@ test('eval validate refuses to write run results through symlinks', async () => 
   expect(result.stderr).toContain('Refusing to write through symlink');
 });
 
+test('run executes a deterministic stub task and writes agent artifacts', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const result = await run(
+    [
+      'run',
+      'examples/evals/harness-self-test/v1.0.0/task.yaml',
+      '--run-id',
+      'stage6-single',
+      '--session-id',
+      'session-stage6',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const summary = JSON.parse(result.stdout);
+  expect(getString(summary, 'case')).toBe('oracle');
+  expect(getString(summary, 'actual_status')).toBe('passed');
+
+  const tracePath = requiredStringForTest(summary, 'trace');
+  const verifierResultPath = requiredStringForTest(summary, 'verifier_result');
+  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  expect(runResults.length).toBe(1);
+  const runResult = runResults[0] ?? {};
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('run-result', runResult)).toEqual([]);
+  expect(getString(runResult, 'trace')).toBe(tracePath);
+  expect(getString(runResult, 'verifier_result')).toBe(verifierResultPath);
+  expect(getObject(runResult, 'execution')).toEqual({
+    mode: 'agent-run',
+    harness_status: 'passed',
+    verifier_status: 'passed',
+    agent_status: 'passed',
+    model_status: 'passed',
+  });
+
+  const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
+  expect(schemas.validate('trace', trace)).toEqual([]);
+  expect(getString(trace, 'session_id')).toBe('session-stage6');
+  expect(getString(getObject(trace, 'credential_reference') ?? {}, 'source')).toBe('stub');
+  expect(getNumberForTest(getObject(trace, 'budgets') ?? {}, 'max_requests')).toBe(1);
+  expect(getString(getObject(trace, 'usage') ?? {}, 'source')).toBe('stub');
+  expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(1);
+
+  const verifierResult = JSON.parse(await readFile(join(root, verifierResultPath), 'utf8'));
+  expect(getString(verifierResult, 'status')).toBe('passed');
+  const agentOutputPath = requiredStringForTest(summary, 'agent_output');
+  expect(await readFile(join(root, agentOutputPath), 'utf8')).toContain('schema-smoke passes');
+});
+
+test('run preserves explicit session association across separate runs', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const first = await run(
+    [
+      'run',
+      '--run-id',
+      'stage6-session-a',
+      '--session-id',
+      'shared-stage6-session',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  const second = await run(
+    [
+      'run',
+      '--run-id',
+      'stage6-session-b',
+      '--session-id',
+      'shared-stage6-session',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(first.code).toBe(ExitCode.ok);
+  expect(second.code).toBe(ExitCode.ok);
+
+  const firstTrace = JSON.parse(
+    await readFile(join(root, requiredStringForTest(JSON.parse(first.stdout), 'trace')), 'utf8'),
+  );
+  const secondTrace = JSON.parse(
+    await readFile(join(root, requiredStringForTest(JSON.parse(second.stdout), 'trace')), 'utf8'),
+  );
+  expect(getString(firstTrace, 'session_id')).toBe('shared-stage6-session');
+  expect(getString(secondTrace, 'session_id')).toBe('shared-stage6-session');
+});
+
+test('run replaces duplicate agent-run ledger entries for the same run id', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const args = [
+    'run',
+    '--run-id',
+    'stage6-repeat',
+    '--session-id',
+    'session-stage6-repeat',
+    '--format',
+    'json',
+  ];
+  const first = await run(args, root);
+  const second = await run(args, root);
+  expect(first.code).toBe(ExitCode.ok);
+  expect(second.code).toBe(ExitCode.ok);
+
+  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  expect(runResults.length).toBe(1);
+  expect(requiredStringForTest(runResults[0] ?? {}, 'run_id')).toContain('stage6-repeat');
+});
+
+test('run rejects empty session ids and symlinked stub outputs', async () => {
+  const emptySession = await run(['run', '--session-id='], await tempRoot());
+  expect(emptySession.code).toBe(ExitCode.usageError);
+  expect(emptySession.stderr).toContain('run --session-id must not be empty');
+  const emptyEvalSession = await run(['eval', 'run', '--session-id='], await tempRoot());
+  expect(emptyEvalSession.code).toBe(ExitCode.usageError);
+  expect(emptyEvalSession.stderr).toContain('eval run --session-id must not be empty');
+
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  await mkdir(root);
+  await run(['init'], root);
+  await writeFile(join(parent, 'outside-oracle.txt'), 'schema-smoke passes outside root.\n');
+  await rm(join(root, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'));
+  await symlink(
+    join(parent, 'outside-oracle.txt'),
+    join(root, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'),
+  );
+  await refreshSelfTestDatasetHash(root);
+
+  const symlinkedOutput = await run(['run', '--format', 'json'], root);
+  expect(symlinkedOutput.code).toBe(ExitCode.usageError);
+  expect(symlinkedOutput.stderr).toContain('Refusing to write through symlink');
+});
+
+test('run rejects deterministic runners without explicit budgets', async () => {
+  const result = await run([
+    'run',
+    '--file',
+    'examples/harness.yaml',
+    '--runner',
+    'examples/fixtures/invalid/agent-runner-missing-budgets.yaml',
+    '--run-id',
+    'stage6-missing-budgets',
+    '--format',
+    'json',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stderr).toContain('Agent runner validation failed');
+  expect(result.stderr).toContain("must have required property 'budgets'");
+});
+
+test('run rejects non-stub credential sources during Stage 6', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const runnerPath = join(root, 'examples/agent-runners/stub.yaml');
+  const runner = await readFile(runnerPath, 'utf8');
+  await writeFile(runnerPath, runner.replace('source: stub', 'source: env'));
+
+  const result = await run(['run', '--run-id', 'stage6-env-credential', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stderr).toContain(
+    'Stage 6 deterministic runner requires credential_reference.source: stub',
+  );
+});
+
+test('eval run emits agent-run results, traces, and a failure-bucket scoreboard', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const result = await run(
+    [
+      'eval',
+      'run',
+      '--run-id',
+      'stage6-suite',
+      '--session-id',
+      'session-stage6-suite',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const evalRun = JSON.parse(result.stdout);
+  expect(getString(evalRun, 'status')).toBe('passed');
+  expect(getString(evalRun, 'session_id')).toBe('session-stage6-suite');
+
+  const schemas = await loadSchemaRegistry(process.cwd());
+  const runResults = jsonObjects(getArray(evalRun, 'run_results'));
+  expect(runResults.length).toBe(2);
+  const ledgerRunResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  expect(ledgerRunResults.map((runResult) => getString(runResult, 'run_id')).sort()).toEqual(
+    runResults.map((runResult) => getString(runResult, 'run_id')).sort(),
+  );
+  const oracle = runResults.find((runResult) =>
+    requiredStringForTest(runResult, 'run_id').includes('-oracle-'),
+  );
+  const brokenTwin = runResults.find((runResult) =>
+    requiredStringForTest(runResult, 'run_id').includes('-broken-twin-'),
+  );
+  expect(getString(oracle ?? {}, 'status')).toBe('passed');
+  expect(getString(brokenTwin ?? {}, 'status')).toBe('failed');
+  expect(getString(brokenTwin ?? {}, 'failure_code')).toBe('agent-failure');
+  for (const runResult of runResults) {
+    expect(getString(runResult, 'trace')).not.toBe('harness://verifier-only/no-agent-trace');
+    expect(getString(getObject(runResult, 'execution') ?? {}, 'mode')).toBe('agent-run');
+    const tracePath = requiredStringForTest(runResult, 'trace');
+    const verifierResultPath = requiredStringForTest(runResult, 'verifier_result');
+    const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
+    expect(schemas.validate('trace', trace)).toEqual([]);
+    expect(getString(trace, 'session_id')).toBe('session-stage6-suite');
+    expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(1);
+    const modelActions = jsonObjects(getArray(trace, 'actions')).filter(
+      (action) => getString(action, 'type') === 'model',
+    );
+    expect(modelActions.length).toBe(1);
+    expect(getObject(getObject(modelActions[0] ?? {}, 'model_call') ?? {}, 'usage')).toEqual(
+      getObject(trace, 'usage'),
+    );
+    const verifierResult = JSON.parse(await readFile(join(root, verifierResultPath), 'utf8'));
+    expect(getString(verifierResult, 'run_id')).toBe(getString(runResult, 'run_id'));
+  }
+
+  const scoreboardPath = requiredStringForTest(evalRun, 'scoreboard');
+  const scoreboard = JSON.parse(await readFile(join(root, scoreboardPath), 'utf8'));
+  expect(schemas.validate('scoreboard', scoreboard)).toEqual([]);
+  expect(getString(scoreboard, 'status')).toBe('passed');
+  const totals = getObject(scoreboard, 'totals') ?? {};
+  expect(getNumberForTest(totals, 'total')).toBe(2);
+  expect(getNumberForTest(totals, 'passed')).toBe(1);
+  expect(getNumberForTest(totals, 'failed')).toBe(1);
+  const buckets = getObject(totals, 'failure_buckets') ?? {};
+  expect(getNumberForTest(buckets, 'agent-failure')).toBe(1);
+  expect(getNumberForTest(buckets, 'model-failure')).toBe(0);
+  expect(getNumberForTest(buckets, 'harness-error')).toBe(0);
+  expect(getNumberForTest(buckets, 'verifier-error')).toBe(0);
+  expect(getNumberForTest(buckets, 'verification-failure')).toBe(0);
+  expect(getNumberForTest(buckets, 'budget-exceeded')).toBe(0);
+  expect(getNumberForTest(buckets, 'credential-missing')).toBe(0);
+  const splits = jsonObjects(getArray(scoreboard, 'splits'));
+  const optimization = objectWithString(splits, 'split', 'optimization');
+  const holdout = objectWithString(splits, 'split', 'holdout');
+  expect(getNumberForTest(optimization ?? {}, 'total')).toBe(2);
+  expect(getNumberForTest(holdout ?? {}, 'total')).toBe(0);
+});
+
+test('eval run maps harness refusals into scoreboard failure buckets', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(taskPath, task.replace('network_access: false', 'network_access: true'));
+
+  const result = await run(['eval', 'run', '--run-id', 'stage6-sandbox', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  const evalRun = JSON.parse(result.stdout);
+  expect(getString(evalRun, 'status')).toBe('error');
+  const runResults = jsonObjects(getArray(evalRun, 'run_results'));
+  expect(runResults.length).toBe(2);
+  for (const runResult of runResults) {
+    expect(getString(runResult, 'failure_code')).toBe('sandbox-violation');
+    expect(getObject(runResult, 'execution')).toEqual({
+      mode: 'agent-run',
+      harness_status: 'failed',
+      verifier_status: 'skipped',
+      agent_status: 'skipped',
+      model_status: 'skipped',
+    });
+  }
+
+  const trace = JSON.parse(
+    await readFile(join(root, requiredStringForTest(runResults[0] ?? {}, 'trace')), 'utf8'),
+  );
+  expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(0);
+  expect(
+    jsonObjects(getArray(trace, 'actions')).map((action) => getString(action, 'type')),
+  ).toEqual(['system']);
+  expect(await readdir(join(root, '.harness/agent-outputs'))).toEqual([]);
+
+  const scoreboard = JSON.parse(
+    await readFile(join(root, requiredStringForTest(evalRun, 'scoreboard')), 'utf8'),
+  );
+  const buckets = getObject(getObject(scoreboard, 'totals') ?? {}, 'failure_buckets') ?? {};
+  expect(getNumberForTest(buckets, 'harness-error')).toBe(2);
+  expect(getNumberForTest(buckets, 'verifier-error')).toBe(0);
+  expect(getNumberForTest(buckets, 'agent-failure')).toBe(0);
+});
+
+test('eval run maps verifier command errors into scoreboard failure buckets', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(
+    taskPath,
+    task.replace(
+      `command: grep -q '^schema-smoke passes' "$HARNESS_EVAL_CANDIDATE"`,
+      'command: definitely-not-a-harness-verifier-command',
+    ),
+  );
+
+  const result = await run(
+    ['eval', 'run', '--run-id', 'stage6-verifier-error', '--format', 'json'],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.validationError);
+  const evalRun = JSON.parse(result.stdout);
+  expect(getString(evalRun, 'status')).toBe('error');
+  const runResults = jsonObjects(getArray(evalRun, 'run_results'));
+  expect(runResults.length).toBe(2);
+  for (const runResult of runResults) {
+    expect(getString(runResult, 'failure_code')).toBe('verifier-error');
+    expect(getObject(runResult, 'execution')).toEqual({
+      mode: 'agent-run',
+      harness_status: 'passed',
+      verifier_status: 'error',
+      agent_status: 'skipped',
+      model_status: 'passed',
+    });
+  }
+  const scoreboard = JSON.parse(
+    await readFile(join(root, requiredStringForTest(evalRun, 'scoreboard')), 'utf8'),
+  );
+  const buckets = getObject(getObject(scoreboard, 'totals') ?? {}, 'failure_buckets') ?? {};
+  expect(getNumberForTest(buckets, 'verifier-error')).toBe(2);
+  expect(getNumberForTest(buckets, 'model-failure')).toBe(0);
+  expect(getNumberForTest(buckets, 'harness-error')).toBe(0);
+  expect(getNumberForTest(buckets, 'agent-failure')).toBe(0);
+});
+
+test('trace validates configured examples and imports normalized traces', async () => {
+  const validate = await run([
+    'trace',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--format',
+    'json',
+  ]);
+  expect(validate.code).toBe(ExitCode.ok);
+  const validation = JSON.parse(validate.stdout);
+  expect(getString(validation, 'status')).toBe('passed');
+  expect(jsonObjects(getArray(validation, 'traces')).length).toBe(2);
+
+  const root = await tempRoot();
+  await run(['init'], root);
+  const imported = await run(
+    [
+      'trace',
+      'import',
+      '--input',
+      'examples/traces/external-import.json',
+      '--output',
+      '.harness/traces/imported.json',
+    ],
+    root,
+  );
+  expect(imported.code).toBe(ExitCode.ok);
+  expect(imported.stdout).toContain('harness trace import passed');
+  const trace = JSON.parse(await readFile(join(root, '.harness/traces/imported.json'), 'utf8'));
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('trace', trace)).toEqual([]);
+  expect(getString(trace, 'determinism_level')).toBe('external-import');
+
+  const parent = await tempRoot();
+  const symlinkRoot = join(parent, 'repo');
+  await mkdir(symlinkRoot);
+  await run(['init'], symlinkRoot);
+  await symlink(join(parent, 'outside-trace.json'), join(symlinkRoot, '.harness/traces/link.json'));
+  const symlinkedOutput = await run(
+    [
+      'trace',
+      'import',
+      '--input',
+      'examples/traces/external-import.json',
+      '--output',
+      '.harness/traces/link.json',
+    ],
+    symlinkRoot,
+  );
+  expect(symlinkedOutput.code).toBe(ExitCode.usageError);
+  expect(symlinkedOutput.stderr).toContain('Refusing to write through symlink');
+});
+
+test('trace commands reject directory and symlink inputs', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  await mkdir(root);
+  await run(['init'], root);
+  await symlink(join(root, 'examples/traces/native-cli-trace.json'), join(root, 'trace-link.json'));
+
+  const symlinkedInput = await run(['trace', 'validate', 'trace-link.json'], root);
+  expect(symlinkedInput.code).toBe(ExitCode.usageError);
+  expect(symlinkedInput.stderr).toContain('Refusing to write through symlink');
+
+  const directoryInput = await run(['trace', 'validate', 'examples/traces'], root);
+  expect(directoryInput.code).toBe(ExitCode.usageError);
+  expect(directoryInput.stderr).toContain('Trace artifact must be a file');
+});
+
 test('usage and missing input errors use stable exit codes', async () => {
   const unknown = await run(['unknown']);
   expect(unknown.code).toBe(ExitCode.usageError);
@@ -743,8 +1151,12 @@ test('usage and missing input errors use stable exit codes', async () => {
   const help = await run(['help']);
   expect(help.code).toBe(ExitCode.ok);
   expect(help.stdout).toContain('doctor     Run deterministic structural harness checks.');
-  expect(help.stdout).toContain('eval       Run deterministic verifier-only eval validation.');
-  expect(help.stdout).toContain('doctor status');
+  expect(help.stdout).toContain('run        Run deterministic stub agent tasks.');
+  expect(help.stdout).toContain(
+    'eval       Run eval validation or deterministic behavioral evals.',
+  );
+  expect(help.stdout).toContain('trace      Validate or import normalized traces.');
+  expect(help.stdout).toContain('version    Print CLI version.');
 });
 
 async function tempRoot(): Promise<string> {
@@ -807,6 +1219,28 @@ function objectWithString(
 function getBoolean(object: JsonObject, key: string): boolean | undefined {
   const value = object[key];
   return typeof value === 'boolean' ? value : undefined;
+}
+
+function getNumberForTest(object: JsonObject, key: string): number | undefined {
+  const value = object[key];
+  return typeof value === 'number' ? value : undefined;
+}
+
+function requiredStringForTest(object: JsonObject, key: string): string {
+  const value = getString(object, key);
+  if (value === undefined) {
+    throw new Error(`Expected ${key} to be a string`);
+  }
+  return value;
+}
+
+async function readJsonLines(path: string): Promise<JsonObject[]> {
+  return (await readFile(path, 'utf8'))
+    .trim()
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line))
+    .filter(isObject);
 }
 
 async function refreshSelfTestDatasetHash(root: string): Promise<void> {

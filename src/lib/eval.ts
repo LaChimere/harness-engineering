@@ -1,14 +1,13 @@
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import process from 'node:process';
 
 import { loadDocument, pathKind } from './files.ts';
 import { validateHarnessConfiguration } from './harness.ts';
 import type { JsonObject, JsonValue } from './json.ts';
 import { getArray, getObject, getString, isObject } from './json.ts';
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
+import { runShellCommand } from './process.ts';
 import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
 
 type EvalValidationStatus = 'passed' | 'failed' | 'error';
@@ -112,7 +111,6 @@ interface VerifierExecutionResult {
 const schemaVersion = '0.1.0';
 const verifierOnlyModelProfile = 'harness://verifier-only/no-model';
 const verifierOnlyTrace = 'harness://verifier-only/no-agent-trace';
-const maxCapturedOutputLength = 16_384;
 
 export async function discoverEvalTaskPathsFromHarness(
   input: EvalTaskDiscoveryInput,
@@ -430,6 +428,7 @@ async function executeVerifier(
     command: commandText,
     cwd,
     timeoutSeconds,
+    processLabel: 'Verifier process',
     environment: {
       ...stringMap(getObject(command, 'environment')),
       HARNESS_EVAL_CASE: evalCase.kind,
@@ -790,136 +789,6 @@ function renderEvalValidationMarkdown(result: JsonObject): string {
   return `${lines.join('\n')}\n`;
 }
 
-async function runShellCommand(input: {
-  readonly command: string;
-  readonly cwd: string;
-  readonly timeoutSeconds: number;
-  readonly environment: Readonly<Record<string, string>>;
-}): Promise<{
-  readonly exitCode?: number;
-  readonly signal?: string;
-  readonly timedOut: boolean;
-  readonly stdout: string;
-  readonly stderr: string;
-  readonly error?: string;
-}> {
-  return await new Promise((resolve) => {
-    const pathEnvKey = 'PATH';
-    const langEnvKey = 'LANG';
-    const lcAllEnvKey = 'LC_ALL';
-    let stdout = '';
-    let stderr = '';
-    let timedOut = false;
-    let settled = false;
-    let killTimer: ReturnType<typeof setTimeout> | undefined;
-    let forceFinishTimer: ReturnType<typeof setTimeout> | undefined;
-    const detached = process.platform !== 'win32';
-    const child = spawn(input.command, {
-      cwd: input.cwd,
-      shell: process.platform === 'win32' ? true : '/bin/sh',
-      detached,
-      env: {
-        ...input.environment,
-        PATH: input.environment[pathEnvKey] ?? '/usr/bin:/bin',
-        LANG: input.environment[langEnvKey] ?? 'C',
-        LC_ALL: input.environment[lcAllEnvKey] ?? 'C',
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    const timeout = setTimeout(() => {
-      timedOut = true;
-      const terminateError = signalVerifier(child.pid, detached, 'SIGTERM');
-      if (terminateError !== undefined) {
-        finish({ timedOut, stdout, stderr, error: terminateError });
-        return;
-      }
-      killTimer = setTimeout(() => {
-        const killError = signalVerifier(child.pid, detached, 'SIGKILL');
-        if (killError !== undefined) {
-          finish({ timedOut, stdout, stderr, error: killError });
-        }
-      }, 1000);
-      forceFinishTimer = setTimeout(() => {
-        const killError = signalVerifier(child.pid, detached, 'SIGKILL');
-        child.stdout?.destroy();
-        child.stderr?.destroy();
-        finish({
-          timedOut,
-          stdout,
-          stderr,
-          error: killError ?? 'Verifier process did not exit after timeout.',
-        });
-      }, 3000);
-    }, input.timeoutSeconds * 1000);
-
-    child.stdout.on('data', (chunk: Buffer) => {
-      stdout = appendCapturedOutput(stdout, chunk.toString('utf8'));
-    });
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr = appendCapturedOutput(stderr, chunk.toString('utf8'));
-    });
-
-    child.on('error', (error) => {
-      finish({ timedOut, stdout, stderr, error: error.message });
-    });
-    child.on('close', (code, signal) => {
-      finish({
-        ...(code === null ? {} : { exitCode: code }),
-        ...(signal === null ? {} : { signal }),
-        timedOut,
-        stdout,
-        stderr,
-      });
-    });
-
-    function finish(result: {
-      readonly exitCode?: number;
-      readonly signal?: string;
-      readonly timedOut: boolean;
-      readonly stdout: string;
-      readonly stderr: string;
-      readonly error?: string;
-    }): void {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      clearTimeout(timeout);
-      if (killTimer !== undefined) {
-        clearTimeout(killTimer);
-      }
-      if (forceFinishTimer !== undefined) {
-        clearTimeout(forceFinishTimer);
-      }
-      resolve(result);
-    }
-  });
-}
-
-function signalVerifier(
-  pid: number | undefined,
-  detached: boolean,
-  signal: NodeJS.Signals,
-): string | undefined {
-  if (pid === undefined) {
-    return 'Verifier process did not expose a process id for timeout termination.';
-  }
-  try {
-    if (detached) {
-      process.kill(-pid, signal);
-    } else {
-      process.kill(pid, signal);
-    }
-    return undefined;
-  } catch (error) {
-    if (isNoSuchProcess(error)) {
-      return undefined;
-    }
-    const message = error instanceof Error ? error.message : String(error);
-    return `Could not send ${signal} to verifier process: ${message}`;
-  }
-}
-
 function datasetReferences(
   task: JsonObject,
 ): readonly { readonly role: string; readonly path: string }[] {
@@ -1021,15 +890,6 @@ function isExternalReference(reference: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(reference) || reference.startsWith('#');
 }
 
-function isNoSuchProcess(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: string }).code === 'ESRCH'
-  );
-}
-
 function stringMap(object: JsonObject | undefined): Record<string, string> {
   if (object === undefined) {
     return {};
@@ -1060,14 +920,6 @@ function stableJson(value: JsonValue): string {
       .join(',')}}`;
   }
   return JSON.stringify(value);
-}
-
-function appendCapturedOutput(current: string, next: string): string {
-  const combined = `${current}${next}`;
-  if (combined.length <= maxCapturedOutputLength) {
-    return combined;
-  }
-  return combined.slice(0, maxCapturedOutputLength);
 }
 
 function mediaTypeForPath(path: string): string {

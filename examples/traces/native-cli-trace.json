@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1.0",
   "session_id": "harness-stage2-example",
-  "run_id": "run-schema-smoke-001",
+  "run_id": "run-schema-smoke-001-oracle-81e3b51b6501",
   "harness_version": "0.1.0",
   "inputs": {
     "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
@@ -19,41 +19,66 @@
   "duration_ms": 1000,
   "exit_code": 0,
   "determinism_level": "recorded",
+  "credential_reference": {
+    "source": "stub",
+    "name": "deterministic-stub",
+    "purpose": "CI-safe recorded response fixture",
+    "scope": "per-run"
+  },
+  "budgets": {
+    "max_cost_usd": 0,
+    "max_total_tokens": 1024,
+    "max_requests": 1,
+    "enforcement": "hard",
+    "scope": "per-run"
+  },
   "usage": {
     "billed_model_id": "stub-v1",
     "input_tokens": 0,
     "output_tokens": 0,
     "total_tokens": 0,
-    "requests": 0,
+    "requests": 1,
     "incurred_cost_usd": 0,
     "source": "stub"
   },
   "actions": [
     {
-      "id": "approval-record",
-      "type": "approval",
+      "id": "run-schema-smoke-001-oracle-81e3b51b6501-stub-model",
+      "type": "model",
       "timestamp": "2026-05-20T00:00:00Z",
-      "summary": "Recorded an approval decision for the fixture run.",
-      "approval_decision": {
-        "decision": "approve",
-        "risk_class": "low",
-        "from_state": "pending",
-        "to_state": "approved",
-        "transport": "cli-interactive",
-        "log_ref": ".harness/approvals/modify-log.jsonl"
+      "summary": "Deterministic stub emitted oracle recorded output.",
+      "model_call": {
+        "model_id": "stub-v1",
+        "request_id": "run-schema-smoke-001-oracle-81e3b51b6501-stub-request",
+        "usage": {
+          "billed_model_id": "stub-v1",
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "requests": 1,
+          "incurred_cost_usd": 0,
+          "source": "stub"
+        },
+        "latency_ms": 0
       },
-      "artifacts": []
-    },
-    {
-      "id": "verify-harness-file",
-      "type": "verifier",
-      "timestamp": "2026-05-20T00:00:00Z",
-      "summary": "Checked that the harness example exists.",
       "artifacts": [
         {
-          "path": "examples/harness.yaml",
-          "media_type": "application/yaml",
-          "description": "Harness example."
+          "path": ".harness/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
+          "media_type": "text/plain",
+          "description": "Recorded stub output."
+        }
+      ]
+    },
+    {
+      "id": "run-schema-smoke-001-oracle-81e3b51b6501-verifier",
+      "type": "verifier",
+      "timestamp": "2026-05-20T00:00:01Z",
+      "summary": "Deterministic stub output satisfied the verifier.",
+      "artifacts": [
+        {
+          "path": ".harness/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",
+          "media_type": "application/json",
+          "description": "Verifier result for this run."
         }
       ]
     }
@@ -61,9 +86,19 @@
   "logs": [],
   "artifact_links": [
     {
-      "path": "examples/run-results/run-result.json",
+      "path": ".harness/run-results.jsonl",
+      "media_type": "application/jsonl",
+      "description": "Run-result ledger containing this run result."
+    },
+    {
+      "path": ".harness/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
+      "media_type": "text/plain",
+      "description": "Deterministic stub output."
+    },
+    {
+      "path": ".harness/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",
       "media_type": "application/json",
-      "description": "Run result for this trace."
+      "description": "Verifier result for this run."
     }
   ]
 }

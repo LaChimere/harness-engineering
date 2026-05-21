@@ -13,6 +13,7 @@ const valueOptions = new Set([
   'verification',
   'run-result',
   'trace',
+  'scoreboard',
   'doctor-result',
 ]);
 const flagOptions = new Set<string>();
@@ -68,6 +69,7 @@ export async function runReport(
   );
   await summarizeOptionalArtifact(root, options, 'run-result', 'run result', citedPaths, context);
   await summarizeOptionalArtifact(root, options, 'trace', 'trace', citedPaths, context);
+  await summarizeOptionalArtifact(root, options, 'scoreboard', 'scoreboard', citedPaths, context);
   await summarizeOptionalArtifact(
     root,
     options,

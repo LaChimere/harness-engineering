@@ -1,0 +1,42 @@
+{
+  "schema_version": "0.1.0",
+  "scoreboard_id": "scoreboard-missing-agent-bucket",
+  "run_id": "eval-run-schema-smoke-001",
+  "session_id": "harness-stage6-example",
+  "harness_version": "0.1.0",
+  "generated_at": "2026-05-21T00:00:00Z",
+  "status": "passed",
+  "splits": [
+    {
+      "split": "optimization",
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "error": 0,
+      "failure_buckets": {
+        "model-failure": 0,
+        "harness-error": 0,
+        "verifier-error": 0,
+        "verification-failure": 0,
+        "budget-exceeded": 0,
+        "credential-missing": 0
+      }
+    }
+  ],
+  "totals": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "error": 0,
+    "failure_buckets": {
+      "agent-failure": 0,
+      "model-failure": 0,
+      "harness-error": 0,
+      "verifier-error": 0,
+      "verification-failure": 0,
+      "budget-exceeded": 0,
+      "credential-missing": 0
+    }
+  },
+  "run_results": []
+}

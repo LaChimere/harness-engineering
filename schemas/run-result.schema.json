@@ -55,18 +55,26 @@
     },
     "execution": {
       "type": "object",
-      "description": "Stage 5 records verifier-only execution semantics. Future schema versions may add agent-run modes after the runner contract exists.",
+      "description": "Execution semantics for verifier-only validation and Stage 6 deterministic agent runs.",
       "required": ["mode", "harness_status", "verifier_status"],
       "properties": {
         "mode": {
           "type": "string",
-          "enum": ["verifier-only"]
+          "enum": ["verifier-only", "agent-run"]
         },
         "harness_status": {
           "type": "string",
           "enum": ["passed", "failed", "error"]
         },
         "verifier_status": {
+          "type": "string",
+          "enum": ["passed", "failed", "error", "skipped"]
+        },
+        "agent_status": {
+          "type": "string",
+          "enum": ["passed", "failed", "error", "skipped"]
+        },
+        "model_status": {
           "type": "string",
           "enum": ["passed", "failed", "error", "skipped"]
         }
@@ -141,6 +149,97 @@
               "required": ["verifier_result"]
             }
           ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "passed"
+          },
+          "execution": {
+            "properties": {
+              "mode": {
+                "const": "agent-run"
+              }
+            },
+            "required": ["mode"]
+          }
+        },
+        "required": ["status", "execution"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "agent_status": {
+                "const": "passed"
+              },
+              "model_status": {
+                "const": "passed"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "mode": {
+                "const": "agent-run"
+              }
+            },
+            "required": ["mode"]
+          }
+        },
+        "required": ["execution"]
+      },
+      "then": {
+        "required": ["trace"],
+        "properties": {
+          "trace": {
+            "not": {
+              "const": "harness://verifier-only/no-agent-trace"
+            }
+          },
+          "execution": {
+            "required": ["agent_status", "model_status"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "mode": {
+                "const": "verifier-only"
+              }
+            },
+            "required": ["mode"]
+          }
+        },
+        "required": ["execution"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["agent_status"]
+                },
+                {
+                  "required": ["model_status"]
+                }
+              ]
+            }
+          }
         }
       }
     },

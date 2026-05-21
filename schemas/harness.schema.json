@@ -63,6 +63,7 @@
             "agent-runner",
             "trace",
             "run-result",
+            "scoreboard",
             "gc-evidence"
           ],
           "additionalProperties": {
@@ -150,6 +151,9 @@
           }
         },
         "run_results": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "scoreboards": {
           "$ref": "common.schema.json#/$defs/artifactRef"
         }
       },

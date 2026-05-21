@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
 
-Stages 1, 2, 3, 4, and 5 are complete. The next implementation target is Stage 6: Agent runner, first behavioral eval, and trace normalization.
+Stages 1, 2, 3, 4, 5, and 6 are complete. The next implementation target is Stage 7: LLM-judge and inferential-review policy.
 
 ## Goals
 
@@ -219,10 +219,11 @@ Includes Stage 4 through Stage 6.
 At this point the repo can demonstrate real harness engineering:
 
 ```bash
-npx @lachimere/harness-engineering doctor
-npx @lachimere/harness-engineering run examples/evals/harness-self-test/v1.0.0/
-npx @lachimere/harness-engineering eval run
-npx @lachimere/harness-engineering trace validate
+bun run build
+node dist/index.js doctor --file examples/harness.yaml
+node dist/index.js run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
+node dist/index.js eval run --file examples/harness.yaml
+node dist/index.js trace validate --file examples/harness.yaml
 ```
 
 Doctor output validates substrate health before eval runs. The run must produce trace, run-result, verifier result, and scoreboard artifacts. The toy suite must run without live model credentials via a deterministic stub or recorded-response runner.

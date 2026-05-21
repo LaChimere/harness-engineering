@@ -33,6 +33,9 @@
               "harness",
               "environment",
               "budget",
+              "credential",
+              "agent",
+              "model",
               "sandbox",
               "approval"
             ]

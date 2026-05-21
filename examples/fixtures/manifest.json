@@ -73,6 +73,10 @@
       "schema": "schemas/trace.schema.json"
     },
     {
+      "path": "examples/traces/external-import.json",
+      "schema": "schemas/trace.schema.json"
+    },
+    {
       "path": "examples/run-results/run-result.json",
       "schema": "schemas/run-result.schema.json"
     },
@@ -83,6 +87,10 @@
     {
       "path": "examples/run-results/failed-run-result.json",
       "schema": "schemas/run-result.schema.json"
+    },
+    {
+      "path": "examples/scoreboards/self-test.json",
+      "schema": "schemas/scoreboard.schema.json"
     },
     {
       "path": "examples/plugin-capabilities/provisional-host.json",
@@ -226,7 +234,7 @@
     {
       "path": "examples/fixtures/invalid/run-result-missing-execution.json",
       "schema": "schemas/run-result.schema.json",
-      "reason": "Run results must declare verifier-only execution semantics.",
+      "reason": "Run results must declare execution semantics.",
       "expected_keyword": "required",
       "expected_path": [],
       "expected_message_contains": "'execution'"
@@ -234,9 +242,39 @@
     {
       "path": "examples/fixtures/invalid/run-result-invalid-execution-mode.json",
       "schema": "schemas/run-result.schema.json",
-      "reason": "Stage 5 run results must not predeclare future agent-run execution mode.",
+      "reason": "Run results must use a supported execution mode.",
       "expected_keyword": "enum",
       "expected_path": ["execution", "mode"]
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-agent-run-missing-agent-status.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Agent-run results must include agent execution status.",
+      "expected_keyword": "required",
+      "expected_path": ["execution"],
+      "expected_message_contains": "'agent_status'"
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-agent-run-missing-model-status.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Agent-run results must include model execution status.",
+      "expected_keyword": "required",
+      "expected_path": ["execution"],
+      "expected_message_contains": "'model_status'"
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-agent-run-passed-with-failed-agent.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Passed agent-run results must not contain failed agent execution state.",
+      "expected_keyword": "const",
+      "expected_path": ["execution", "agent_status"]
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-agent-run-verifier-only-trace.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Agent-run results must link to a real trace artifact.",
+      "expected_keyword": "not",
+      "expected_path": ["trace"]
     },
     {
       "path": "examples/fixtures/invalid/run-result-passed-with-failed-verifier.json",
@@ -258,6 +296,14 @@
       "reason": "Failed eval run results must contain failed verifier execution state.",
       "expected_keyword": "const",
       "expected_path": ["execution", "verifier_status"]
+    },
+    {
+      "path": "examples/fixtures/invalid/scoreboard-missing-agent-bucket.json",
+      "schema": "schemas/scoreboard.schema.json",
+      "reason": "Scoreboards must distinguish agent-failure buckets.",
+      "expected_keyword": "required",
+      "expected_path": ["splits", 0, "failure_buckets"],
+      "expected_message_contains": "'agent-failure'"
     }
   ],
   "failure_taxonomy_required_codes": [
@@ -273,6 +319,9 @@
     "verifier-error",
     "environment-error",
     "budget-exceeded",
+    "credential-missing",
+    "agent-failure",
+    "model-failure",
     "sandbox-violation",
     "approval-denied"
   ],

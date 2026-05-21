@@ -1,6 +1,6 @@
 # Harness schema conventions
 
-Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it.
+Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 6 now consumes the runner, trace, run-result, and scoreboard schemas through deterministic stub CLI commands.
 
 All schemas use JSON Schema draft 2020-12 and local relative `$ref` links. Validation tools should load every file in `schemas/` into an offline registry keyed by each schema's versioned `$id`; validation must not require network access.
 
@@ -15,7 +15,7 @@ engines:
     agent-runner: ">=0.1 <0.2"
 ```
 
-The schema validates artifact shape; the future CLI enforces compatibility ranges and migration rules. Canonical schema IDs include the schema family version, for example `https://lachimere.github.io/harness-engineering/schemas/0.1/harness.schema.json`; future releases may add aliases, but validation must resolve the versioned IDs offline.
+The schema validates artifact shape; the CLI enforces compatibility ranges and migration rules. Canonical schema IDs include the schema family version, for example `https://lachimere.github.io/harness-engineering/schemas/0.1/harness.schema.json`; future releases may add aliases, but validation must resolve the versioned IDs offline.
 
 ## Composition
 
@@ -29,15 +29,17 @@ Local doctor checks, eval verifiers, and repair actions all reuse the same `trus
 
 ## Credentials and budgets
 
-Agent runners reference credentials with `credential_reference`; they must not embed secret values. Model execution also requires `budgets` with cost, request, and token limits so future `harness run` implementations can refuse unbounded runs deterministically.
+Agent runners reference credentials with `credential_reference`; they must not embed secret values. Model execution also requires `budgets` with cost, request, and token limits so `harness run` can refuse unbounded runs deterministically. The Stage 6 runner accepts only non-secret `source: stub` credential references and recorded fixture outputs; live model credentials remain out of scope.
 
-Trace and run-result artifacts record aggregate usage evidence with token, request, model, and cost fields so budgets can be audited after execution.
+Trace and run-result artifacts record aggregate usage evidence with token, request, model, and cost fields so budgets can be audited after execution. Stage 6 traces also require the credential reference and budget contract that governed the run.
 
 ## Eval and run-result execution semantics
 
 Eval tasks declare suite/task identity, task version, dataset hash, optimization or holdout split, verifier command, timeout, oracle/baseline artifacts, and verifier trust requirements. Stage 5 `harness eval validate` recomputes the dataset hash before execution and refuses to run verifier commands whose trust declaration asks for network, secret, host-file, or any sandbox tier other than `process`. Stage 5 enforces the declaration contract before execution; runtime sandbox enforcement belongs to a later runner stage.
 
-Run results include an `execution` block. In Stage 5 the only valid mode is `verifier-only`, with separate `harness_status` and `verifier_status` fields so verifier failures, harness refusals, and future agent/model failures do not collapse into one status. Future agent-run semantics belong to a later schema version after the Stage 6 runner contract exists.
+Run results include an `execution` block. `verifier-only` records separate `harness_status` and `verifier_status` fields. `agent-run` records `harness_status`, `verifier_status`, `agent_status`, and `model_status`, and must link to a real trace artifact rather than the verifier-only sentinel trace.
+
+Scoreboards summarize agent-run ledgers by optimization/holdout split and total counts. Their failure buckets explicitly separate `agent-failure`, `model-failure`, `harness-error`, `verifier-error`, `verification-failure`, `budget-exceeded`, and `credential-missing` so behavioral regressions do not collapse into one opaque failure class. Stage 6's broken-twin fixture intentionally contributes an `agent-failure` bucket while the overall eval run can still pass because that negative control failed as expected.
 
 ## Taxonomies
 

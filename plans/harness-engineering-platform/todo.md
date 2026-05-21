@@ -184,49 +184,49 @@
 
 ## Stage 6: Agent runner, first behavioral eval, and trace normalization
 
-- [ ] Implement or specify `harness run <task>`.
-- [ ] Bind `agent-runner.schema.json` to:
-  - [ ] model profile,
-  - [ ] credential reference,
-  - [ ] cost/token/request budgets,
-  - [ ] sandbox,
-  - [ ] approval policy,
-  - [ ] trace output,
-  - [ ] verifier binding.
-- [ ] Refuse agent runs without explicit credential references and budgets.
-- [ ] Add failing fixture or test for missing credential references and budgets.
-- [ ] Add deterministic stub runner or recorded-response runner.
-- [ ] Document stub/recorded runner architecture and local/CI usage.
-- [ ] Ensure stub/recorded runs use explicit non-secret stub credential references and budgets.
-- [ ] Implement `harness eval run` as an end-to-end behavioral eval.
-- [ ] Add at least one toy suite with baseline/oracle.
-- [ ] Ensure toy suite runs without live credentials.
-- [ ] Output trace artifacts.
-- [ ] Output run-result artifacts.
-- [ ] Output verifier result artifacts.
-- [ ] Output small scoreboard/trend report.
-- [ ] Ensure scoreboard distinguishes harness/verifier failure from agent/model failure.
-- [ ] Distinguish optimization and holdout splits in output.
-- [ ] Link run results to the trace and artifacts that produced them.
-- [ ] Associate multiple runs with one long-running session.
-- [ ] Implement or specify `harness trace validate/import`.
-- [ ] Add examples for imported external traces and native CLI traces.
-- [ ] Validate trace examples against schema.
-- [ ] Run end-to-end toy eval in local/CI-safe mode.
-- [ ] Run `git diff --check`.
+- [x] Implement or specify `harness run <task>`.
+- [x] Bind `agent-runner.schema.json` to:
+  - [x] model profile,
+  - [x] credential reference,
+  - [x] cost/token/request budgets,
+  - [x] sandbox,
+  - [x] approval policy,
+  - [x] trace output,
+  - [x] verifier binding.
+- [x] Refuse agent runs without explicit credential references and budgets.
+- [x] Add failing fixture or test for missing credential references and budgets.
+- [x] Add deterministic stub runner or recorded-response runner.
+- [x] Document stub/recorded runner architecture and local/CI usage.
+- [x] Ensure stub/recorded runs use explicit non-secret stub credential references and budgets.
+- [x] Implement `harness eval run` as an end-to-end behavioral eval.
+- [x] Add at least one toy suite with baseline/oracle.
+- [x] Ensure toy suite runs without live credentials.
+- [x] Output trace artifacts.
+- [x] Output run-result artifacts.
+- [x] Output verifier result artifacts.
+- [x] Output small scoreboard/trend report.
+- [x] Ensure scoreboard distinguishes harness/verifier failure from agent/model failure.
+- [x] Distinguish optimization and holdout splits in output.
+- [x] Link run results to the trace and artifacts that produced them.
+- [x] Associate multiple runs with one long-running session.
+- [x] Implement or specify `harness trace validate/import`.
+- [x] Add examples for imported external traces and native CLI traces.
+- [x] Validate trace examples against schema.
+- [x] Run end-to-end toy eval in local/CI-safe mode.
+- [x] Run `git diff --check`.
 
 ### Stage 6 acceptance criteria
 
-- [ ] A user can run a toy task through a configured model/harness and receive trace, run-result, verifier result, and report artifacts.
-- [ ] The toy suite can run with the deterministic stub/recorded runner and does not require live credentials.
-- [ ] The stub/recorded runner satisfies the credential-reference and budget contract with non-secret fixture values rather than bypassing it.
-- [ ] Agent runs refuse to execute without explicit credential references and cost/token/request budgets, with fixtures or tests covering the refusal.
-- [ ] Eval output distinguishes optimization and holdout splits.
-- [ ] The first scoreboard distinguishes harness/verifier failure from agent/model failure.
-- [ ] Trace examples validate against schema.
-- [ ] A run result links to the trace and artifacts that produced it.
-- [ ] Long-running continuity can associate multiple runs with one session.
-- [ ] Review docs explain how to run the toy eval locally and in CI-safe mode without credentials.
+- [x] A user can run a toy task through a configured model/harness and receive trace, run-result, verifier result, and report artifacts.
+- [x] The toy suite can run with the deterministic stub/recorded runner and does not require live credentials.
+- [x] The stub/recorded runner satisfies the credential-reference and budget contract with non-secret fixture values rather than bypassing it.
+- [x] Agent runs refuse to execute without explicit credential references and cost/token/request budgets, with fixtures or tests covering the refusal.
+- [x] Eval output distinguishes optimization and holdout splits.
+- [x] The first scoreboard distinguishes harness/verifier failure from agent/model failure.
+- [x] Trace examples validate against schema.
+- [x] A run result links to the trace and artifacts that produced it.
+- [x] Long-running continuity can associate multiple runs with one session.
+- [x] Review docs explain how to run the toy eval locally and in CI-safe mode without credentials.
 
 ## Stage 7: LLM-judge and inferential-review policy
 

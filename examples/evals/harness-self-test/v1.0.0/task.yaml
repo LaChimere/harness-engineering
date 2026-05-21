@@ -2,7 +2,7 @@ schema_version: "0.1.0"
 suite_id: harness-self-test
 task_id: schema-smoke
 task_version: "1.0.0"
-dataset_hash: sha256:9330054cc7ffef346ff5709de3a3b81b6e5177dcb1954510cd39eee2986c591d
+dataset_hash: sha256:017a04a2662fd3cfc3bcb47289dd51a7f7f0e1ed3322bfc1d01681f2856b29c8
 split: optimization
 confidence: validated-oracle
 instruction: Validate that the harness schema substrate can describe a deterministic self-test task.
@@ -21,6 +21,7 @@ verifier:
     allowed_inputs:
       - examples/evals/harness-self-test/v1.0.0/oracle.txt
       - examples/evals/harness-self-test/v1.0.0/broken-twin.txt
+      - .harness/agent-outputs
     allowed_outputs:
       - .harness/run-results.jsonl
       - .harness/verifier-results

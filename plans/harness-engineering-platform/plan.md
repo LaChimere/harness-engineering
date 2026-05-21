@@ -93,6 +93,7 @@ Stages 1, 2, and 3 are complete. The next implementation target is Stage 4: Harn
 - Passing and failing fixtures validate with zero schema errors.
 - Exit code semantics are documented for plugin and CI consumption.
 - Doctor checks remain deterministic structural checks and do not claim task acceptance, self-verification status, or subjective "AI slop" scores.
+- Stage 4 completion includes an entropy pass for stale docs, orphan doctor fixtures/artifacts, duplicate source-of-truth logic, and command-boundary drift before Stage 5 begins.
 
 ### Stage 5: Eval task contract and deterministic verifier runner
 
@@ -250,6 +251,7 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 - Schema stages must include valid and invalid fixtures for high-risk schemas.
 - CLI stages must include command-level tests and machine-readable output fixtures.
 - Doctor/GC checks must include explicit inputs, algorithms, false-positive policy, and passing/failing fixtures.
+- Doctor stages must include an entropy pass confirming docs, examples, fixtures, and shared validation helpers still describe one coherent substrate.
 - Eval stages must prove oracle pass and broken twin fail.
 - Agent-runner stages must include deterministic stub/recorded execution for CI and reviewers without API keys.
 - Plugin stages must prove the plugin is a thin adapter over CLI/schema artifacts and cannot create a second source of truth.

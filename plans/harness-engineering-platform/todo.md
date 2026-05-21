@@ -138,6 +138,11 @@
 - [ ] Emit Markdown report.
 - [ ] Document doctor/verify/eval command boundaries.
 - [ ] Confirm no subjective "AI slop" scoring.
+- [ ] Run Stage 4 entropy pass:
+  - [ ] Confirm docs do not describe planned `doctor`, `eval`, `run`, `gc`, plugin, or CI behavior as currently available.
+  - [ ] Confirm doctor fixtures and artifacts are referenced by tests, manifests, docs, or `harness.yaml`.
+  - [ ] Confirm doctor implementation reuses shared validation/reference helpers instead of creating a duplicate source of truth.
+  - [ ] Confirm `doctor` does not drift into `validate`, `verify`, `eval`, `run`, or GC responsibilities.
 - [ ] Run doctor tests.
 - [ ] Run `git diff --check`.
 
@@ -147,6 +152,7 @@
 - [ ] Passing and failing fixtures validate with zero schema errors.
 - [ ] Exit code semantics are documented for plugin and CI consumption.
 - [ ] Doctor checks remain deterministic structural checks and do not claim task acceptance, self-verification status, or subjective "AI slop" scores.
+- [ ] Entropy pass has no unresolved stale docs, orphan doctor fixtures/artifacts, duplicate source-of-truth logic, or command-boundary drift.
 
 ## Stage 5: Eval task contract and deterministic verifier runner
 

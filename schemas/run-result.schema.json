@@ -10,6 +10,7 @@
     "model_profile",
     "harness_version",
     "status",
+    "execution",
     "usage",
     "trace",
     "artifacts"
@@ -51,6 +52,26 @@
     "status": {
       "type": "string",
       "enum": ["passed", "failed", "error", "skipped"]
+    },
+    "execution": {
+      "type": "object",
+      "description": "Stage 5 records verifier-only execution semantics. Future schema versions may add agent-run modes after the runner contract exists.",
+      "required": ["mode", "harness_status", "verifier_status"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["verifier-only"]
+        },
+        "harness_status": {
+          "type": "string",
+          "enum": ["passed", "failed", "error"]
+        },
+        "verifier_status": {
+          "type": "string",
+          "enum": ["passed", "failed", "error", "skipped"]
+        }
+      },
+      "additionalProperties": false
     },
     "failure_code": {
       "$ref": "common.schema.json#/$defs/failureCode"
@@ -126,6 +147,36 @@
     {
       "if": {
         "properties": {
+          "kind": {
+            "const": "eval"
+          },
+          "status": {
+            "const": "error"
+          }
+        },
+        "required": ["kind", "status"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "not": {
+              "properties": {
+                "harness_status": {
+                  "const": "passed"
+                },
+                "verifier_status": {
+                  "const": "passed"
+                }
+              },
+              "required": ["harness_status", "verifier_status"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "status": {
             "enum": ["failed", "error"]
           }
@@ -139,11 +190,71 @@
     {
       "if": {
         "properties": {
+          "kind": {
+            "const": "eval"
+          },
           "status": {
             "const": "passed"
           }
         },
-        "required": ["status"]
+        "required": ["kind", "status"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "harness_status": {
+                "const": "passed"
+              },
+              "verifier_status": {
+                "const": "passed"
+              }
+            }
+          }
+        },
+        "not": {
+          "required": ["failure_code"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "eval"
+          },
+          "status": {
+            "const": "failed"
+          }
+        },
+        "required": ["kind", "status"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "harness_status": {
+                "const": "passed"
+              },
+              "verifier_status": {
+                "const": "failed"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "ad-hoc"
+          },
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": ["kind", "status"]
       },
       "then": {
         "not": {

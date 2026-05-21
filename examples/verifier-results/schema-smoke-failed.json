@@ -1,0 +1,13 @@
+{
+  "schema_version": "0.1.0",
+  "verifier_id": "schema-smoke",
+  "run_id": "run-schema-smoke-failed",
+  "case": "broken-twin",
+  "expected_status": "failed",
+  "candidate": "examples/evals/harness-self-test/v1.0.0/broken-twin.txt",
+  "status": "failed",
+  "harness_status": "passed",
+  "summary": "Verifier command exited 1.",
+  "timed_out": false,
+  "exit_code": 1
+}

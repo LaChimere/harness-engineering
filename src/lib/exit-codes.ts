@@ -23,7 +23,7 @@ export const exitCodeDescriptions: ReadonlyArray<{
     code: ExitCode.validationError,
     name: 'validation-error',
     meaning:
-      'Input was found, but schema validation, doctor status, or explicit verification status failed.',
+      'Input was found, but schema validation, doctor status, eval validation status, or explicit verification status failed.',
   },
   {
     code: ExitCode.usageError,

@@ -222,6 +222,42 @@
       "expected_keyword": "required",
       "expected_path": [],
       "expected_message_contains": "'failure_code'"
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-missing-execution.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Run results must declare verifier-only execution semantics.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'execution'"
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-invalid-execution-mode.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Stage 5 run results must not predeclare future agent-run execution mode.",
+      "expected_keyword": "enum",
+      "expected_path": ["execution", "mode"]
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-passed-with-failed-verifier.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Passed eval run results must not contain failed verifier execution state.",
+      "expected_keyword": "const",
+      "expected_path": ["execution", "verifier_status"]
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-error-with-passed-execution.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Errored eval run results must not contain fully passed execution state.",
+      "expected_keyword": "not",
+      "expected_path": ["execution"]
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-failed-with-passed-verifier.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "Failed eval run results must contain failed verifier execution state.",
+      "expected_keyword": "const",
+      "expected_path": ["execution", "verifier_status"]
     }
   ],
   "failure_taxonomy_required_codes": [

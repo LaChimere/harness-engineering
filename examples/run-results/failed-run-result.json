@@ -5,14 +5,19 @@
   "suite_id": "harness-self-test",
   "task_id": "schema-smoke",
   "task_version": "1.0.0",
-  "dataset_hash": "sha256:a24aec6c89366e103dec4e2f26c0dc6efabccb8157bca47a7ee417119a58923b",
+  "dataset_hash": "sha256:9330054cc7ffef346ff5709de3a3b81b6e5177dcb1954510cd39eee2986c591d",
   "split": "optimization",
-  "model_profile": "examples/model-profiles/stub.yaml",
+  "model_profile": "harness://verifier-only/no-model",
   "harness_version": "0.1.0",
   "status": "failed",
   "failure_code": "verification-failure",
+  "execution": {
+    "mode": "verifier-only",
+    "harness_status": "passed",
+    "verifier_status": "failed"
+  },
   "usage": {
-    "billed_model_id": "stub-v1",
+    "billed_model_id": "verifier-only",
     "input_tokens": 0,
     "output_tokens": 0,
     "total_tokens": 0,
@@ -20,7 +25,7 @@
     "incurred_cost_usd": 0,
     "source": "stub"
   },
-  "trace": "examples/traces/native-cli-trace.json",
-  "verifier_result": "examples/verifier-results/schema-smoke.json",
+  "trace": "harness://verifier-only/no-agent-trace",
+  "verifier_result": "examples/verifier-results/schema-smoke-failed.json",
   "artifacts": []
 }

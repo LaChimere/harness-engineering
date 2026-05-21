@@ -33,6 +33,12 @@ Agent runners reference credentials with `credential_reference`; they must not e
 
 Trace and run-result artifacts record aggregate usage evidence with token, request, model, and cost fields so budgets can be audited after execution.
 
+## Eval and run-result execution semantics
+
+Eval tasks declare suite/task identity, task version, dataset hash, optimization or holdout split, verifier command, timeout, oracle/baseline artifacts, and verifier trust requirements. Stage 5 `harness eval validate` recomputes the dataset hash before execution and refuses to run verifier commands whose trust declaration asks for network, secret, host-file, or any sandbox tier other than `process`. Stage 5 enforces the declaration contract before execution; runtime sandbox enforcement belongs to a later runner stage.
+
+Run results include an `execution` block. In Stage 5 the only valid mode is `verifier-only`, with separate `harness_status` and `verifier_status` fields so verifier failures, harness refusals, and future agent/model failures do not collapse into one status. Future agent-run semantics belong to a later schema version after the Stage 6 runner contract exists.
+
 ## Taxonomies
 
 `failure-taxonomy.schema.json` validates taxonomy structure. The starter taxonomy data lives in `examples/failure-taxonomy.yaml` and is checked by the Stage 2 fixture validator so future taxonomy content can evolve through data and CLI checks rather than by rewriting the structural schema.

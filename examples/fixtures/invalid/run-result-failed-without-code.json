@@ -5,11 +5,16 @@
   "suite_id": "harness-self-test",
   "task_id": "schema-smoke",
   "task_version": "1.0.0",
-  "dataset_hash": "sha256:a24aec6c89366e103dec4e2f26c0dc6efabccb8157bca47a7ee417119a58923b",
+  "dataset_hash": "sha256:9330054cc7ffef346ff5709de3a3b81b6e5177dcb1954510cd39eee2986c591d",
   "split": "optimization",
   "model_profile": "examples/model-profiles/stub.yaml",
   "harness_version": "0.1.0",
   "status": "failed",
+  "execution": {
+    "mode": "verifier-only",
+    "harness_status": "passed",
+    "verifier_status": "failed"
+  },
   "usage": {
     "billed_model_id": "stub-v1",
     "input_tokens": 0,

@@ -1,6 +1,13 @@
 {
   "schema_version": "0.1.0",
   "verifier_id": "schema-smoke",
+  "run_id": "run-schema-smoke-001",
+  "case": "oracle",
+  "expected_status": "passed",
+  "candidate": "examples/evals/harness-self-test/v1.0.0/oracle.txt",
   "status": "passed",
-  "summary": "The recorded schema smoke verifier passed."
+  "harness_status": "passed",
+  "summary": "Verifier command exited 0.",
+  "timed_out": false,
+  "exit_code": 0
 }

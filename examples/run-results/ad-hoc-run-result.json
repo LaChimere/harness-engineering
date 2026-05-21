@@ -5,6 +5,11 @@
   "model_profile": "examples/model-profiles/stub.yaml",
   "harness_version": "0.1.0",
   "status": "passed",
+  "execution": {
+    "mode": "verifier-only",
+    "harness_status": "passed",
+    "verifier_status": "skipped"
+  },
   "usage": {
     "billed_model_id": "stub-v1",
     "input_tokens": 0,

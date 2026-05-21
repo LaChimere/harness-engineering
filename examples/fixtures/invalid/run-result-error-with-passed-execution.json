@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0",
-  "run_id": "run-schema-smoke-001",
+  "run_id": "run-error-with-passed-execution",
   "kind": "eval",
   "suite_id": "harness-self-test",
   "task_id": "schema-smoke",
@@ -9,7 +9,8 @@
   "split": "optimization",
   "model_profile": "harness://verifier-only/no-model",
   "harness_version": "0.1.0",
-  "status": "passed",
+  "status": "error",
+  "failure_code": "timeout",
   "execution": {
     "mode": "verifier-only",
     "harness_status": "passed",
@@ -26,11 +27,5 @@
   },
   "trace": "harness://verifier-only/no-agent-trace",
   "verifier_result": "examples/verifier-results/schema-smoke.json",
-  "artifacts": [
-    {
-      "path": "examples/harness.yaml",
-      "media_type": "application/yaml",
-      "description": "Validated harness example."
-    }
-  ]
+  "artifacts": []
 }

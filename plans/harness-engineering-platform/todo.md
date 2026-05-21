@@ -157,30 +157,30 @@
 
 ## Stage 5: Eval task contract and deterministic verifier runner
 
-- [ ] Define minimal eval task/run format inspired by Harbor, Terminal-Bench, SWE-bench, and OpenAI Evals.
-- [ ] Implement verifier-only eval execution.
-- [ ] Define verifier trust/sandbox requirement contract.
-- [ ] Add verifier trust declaration to self-test fixture.
-- [ ] Implement or specify `harness eval validate`.
-- [ ] Add task versioning.
-- [ ] Add dataset hash handling.
-- [ ] Add optimization/holdout split creation and validation.
-- [ ] Add resource/time limit semantics.
-- [ ] Add result semantics.
-- [ ] Add harness self-test fixture with oracle pass.
-- [ ] Add broken twin fixture that fails deterministically.
-- [ ] Record run results with suite/task version, dataset hash, and split designation.
-- [ ] Add tests proving oracle pass and broken twin fail.
-- [ ] Run eval/verifier tests.
-- [ ] Run `git diff --check`.
+- [x] Define minimal eval task/run format inspired by Harbor, Terminal-Bench, SWE-bench, and OpenAI Evals.
+- [x] Implement verifier-only eval execution.
+- [x] Define verifier trust/sandbox requirement contract.
+- [x] Add verifier trust declaration to self-test fixture.
+- [x] Implement or specify `harness eval validate`.
+- [x] Add task versioning.
+- [x] Add dataset hash handling.
+- [x] Add optimization/holdout split creation and validation.
+- [x] Add resource/time limit semantics.
+- [x] Add result semantics.
+- [x] Add harness self-test fixture with oracle pass.
+- [x] Add broken twin fixture that fails deterministically.
+- [x] Record run results with suite/task version, dataset hash, and split designation.
+- [x] Add tests proving oracle pass and broken twin fail.
+- [x] Run eval/verifier tests.
+- [x] Run `git diff --check`.
 
 ### Stage 5 acceptance criteria
 
-- [ ] The self-test proves the verifier can pass and fail deterministically.
-- [ ] Run results include suite/task version and dataset hash.
-- [ ] A reviewer can distinguish agent failure from harness/verifier failure.
-- [ ] Verifiers declare trust level, sandbox requirements, allowed inputs/outputs, and network/secret/host-file access before execution.
-- [ ] Eval task and run-result schemas support optimization/holdout split designation and record which split was used.
+- [x] The self-test proves the verifier can pass and fail deterministically.
+- [x] Run results include suite/task version and dataset hash.
+- [x] A reviewer can distinguish agent failure from harness/verifier failure.
+- [x] Verifiers declare trust level, sandbox requirements, allowed inputs/outputs, and network/secret/host-file access before execution.
+- [x] Eval task and run-result schemas support optimization/holdout split designation and record which split was used.
 
 ## Stage 6: Agent runner, first behavioral eval, and trace normalization
 

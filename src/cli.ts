@@ -1,4 +1,5 @@
 import { runDoctorCommand } from './commands/doctor.ts';
+import { runEvalCommand } from './commands/eval.ts';
 import { runInit } from './commands/init.ts';
 import { runMigrate } from './commands/migrate.ts';
 import { runReport } from './commands/report.ts';
@@ -45,6 +46,8 @@ export async function runCli(args: readonly string[], context: RunContext): Prom
         return await runMigrate(commandArgs, commandContext);
       case 'doctor':
         return await runDoctorCommand(commandArgs, commandContext);
+      case 'eval':
+        return await runEvalCommand(commandArgs, commandContext);
       case 'verify':
         return await runVerify(commandArgs, commandContext);
       case 'report':
@@ -71,6 +74,7 @@ Commands:
   validate   Validate harness.yaml shape, engines, and composed references.
   migrate    Emit dry-run/no-op migration evidence.
   doctor     Run deterministic structural harness checks.
+  eval       Run deterministic verifier-only eval validation.
   verify     Validate explicit self-verification evidence.
   report     Summarize harness artifacts and cite source paths.
   version    Print CLI version.

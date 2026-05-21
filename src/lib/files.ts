@@ -54,23 +54,43 @@ export async function writeTextNoFollowCreatingDirectories(
   path: string,
   text: string,
 ): Promise<void> {
-  await writeFileNoFollowCreatingDirectories(root, path, text);
+  await writeFileNoFollowCreatingDirectories(
+    root,
+    path,
+    text,
+    constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
+  );
+}
+
+export async function appendTextNoFollowCreatingDirectories(
+  root: string,
+  path: string,
+  text: string,
+): Promise<void> {
+  await writeFileNoFollowCreatingDirectories(
+    root,
+    path,
+    text,
+    constants.O_WRONLY | constants.O_CREAT | constants.O_APPEND | constants.O_NOFOLLOW,
+  );
 }
 
 async function writeFileNoFollowCreatingDirectories(
   root: string,
   path: string,
   data: string | Uint8Array,
+  flags = constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
 ): Promise<void> {
-  await ensureDirectory(dirname(path));
+  await ensureDirectoryInsideRoot(root, dirname(path));
   await assertNoSymlinkWithinRoot(root, path);
   await assertRealPathInsideRoot(root, dirname(path));
-  const file = await open(
-    path,
-    constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
-    0o666,
-  );
+  const file = await open(path, flags, 0o666);
   try {
+    const stats = await file.stat();
+    if (!stats.isFile()) {
+      throw new CliError(`Refusing to write non-file target: ${path}`, ExitCode.usageError);
+    }
+    await assertRealPathInsideRoot(root, path);
     await file.writeFile(data);
   } finally {
     await file.close();

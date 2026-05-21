@@ -44,6 +44,7 @@ const starterDirectories = [
   '.harness/handoffs',
   '.harness/gc',
   '.harness/doctor',
+  '.harness/verifier-results',
   '.harness/approvals',
 ] as const;
 

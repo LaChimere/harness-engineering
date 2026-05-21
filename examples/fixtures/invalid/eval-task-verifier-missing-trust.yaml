@@ -2,7 +2,7 @@ schema_version: "0.1.0"
 suite_id: harness-self-test
 task_id: verifier-missing-trust
 task_version: "1.0.0"
-dataset_hash: sha256:a24aec6c89366e103dec4e2f26c0dc6efabccb8157bca47a7ee417119a58923b
+dataset_hash: sha256:9330054cc7ffef346ff5709de3a3b81b6e5177dcb1954510cd39eee2986c591d
 split: optimization
 confidence: validated-oracle
 instruction: This fixture omits verifier trust requirements and must fail validation.

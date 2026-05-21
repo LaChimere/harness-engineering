@@ -1,6 +1,6 @@
 # Harness CLI
 
-Stage 4 includes the initial deterministic `harness` CLI and Harness doctor MVP. It consumes the Stage 2 schemas and examples, but it still does not implement `eval`, `run`, plugin, CI, skill, live model execution behavior, or formal GC behavior.
+Stage 5 includes the initial deterministic `harness` CLI, Harness doctor MVP, and verifier-only eval validation. It consumes the Stage 2 schemas and examples, but it still does not implement `harness run`, `harness eval run`, plugin, CI, skill, live model execution behavior, or formal GC behavior.
 
 ## Commands
 
@@ -9,6 +9,7 @@ harness init
 harness validate
 harness migrate
 harness doctor --file examples/harness.yaml
+harness eval validate --file examples/harness.yaml
 harness verify --spec examples/verification/stage3-self-verification.yaml
 harness report
 ```
@@ -25,7 +26,7 @@ harness report
 
 It does not run doctor checks, eval verifiers, agents, or migrations.
 
-`harness migrate` currently remains dry-run/no-op as of Stage 4. It emits provisional migration evidence with `schema_version`, `kind: migration-evidence`, `stability: provisional`, source/target schema versions, `dry_run: true`, and `would_change: false`.
+`harness migrate` currently remains dry-run/no-op as of Stage 5. It emits provisional migration evidence with `schema_version`, `kind: migration-evidence`, `stability: provisional`, source/target schema versions, `dry_run: true`, and `would_change: false`.
 
 `harness doctor` runs deterministic structural harness checks and emits Markdown by default or schema-valid JSON with `--format json`. Stage 4 doctor checks cover:
 
@@ -37,6 +38,10 @@ It does not run doctor checks, eval verifiers, agents, or migrations.
 
 Doctor JSON conforms to `schemas/doctor-result.schema.json`. `--output <path>` writes Markdown or JSON inside the selected root and rejects symlinked write targets. Doctor does not execute local checks, shell commands, eval verifiers, agents, repairs, GC, or subjective quality scoring.
 
+`harness eval validate` runs deterministic verifier-only eval validation. With no explicit task, it reads `harness.yaml`, discovers configured eval task files, validates them against `schemas/eval-task.schema.json`, recomputes the declared dataset hash from the task's environment, oracle, baseline, and artifact references, then runs the task verifier against the oracle and broken twin candidates. The Stage 5 verifier runner only executes `command` verifiers whose trust declaration is `sandboxed`, requires `process`, and refuses tasks that declare network, secret, or host-file access. Stage 5 validates and gates declarations before execution; it does not provide a runtime sandbox, network namespace, filesystem jail, or secret isolation.
+
+Eval validation emits Markdown by default or JSON with `--format json`. `--output <path>` appends a per-invocation run-result JSONL ledger inside the selected root using unique run IDs by default and writes verifier-result JSON under `.harness/verifier-results/`, rejecting symlinked write targets; omit `--output` for stable content-derived stdout run IDs, or pass a safe `--run-id` explicitly. Run results use `execution.mode: verifier-only` with separate `harness_status` and `verifier_status` fields so reviewers can distinguish harness/verifier failures from future agent/model failures. `harness eval validate` does not run agents, call models, produce agent traces, compute scoreboards, or implement `harness eval run`.
+
 `harness verify` consumes explicit self-verification evidence shaped by `schemas/self-verification.schema.json`. It validates the evidence document and reports the statuses already recorded in `acceptance_checks`. It does not inspect harness structure, execute checks, run verifiers, run agents, or infer behavioral quality; structural inspection belongs to current `doctor`, while behavioral execution remains later `eval` and `run` work.
 
 `harness report` summarizes the harness and optional artifact inputs while citing every artifact path it summarized.
@@ -45,7 +50,7 @@ Doctor JSON conforms to `schemas/doctor-result.schema.json`. `--output <path>` w
 
 `harness init` can create or overwrite starter-managed files, so its `--root` value must stay inside the current working directory. Run `init` from the target repository root, or pass a child directory with `--root`.
 
-The read/report commands (`validate`, `doctor`, `verify`, `report`) and the Stage 3 no-op `migrate` command may point `--root` at another checkout for inspection. User-provided file, spec, artifact, doctor-output, and migration-output paths are still constrained to the selected root. Doctor output, migration output, and init writes also reject symlinked write targets.
+The read/report commands (`validate`, `doctor`, `verify`, `report`) and the no-op `migrate` command may point `--root` at another checkout for inspection. Unlike those read/report commands, `harness eval validate` may execute declaration-gated verifier commands in the selected root, including when `--root` points at another checkout. User-provided file, task, spec, artifact, doctor-output, eval-output, and migration-output paths are still constrained to the selected root. Doctor output, eval output, verifier-result output, migration output, and init writes also reject symlinked write targets.
 
 ## Exit semantics
 
@@ -54,7 +59,7 @@ These exit codes are stable command contracts for future plugin and CI adapters:
 | Code | Name | Meaning |
 |---:|---|---|
 | 0 | `ok` | The command completed successfully. |
-| 1 | `validation-error` | Input was found, but schema validation, doctor status, or explicit verification status failed. |
+| 1 | `validation-error` | Input was found, but schema validation, doctor status, eval validation status, or explicit verification status failed. |
 | 2 | `usage-error` | The command line arguments are invalid or required arguments are missing. |
 | 3 | `not-found` | A required input file or directory does not exist. |
 | 4 | `incompatible-engines` | The harness declares CLI or schema engine ranges that this CLI cannot satisfy. |
@@ -62,9 +67,11 @@ These exit codes are stable command contracts for future plugin and CI adapters:
 
 For `harness doctor`, process exit status is computed from the top-level doctor status: `passed` exits `0`; `failed` and future `warning` statuses exit `1`. Engine incompatibility inside doctor is reported as a failed `engine-compatibility` check and uses exit code `1`; `harness validate` still uses exit code `4` for direct engine compatibility failures.
 
+For `harness eval validate`, process exit status is computed from the top-level eval validation status: `passed` exits `0`; `failed` and `error` exit `1`. A broken twin that fails as expected contributes a failed run-result with `failure_code: verification-failure`, but the overall eval validation still passes when the expected oracle and broken-twin outcomes both hold.
+
 ## Verification spec format
 
-A verification spec is self-verification evidence, not a doctor or eval task. It must include:
+A verification spec is self-verification evidence, not a doctor result, eval task, or run-result. It must include:
 
 - `schema_version`;
 - `verification_id`;

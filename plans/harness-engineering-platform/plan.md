@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
 
-Stages 1, 2, 3, and 4 are complete. The next implementation target is Stage 5: Eval task contract and deterministic verifier runner.
+Stages 1, 2, 3, 4, and 5 are complete. The next implementation target is Stage 6: Agent runner, first behavioral eval, and trace normalization.
 
 ## Goals
 

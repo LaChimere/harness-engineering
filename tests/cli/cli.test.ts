@@ -1,10 +1,12 @@
 import { afterEach, expect, test } from 'bun:test';
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { runCli } from '../../src/cli.ts';
+import { computeEvalTaskDatasetHash } from '../../src/lib/eval.ts';
 import { ExitCode } from '../../src/lib/exit-codes.ts';
+import { loadDocument } from '../../src/lib/files.ts';
 import { getArray, getObject, getString, isObject, type JsonObject } from '../../src/lib/json.ts';
 import { loadSchemaRegistry } from '../../src/lib/schema-registry.ts';
 
@@ -403,6 +405,332 @@ test('doctor refuses to write output through symlinks', async () => {
   expect(result.stderr).toContain('Refusing to write through symlink');
 });
 
+test('eval validate proves oracle pass and broken twin fail deterministically', async () => {
+  const result = await run([
+    'eval',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--format',
+    'json',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  const evalResult = JSON.parse(result.stdout);
+  expect(evalResult.status).toBe('passed');
+
+  const tasks = jsonObjects(getArray(evalResult, 'tasks'));
+  expect(tasks.length).toBe(1);
+  expect(getString(tasks[0] ?? {}, 'split')).toBe('optimization');
+
+  const cases = jsonObjects(getArray(tasks[0] ?? {}, 'cases'));
+  const oracleCase = objectWithString(cases, 'case', 'oracle');
+  const brokenTwinCase = objectWithString(cases, 'case', 'broken-twin');
+  expect(getString(oracleCase ?? {}, 'actual_status')).toBe('passed');
+  expect(getBoolean(oracleCase ?? {}, 'expectation_met')).toBe(true);
+  expect(getString(brokenTwinCase ?? {}, 'actual_status')).toBe('failed');
+  expect(getBoolean(brokenTwinCase ?? {}, 'expectation_met')).toBe(true);
+
+  const runResults = jsonObjects(getArray(evalResult, 'run_results'));
+  expect(runResults.length).toBe(2);
+  const schemas = await loadSchemaRegistry(process.cwd());
+  for (const runResult of runResults) {
+    expect(schemas.validate('run-result', runResult)).toEqual([]);
+    expect(getString(runResult, 'suite_id')).toBe('harness-self-test');
+    expect(getString(runResult, 'task_id')).toBe('schema-smoke');
+    expect(getString(runResult, 'task_version')).toBe('1.0.0');
+    expect(getString(runResult, 'dataset_hash')).toBe(
+      'sha256:9330054cc7ffef346ff5709de3a3b81b6e5177dcb1954510cd39eee2986c591d',
+    );
+    expect(getString(runResult, 'split')).toBe('optimization');
+    expect(getString(runResult, 'model_profile')).toBe('harness://verifier-only/no-model');
+    expect(getString(runResult, 'trace')).toBe('harness://verifier-only/no-agent-trace');
+    expect(getObject(runResult, 'usage')).toEqual({
+      billed_model_id: 'verifier-only',
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0,
+      requests: 0,
+      incurred_cost_usd: 0,
+      source: 'stub',
+    });
+    const execution = getObject(runResult, 'execution');
+    expect(execution).toEqual({
+      mode: 'verifier-only',
+      harness_status: 'passed',
+      verifier_status: getString(runResult, 'status') === 'passed' ? 'passed' : 'failed',
+    });
+    if (getString(runResult, 'status') === 'passed') {
+      expect(getString(runResult, 'failure_code')).toBeUndefined();
+    } else {
+      expect(getString(runResult, 'failure_code')).toBe('verification-failure');
+    }
+  }
+});
+
+test('eval validate appends run results and writes verifier artifacts', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const result = await run(['eval', 'validate', '--output', '.harness/run-results.jsonl'], root);
+  expect(result.code).toBe(ExitCode.ok);
+  expect(result.stdout).toContain('harness eval validate passed: wrote .harness/run-results.jsonl');
+  const secondResult = await run(
+    ['eval', 'validate', '--output', '.harness/run-results.jsonl'],
+    root,
+  );
+  expect(secondResult.code).toBe(ExitCode.ok);
+
+  const lines = (await readFile(join(root, '.harness/run-results.jsonl'), 'utf8'))
+    .trim()
+    .split('\n');
+  expect(lines.length).toBe(4);
+  const schemas = await loadSchemaRegistry(process.cwd());
+  const runIds = new Set<string>();
+  for (const line of lines) {
+    const runResult = JSON.parse(line);
+    expect(schemas.validate('run-result', runResult)).toEqual([]);
+    const runId = getString(runResult, 'run_id');
+    if (runId === undefined) {
+      throw new Error('run result did not include run_id');
+    }
+    runIds.add(runId);
+    const verifierResult = getString(runResult, 'verifier_result');
+    if (verifierResult === undefined) {
+      throw new Error('run result did not include verifier_result');
+    }
+    const verifierArtifact = JSON.parse(await readFile(join(root, verifierResult), 'utf8'));
+    expect(getString(verifierArtifact, 'schema_version')).toBe('0.1.0');
+    expect(getString(verifierArtifact, 'run_id')).toBe(runId);
+    expect(getString(verifierArtifact, 'status')).toBe(
+      getString(getObject(runResult, 'execution') ?? {}, 'verifier_status'),
+    );
+  }
+  expect(runIds.size).toBe(4);
+});
+
+test('eval validate treats dot output declarations as root-contained allowlists', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(
+    taskPath,
+    task.replace(
+      `      - .harness/run-results.jsonl
+      - .harness/verifier-results`,
+      '      - .',
+    ),
+  );
+
+  const result = await run(['eval', 'validate', '--output', '.harness/run-results.jsonl'], root);
+  expect(result.code).toBe(ExitCode.ok);
+});
+
+test('eval validate canonicalizes candidate paths for trust checks', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(
+    taskPath,
+    task.replace(
+      'artifact: examples/evals/harness-self-test/v1.0.0/oracle.txt',
+      'artifact: ./examples/evals/harness-self-test/v1.0.0/oracle.txt',
+    ),
+  );
+
+  const result = await run(['eval', 'validate', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.ok);
+});
+
+test('eval validate rejects stale dataset hashes before verifier execution', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(
+    taskPath,
+    task.replace(
+      `command: grep -q '^schema-smoke passes' "$HARNESS_EVAL_CANDIDATE"`,
+      `command: touch stale-verifier-ran && grep -q '^schema-smoke passes' "$HARNESS_EVAL_CANDIDATE"`,
+    ),
+  );
+  await writeFile(
+    join(root, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'),
+    'schema-smoke passes after an unrecorded dataset edit.\n',
+  );
+
+  const result = await run(['eval', 'validate', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  const evalResult = JSON.parse(result.stdout);
+  expect(evalResult.status).toBe('failed');
+  expect(result.stdout).toContain('dataset_hash mismatch');
+  expect(getArray(evalResult, 'run_results')).toEqual([]);
+  expect(await pathExistsForTest(join(root, 'stale-verifier-ran'))).toBe(false);
+});
+
+test('eval validate refuses unsafe verifier trust declarations', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(
+    taskPath,
+    task
+      .replace(
+        `command: grep -q '^schema-smoke passes' "$HARNESS_EVAL_CANDIDATE"`,
+        'command: touch should-not-run',
+      )
+      .replace('network_access: false', 'network_access: true'),
+  );
+
+  const result = await run(['eval', 'validate', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  const evalResult = JSON.parse(result.stdout);
+  expect(evalResult.status).toBe('error');
+  const runResults = jsonObjects(getArray(evalResult, 'run_results'));
+  expect(runResults.length).toBe(2);
+  for (const runResult of runResults) {
+    expect(getString(runResult, 'status')).toBe('error');
+    expect(getString(runResult, 'failure_code')).toBe('sandbox-violation');
+    expect(getObject(runResult, 'execution')).toEqual({
+      mode: 'verifier-only',
+      harness_status: 'failed',
+      verifier_status: 'skipped',
+    });
+  }
+  expect(await pathExistsForTest(join(root, 'should-not-run'))).toBe(false);
+});
+
+test('eval validate fails when oracle fails or broken twin passes unexpectedly', async () => {
+  const oracleRoot = await tempRoot();
+  await run(['init'], oracleRoot);
+  await writeFile(
+    join(oracleRoot, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'),
+    'schema-smoke no longer has the passing marker.\n',
+  );
+  await refreshSelfTestDatasetHash(oracleRoot);
+
+  const oracleResult = await run(['eval', 'validate', '--format', 'json'], oracleRoot);
+  expect(oracleResult.code).toBe(ExitCode.validationError);
+  const oracleEval = JSON.parse(oracleResult.stdout);
+  expect(oracleEval.status).toBe('failed');
+  const oracleCases = jsonObjects(
+    getArray(jsonObjects(getArray(oracleEval, 'tasks'))[0] ?? {}, 'cases'),
+  );
+  const failedOracleCase = objectWithString(oracleCases, 'case', 'oracle');
+  expect(getString(failedOracleCase ?? {}, 'actual_status')).toBe('failed');
+  expect(getBoolean(failedOracleCase ?? {}, 'expectation_met')).toBe(false);
+
+  const brokenTwinRoot = await tempRoot();
+  await run(['init'], brokenTwinRoot);
+  await writeFile(
+    join(brokenTwinRoot, 'examples/evals/harness-self-test/v1.0.0/broken-twin.txt'),
+    'schema-smoke passes even though this is the broken twin.\n',
+  );
+  await refreshSelfTestDatasetHash(brokenTwinRoot);
+
+  const brokenTwinResult = await run(['eval', 'validate', '--format', 'json'], brokenTwinRoot);
+  expect(brokenTwinResult.code).toBe(ExitCode.validationError);
+  const brokenTwinEval = JSON.parse(brokenTwinResult.stdout);
+  expect(brokenTwinEval.status).toBe('failed');
+  const brokenTwinCases = jsonObjects(
+    getArray(jsonObjects(getArray(brokenTwinEval, 'tasks'))[0] ?? {}, 'cases'),
+  );
+  const passingBrokenTwinCase = objectWithString(brokenTwinCases, 'case', 'broken-twin');
+  expect(getString(passingBrokenTwinCase ?? {}, 'actual_status')).toBe('passed');
+  expect(getBoolean(passingBrokenTwinCase ?? {}, 'expectation_met')).toBe(false);
+});
+
+test('eval validate rejects run ids that could escape verifier output paths', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const result = await run(
+    ['eval', 'validate', '--output', '.harness/run-results.jsonl', '--run-id', '../escape'],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('eval validate --run-id may contain only');
+});
+
+test('eval validate distinguishes verifier command errors from verification failures', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(
+    taskPath,
+    task.replace(
+      `command: grep -q '^schema-smoke passes' "$HARNESS_EVAL_CANDIDATE"`,
+      'command: definitely-not-a-harness-verifier-command',
+    ),
+  );
+
+  const result = await run(['eval', 'validate', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  const evalResult = JSON.parse(result.stdout);
+  expect(evalResult.status).toBe('error');
+  const runResults = jsonObjects(getArray(evalResult, 'run_results'));
+  expect(runResults.length).toBe(2);
+  for (const runResult of runResults) {
+    expect(getString(runResult, 'status')).toBe('error');
+    expect(getString(runResult, 'failure_code')).toBe('verifier-error');
+    expect(getObject(runResult, 'execution')).toEqual({
+      mode: 'verifier-only',
+      harness_status: 'passed',
+      verifier_status: 'error',
+    });
+  }
+});
+
+test('eval validate reports verifier command timeouts distinctly', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const task = await readFile(taskPath, 'utf8');
+  await writeFile(
+    taskPath,
+    task
+      .replace(
+        `command: grep -q '^schema-smoke passes' "$HARNESS_EVAL_CANDIDATE"`,
+        'command: sleep 2',
+      )
+      .replace('timeout_seconds: 30', 'timeout_seconds: 1'),
+  );
+
+  const result = await run(['eval', 'validate', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  const evalResult = JSON.parse(result.stdout);
+  expect(evalResult.status).toBe('error');
+  const runResults = jsonObjects(getArray(evalResult, 'run_results'));
+  expect(runResults.length).toBe(2);
+  for (const runResult of runResults) {
+    expect(getString(runResult, 'status')).toBe('error');
+    expect(getString(runResult, 'failure_code')).toBe('timeout');
+    expect(getObject(runResult, 'execution')).toEqual({
+      mode: 'verifier-only',
+      harness_status: 'passed',
+      verifier_status: 'error',
+    });
+  }
+});
+
+test('eval validate refuses to write run results through symlinks', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  const sensitive = join(parent, 'sensitive');
+  await mkdir(root);
+  await mkdir(sensitive);
+  await run(['init'], root);
+  await rm(join(root, '.harness/run-results.jsonl'));
+  await symlink(join(sensitive, 'run-results.jsonl'), join(root, '.harness/run-results.jsonl'));
+
+  const result = await run(['eval', 'validate', '--output', '.harness/run-results.jsonl'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Refusing to write through symlink');
+});
+
 test('usage and missing input errors use stable exit codes', async () => {
   const unknown = await run(['unknown']);
   expect(unknown.code).toBe(ExitCode.usageError);
@@ -415,6 +743,7 @@ test('usage and missing input errors use stable exit codes', async () => {
   const help = await run(['help']);
   expect(help.code).toBe(ExitCode.ok);
   expect(help.stdout).toContain('doctor     Run deterministic structural harness checks.');
+  expect(help.stdout).toContain('eval       Run deterministic verifier-only eval validation.');
   expect(help.stdout).toContain('doctor status');
 });
 
@@ -461,4 +790,52 @@ function doctorCheck(document: unknown, checkId: string): JsonObject | undefined
     }
   }
   return undefined;
+}
+
+function jsonObjects(values: ReturnType<typeof getArray>): JsonObject[] {
+  return (values ?? []).filter(isObject);
+}
+
+function objectWithString(
+  objects: readonly JsonObject[],
+  key: string,
+  value: string,
+): JsonObject | undefined {
+  return objects.find((object) => getString(object, key) === value);
+}
+
+function getBoolean(object: JsonObject, key: string): boolean | undefined {
+  const value = object[key];
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+async function refreshSelfTestDatasetHash(root: string): Promise<void> {
+  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskText = await readFile(taskPath, 'utf8');
+  const task = await loadDocument(taskPath);
+  if (!isObject(task)) {
+    throw new Error('self-test task must be an object');
+  }
+  const datasetHash = await computeEvalTaskDatasetHash(root, task);
+  await writeFile(
+    taskPath,
+    taskText.replace(/^dataset_hash: .+$/m, `dataset_hash: ${datasetHash}`),
+  );
+}
+
+async function pathExistsForTest(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: string }).code === 'ENOENT'
+    ) {
+      return false;
+    }
+    throw error;
+  }
 }

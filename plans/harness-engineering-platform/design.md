@@ -220,7 +220,7 @@ doctor:
     - builtin:schema-validity
     - builtin:reference-exists
     - id: local-doc-link-check
-      path: .harness/checks/doc-links.yaml
+      path: examples/checks/doc-links.yaml
       trust_requirements:
         trust_level: sandboxed
         sandbox_required: process
@@ -235,7 +235,7 @@ doctor:
 continuity:
   state_dir: .harness/continuity
   startup_smoke_test:
-    command: npx @lachimere/harness-engineering verify --scope continuity
+    command: harness validate
     timeout_seconds: 300
   handoff_dir: .harness/handoffs
   session_id_env: HARNESS_SESSION_ID

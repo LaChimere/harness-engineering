@@ -6,29 +6,30 @@ The product goal is a versioned harness substrate that makes agent work reproduc
 
 ## Current status
 
-This repository has completed Stage 2: harness schema substrate.
+This repository has completed Stage 3: CLI skeleton, init, validate, migrate, verify, and report.
 
-The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`. No npm package, CLI command, marketplace plugin, CI adapter, or native skill adapter is available from this repository today.
+The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. No marketplace plugin, CI adapter, native skill adapter, or live agent runner is available from this repository today.
 
 ## Entrypoint matrix
 
 | Entrypoint | Status now | Intended role | First stage that makes it concrete |
 |---|---|---|---|
-| CLI plus `harness.yaml` | Current documented default path. Stage 2 schemas exist; the CLI is planned, not yet published. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, GC, and reports. | Stage 3 implements the initial CLI. |
+| CLI plus `harness.yaml` | Initial Stage 3 CLI exists locally with `init`, `validate`, `migrate`, `verify`, and `report`. It is not yet a published npm package. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, GC, and reports. | Stage 3 implements the initial CLI. |
 | Host marketplace plugin | Planned north-star UX only. No plugin install path is promised yet. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported agent or IDE hosts. | Stage 8 verifies feasibility; Stage 9 ships a plugin only if feasible. |
 | `agent-coding` skills compatibility | External migration-source evidence. Compatibility is not audited yet. | Portable fallback or compatibility path after the substrate exists and each skill is classified. | Stage 13. |
 | CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Stage 11. |
 
-Until a real marketplace plugin is verified and shipped, the public path stays CLI-first. When Stage 3 lands, the intended command shape is:
+Until a real marketplace plugin is verified and shipped, the public path stays CLI-first. The Stage 3 local command shape is:
 
 ```bash
-npx @lachimere/harness-engineering init
-npx @lachimere/harness-engineering validate
-npx @lachimere/harness-engineering verify
-npx @lachimere/harness-engineering report
+bun run build
+node dist/index.js init
+node dist/index.js validate
+node dist/index.js verify --spec examples/verification/stage3-self-verification.yaml
+node dist/index.js report
 ```
 
-These commands are target commands, not available commands yet.
+The npm package metadata and `harness` binary mapping exist, but the package has not been published.
 
 ## Product layers
 
@@ -55,7 +56,7 @@ These commands are target commands, not available commands yet.
 
 ## Schema publication and compatibility
 
-Stage 2 added JSON schemas under `schemas/` with versioned `$id` values. External tools can validate artifacts from a local checkout today; after Stage 3 packaging exists, the same schemas should also be available from `node_modules/@lachimere/harness-engineering/schemas/` or tagged release assets.
+Stage 2 added JSON schemas under `schemas/` with versioned `$id` values. External tools can validate artifacts from a local checkout today; Stage 3 package metadata includes the same schemas so installed package consumers can resolve them from `node_modules/@lachimere/harness-engineering/schemas/` after the package is published.
 
 Every machine-readable artifact must include `schema_version`. Each schema uses semantic versioning, and `harness.yaml` pins compatible ranges with `engines.schemas`. The CLI validates artifacts only against schema versions inside its supported range and reports version mismatch as an explicit compatibility error.
 
@@ -88,4 +89,4 @@ The approved roadmap lives in:
 - `plans/harness-engineering-platform/plan.md`
 - `plans/harness-engineering-platform/todo.md`
 
-The next implementation target after Stage 2 is Stage 3: CLI skeleton, init, validate, migrate, verify, and report.
+The next implementation target after Stage 3 is Stage 4: Harness doctor MVP.

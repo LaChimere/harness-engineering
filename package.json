@@ -1,12 +1,47 @@
 {
-  "name": "harness-engineering",
-  "module": "index.ts",
+  "name": "@lachimere/harness-engineering",
+  "version": "0.1.0",
+  "description": "Harness-as-code platform for AI coding agents.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LaChimere/harness-engineering.git"
+  },
   "type": "module",
-  "private": true,
+  "engines": {
+    "node": ">=16"
+  },
+  "bin": {
+    "harness": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "examples",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --target node --outfile ./dist/index.js",
+    "check": "bun run typecheck && bun run lint",
+    "lint": "biome check .",
+    "prepublishOnly": "bun run build",
+    "test:unit": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
+    "@biomejs/biome": "2.4.13",
     "@types/bun": "latest",
+    "@types/semver": "^7.7.1",
+    "lefthook": "^2.1.8",
     "typescript": "^6"
   },
-  "peerDependencies": {
+  "peerDependencies": {},
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "semver": "^7.8.0",
+    "yaml": "^2.9.0"
   }
 }

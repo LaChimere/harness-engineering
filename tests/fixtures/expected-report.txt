@@ -1,0 +1,15 @@
+Harness report
+- harness: harness.yaml
+- name: harness-engineering
+- artifacts:
+  - examples/failure-taxonomy.yaml
+  - AGENTS.md
+  - README.md
+  - examples/environments/local.yaml
+  - examples/policies/approval-policy.yaml
+  - examples/policies/sandbox-policy.yaml
+  - examples/model-profiles/stub.yaml
+  - examples/agent-runners/stub.yaml
+  - examples/traces/native-cli-trace.json
+  - examples/evals/harness-self-test/v1.0.0/
+  - examples/checks/doc-links.yaml

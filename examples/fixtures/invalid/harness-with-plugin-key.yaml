@@ -40,10 +40,22 @@ evals:
 doctor:
   checks:
     - builtin:schema-validity
+    - id: local-doc-link-check
+      path: examples/checks/doc-links.yaml
+      trust_requirements:
+        trust_level: sandboxed
+        sandbox_required: process
+        network_access: false
+        secret_access: false
+        host_file_access: false
+        allowed_inputs:
+          - README.md
+        allowed_outputs:
+          - .harness/doctor/doc-links.json
 continuity:
   state_dir: .harness/continuity
   startup_smoke_test:
-    command: npx @lachimere/harness-engineering verify --scope continuity
+    command: harness validate
     timeout_seconds: 300
 gc:
   evidence_dir: .harness/gc

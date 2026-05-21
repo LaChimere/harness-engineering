@@ -12,7 +12,7 @@ preview_diff: |
   -schema_version: "0.0.0"
   +schema_version: "0.1.0"
 equivalent_cli_command:
-  command: npx @lachimere/harness-engineering migrate --dry-run --repair-action examples/fixtures/invalid/repair-action-missing-trust.yaml
+  command: harness migrate --dry-run --output .harness/repairs/missing-trust.yaml
   timeout_seconds: 300
 approval_state: proposed
 sandbox_requirement: worktree

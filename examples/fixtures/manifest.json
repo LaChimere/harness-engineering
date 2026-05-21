@@ -45,6 +45,10 @@
       "schema": "schemas/self-verification.schema.json"
     },
     {
+      "path": "examples/verification/stage3-self-verification.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
       "path": "examples/doctor/results/pass.json",
       "schema": "schemas/doctor-result.schema.json"
     },

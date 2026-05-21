@@ -1,0 +1,21 @@
+schema_version: "0.1.0"
+verification_id: unexecuted-check
+spec_ref: plans/harness-engineering-platform/plan.md#stage-3-cli-skeleton
+spec_reread:
+  ref: plans/harness-engineering-platform/plan.md#stage-3-cli-skeleton
+  timestamp: "2026-05-21T00:00:00Z"
+  digest: sha256:d4bafe7d022d54172884fafc7e9c5696e2a3aa17b685228a900f407e245e6e53
+  status: matched
+acceptance_checks:
+  - id: do-not-execute-checks
+    expected: verify reports recorded evidence without executing checks_run commands.
+    actual: This fixture would fail if the command were executed.
+    status: passed
+checks_run:
+  - command:
+      command: exit 42
+      timeout_seconds: 1
+    status: passed
+artifacts: []
+unresolved_risks: []
+evidence_links: []

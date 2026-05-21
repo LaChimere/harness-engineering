@@ -83,37 +83,37 @@
 
 ## Stage 3: CLI skeleton: init, validate, migrate, verify, report
 
-- [ ] Add package metadata for the npm CLI.
-- [ ] Add Bun-managed dependency setup and commit the Bun text lockfile.
-- [ ] Configure TypeScript 6.
-- [ ] Add explicit `tsc --noEmit` type-check script.
-- [ ] Add Biome using user-provided configuration.
-- [ ] Add Lefthook using user-provided configuration.
-- [ ] Configure build output as a Node-compatible npm binary rather than a Bun-only executable.
-- [ ] Implement `harness init`.
-- [ ] Ensure `init` does not emit CI/plugin-specific adapter keys.
-- [ ] Implement `harness validate`.
-- [ ] Scope `validate` to schema, schema publication references, version compatibility, and currently composed reference files.
-- [ ] Implement `harness migrate`.
-- [ ] Make early `migrate` support dry-run/no-op migration evidence.
-- [ ] Implement `harness verify`.
-- [ ] Ensure `verify` consumes explicit verification specs or acceptance checks and does not do structural harness inspection.
-- [ ] Document verification spec format.
-- [ ] Add example verification spec showing non-structural acceptance verification distinct from `doctor` and `eval`.
-- [ ] Implement `harness report`.
-- [ ] Document command exit semantics.
-- [ ] Add command-level tests and output fixtures.
-- [ ] Run CLI tests.
-- [ ] Run `git diff --check`.
+- [x] Add package metadata for the npm CLI.
+- [x] Add Bun-managed dependency setup and commit the Bun text lockfile.
+- [x] Configure TypeScript 6.
+- [x] Add explicit `tsc --noEmit` type-check script.
+- [x] Add Biome using user-provided configuration.
+- [x] Add Lefthook using user-provided configuration.
+- [x] Configure build output as a Node-compatible npm binary rather than a Bun-only executable.
+- [x] Implement `harness init`.
+- [x] Ensure `init` does not emit CI/plugin-specific adapter keys.
+- [x] Implement `harness validate`.
+- [x] Scope `validate` to schema, schema publication references, version compatibility, and currently composed reference files.
+- [x] Implement `harness migrate`.
+- [x] Make early `migrate` support dry-run/no-op migration evidence.
+- [x] Implement `harness verify`.
+- [x] Ensure `verify` consumes explicit verification specs or acceptance checks and does not do structural harness inspection.
+- [x] Document verification spec format.
+- [x] Add example verification spec showing non-structural acceptance verification distinct from `doctor` and `eval`.
+- [x] Implement `harness report`.
+- [x] Document command exit semantics.
+- [x] Add command-level tests and output fixtures.
+- [x] Run CLI tests.
+- [x] Run `git diff --check`.
 
 ### Stage 3 acceptance criteria
 
-- [ ] A user can bootstrap and validate a harness baseline from the terminal.
-- [ ] CLI project uses TypeScript 6, Bun-managed dependencies, Biome, and Lefthook while producing a Node-compatible npm binary.
-- [ ] CLI exit semantics are documented for future plugin and CI adapters.
-- [ ] Reports cite the artifact paths they summarized.
-- [ ] `verify` documentation defines the verification spec or acceptance-check input format and includes an example that distinguishes self-verification from structural `doctor` checks and behavioral `eval` runs.
-- [ ] `verify` does not perform structural harness inspection that belongs to `doctor`.
+- [x] A user can bootstrap and validate a harness baseline from the terminal.
+- [x] CLI project uses TypeScript 6, Bun-managed dependencies, Biome, and Lefthook while producing a Node-compatible npm binary.
+- [x] CLI exit semantics are documented for future plugin and CI adapters.
+- [x] Reports cite the artifact paths they summarized.
+- [x] `verify` documentation defines the verification spec or acceptance-check input format and includes an example that distinguishes self-verification from structural `doctor` checks and behavioral `eval` runs.
+- [x] `verify` does not perform structural harness inspection that belongs to `doctor`.
 
 ## Stage 4: Harness doctor MVP
 

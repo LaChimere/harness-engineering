@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
 
-Stages 1 and 2 are complete. The next implementation target is Stage 3: CLI skeleton, init, validate, migrate, verify, and report.
+Stages 1, 2, and 3 are complete. The next implementation target is Stage 4: Harness doctor MVP.
 
 ## Goals
 
@@ -199,13 +199,14 @@ Stages 1 and 2 are complete. The next implementation target is Stage 3: CLI skel
 
 Includes Stage 1 through Stage 3.
 
-At this point users can run the CLI-first path:
+At this point users can run the CLI-first path from a local checkout. After the package is published, the same command surface is intended to be available through `npx @lachimere/harness-engineering`:
 
 ```bash
-npx @lachimere/harness-engineering init
-npx @lachimere/harness-engineering validate
-npx @lachimere/harness-engineering verify
-npx @lachimere/harness-engineering report
+bun run build
+node dist/index.js init
+node dist/index.js validate
+node dist/index.js verify --spec examples/verification/stage3-self-verification.yaml
+node dist/index.js report
 ```
 
 The default `harness init` output must not create CI or plugin-specific keys before those adapters exist.

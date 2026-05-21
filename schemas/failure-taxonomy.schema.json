@@ -23,7 +23,19 @@
           },
           "category": {
             "type": "string",
-            "enum": ["tooling", "execution", "verification", "context", "routing", "progress", "harness", "environment", "budget", "sandbox", "approval"]
+            "enum": [
+              "tooling",
+              "execution",
+              "verification",
+              "context",
+              "routing",
+              "progress",
+              "harness",
+              "environment",
+              "budget",
+              "sandbox",
+              "approval"
+            ]
           },
           "description": {
             "$ref": "common.schema.json#/$defs/nonEmptyString"

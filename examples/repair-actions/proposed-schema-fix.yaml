@@ -17,7 +17,7 @@ preview_diff: |
   -  copilot:
   -    enabled: true
 equivalent_cli_command:
-  command: npx @lachimere/harness-engineering migrate --dry-run --repair-action examples/repair-actions/proposed-schema-fix.yaml
+  command: harness migrate --dry-run --output .harness/repairs/fix-schema-example.yaml
   timeout_seconds: 300
 approval_state: proposed
 sandbox_requirement: worktree

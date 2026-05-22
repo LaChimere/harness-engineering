@@ -27,7 +27,9 @@
     "check": "bun run typecheck && bun run lint",
     "lint": "biome check .",
     "prepublishOnly": "bun run build",
-    "test:unit": "bun test",
+    "test:all": "bun run check && bun run test:unit && bun run test:e2e",
+    "test:e2e": "bun run build && bun test tests/e2e",
+    "test:unit": "bun test tests/cli tests/schemas tests/unit-tests tests/ci-tests",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

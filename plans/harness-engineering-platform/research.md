@@ -9,15 +9,15 @@ The plan originated in `agent-coding`, where the user wanted to broaden the scop
 - The whole repository may be reshaped around harness engineering.
 - Existing skills may be changed, merged, or deleted if that better serves the goal.
 - Delivery does not need to be limited to `npx skills add`; plugin, CLI/tooling, agent profiles, or other delivery surfaces are allowed.
-- The preferred user-facing installation path, when host support exists, should be a Harness Engineering plugin installed from the user's existing Codex/Claude/Copilot CLI/IDE marketplace or extension surface.
+- The preferred user-facing installation path, when host support exists, should be a Harness Engineering plugin or adapter installed from the user's existing Codex, Claude Code, GitHub Copilot CLI, or comparable coding-agent marketplace/install surface.
 
 The user later confirmed the intended direction: the product should actively do harness engineering and examine how the current `agent-coding` skills can be combined into the new harness-engineering architecture. Existing practices should be retained only when they fit; better practices should replace them when evidence supports the change.
 
-## Current repository evidence
+## Gate 1 repository evidence
 
-- `LaChimere/harness-engineering` is currently a clean new repository containing a license and this copied planning directory.
-- That blank state is an advantage: the target architecture can be designed around the harness substrate instead of migrating a skills-first repository in place.
-- The first implementation stage should establish product identity, package/distribution choices, and the initial repository layout before adding schemas or CLI code.
+- At Gate 1, `LaChimere/harness-engineering` was a clean new repository containing a license and this copied planning directory.
+- That blank starting point was an advantage: the target architecture could be designed around the harness substrate instead of migrating a skills-first repository in place.
+- Stages 1-7 have since added the product identity docs, package metadata, versioned schemas, examples, and the initial deterministic CLI. This section is historical evidence for why the platform could be designed cleanly, not a current file inventory.
 
 ## `agent-coding` migration-source evidence
 
@@ -38,11 +38,7 @@ The earlier research report concluded that harness engineering is broader than a
 - Best practices include reproducible sandboxes, versioned data/tasks, trace/artifact capture, deterministic graders first, calibrated LLM judges, self-verification loops, tool-permission boundaries, CI gates, and continuous entropy/garbage-collection loops.
 - OpenAI's article emphasizes repository knowledge as the system of record, agent-legible observability, mechanical architecture/taste rules, and continuous garbage collection for agent-generated entropy.
 
-Saved report:
-
-```text
-/Users/lachimere/.copilot/workspaces/cc38a0ae-41bd-4f56-a970-7a3e1faa605f/artifacts/research/https-openai-com-index-harness-engineeri.md
-```
+The first research report was saved as a session artifact during Gate 1. The durable evidence to preserve in this slug is the summarized finding above, not the local artifact path.
 
 The second research pass refined the design direction:
 
@@ -58,11 +54,7 @@ The second research pass refined the design direction:
 - SWE-bench reinforces reproducible evaluation through Docker, named `run_id`s, separate build/eval logs, `gold` predictions to validate the harness itself, and explicit resource requirements (`https://github.com/princeton-nlp/SWE-bench`).
 - Cursor's harness work highlights model-specific profiles, offline evals plus online telemetry, tool-error taxonomies, and recurring automation for harness bugs (`https://cursor.com/blog/continually-improving-agent-harness`).
 
-Saved second report:
-
-```text
-/Users/lachimere/.copilot/workspaces/cc38a0ae-41bd-4f56-a970-7a3e1faa605f/artifacts/research/harness-engineering-harness-engineering.md
-```
+The second research report was also saved as a session artifact during Gate 1. The durable evidence to preserve in this slug is the public source list and summarized conclusions above.
 
 ## Key constraints
 
@@ -73,9 +65,28 @@ Saved second report:
 5. **Agent invocation is a first-class primitive.** A harness platform must run a model through a configured harness on real tasks; schemas and verifier-only checks are not enough.
 6. **Trace, approval, sandbox, and failure-taxonomy shapes must be pinned early.** Later skills, doctor checks, recurring agents, and plugins will drift if these remain only conceptual.
 7. **Existing skills are an evidence base.** Deleting, migrating, or replacing `agent-coding` skills before defining the v-next harness contract risks removing behavior the new platform should preserve or supersede deliberately.
-8. **Marketplace plugin-first is a north star, not a promise before feasibility.** Public docs should lead with CLI-first until a real host marketplace/extension distribution path and runtime capability are verified.
+8. **Marketplace plugin-first is a north star, not a promise before feasibility.** Public docs should lead with CLI-first until a real agent/CLI marketplace distribution path and runtime capability tier are verified.
 9. **`scan-image-vulnerabilities` is an outlier.** It is useful but domain-specific security tooling rather than core harness engineering; the design should explicitly keep, move, deprecate, or reframe it.
 10. **This is large enough for Gate 1.** The change affects repository identity, delivery surfaces, workflow contract, and potentially all skills. Design approval should happen before plan/todo and implementation.
+
+## Stage 8 correction: marketplace target definition
+
+After the first Stage 8 attempt, the user clarified that the desired plugin target is not a VS Code-specific extension. Stage 8 must evaluate **generic agent/CLI marketplace or install surfaces** that can meet users where they run coding agents, especially Codex, Claude Code, GitHub Copilot CLI, and comparable named coding-agent surfaces. IDE-only extension hosts are out of scope for the corrected Stage 8/9 target; they may be recorded as future evidence, but selecting one requires a separate future planning slug rather than reuse of this Stage 8 decision.
+
+The corrected feasibility question is:
+
+- Can a plugin or adapter distributed through Codex, Claude Code, GitHub Copilot CLI, or another agent/CLI host's marketplace, command/hook discovery, MCP registry, skill-pack mechanism, or equivalent install surface discover a repository harness, bootstrap or resolve the `harness` CLI, surface reports/evidence, trigger CLI-backed repair flows, and stay an adapter over `harness.yaml` plus schemas?
+
+If no such generic agent/CLI marketplace surface can support the required adapter behavior today, Stage 8 should explicitly choose the CLI-first fallback for Stage 9 rather than redirecting to a VS Code-only adapter.
+
+SPAR review refined the correction further:
+
+- Stage 8 should grade hosts by **capability tier**, not by binary optimism. A host may support a full marketplace plugin, a limited command/skill/MCP-style adapter that shells out to the CLI, or no safe adapter beyond CLI-first documentation.
+- Rich plugin UX is not portable by default. Dashboards, annotations, background runs, repair UI, and trace deep-links must be proven per host instead of assumed from generic marketplace availability.
+- Plugin-first should not outrun the substrate. If the CLI is not published, versioned, and boring enough to bootstrap, Stage 8 should not promise a plugin that hides CLI setup.
+- A limited adapter can still be valuable if it is explicitly labeled as limited and remains a projection of CLI/schema artifacts. It must not be described as a full plugin UX.
+
+The historical process correction is also recorded in `plans/harness-engineering-platform/lessons.md`; `design.md`, `plan.md`, and `todo.md` remain the execution source of truth.
 
 ## Resolved design direction
 
@@ -83,7 +94,7 @@ The design artifact resolves the main unknowns as follows:
 
 - The canonical product should be this repo as a **harness-as-code platform**, not a skills-first package. Skills remain a portable adapter and migration path.
 - The canonical source of truth should be `harness.yaml` plus versioned schemas.
-- Host marketplace/extension plugin UX should be the preferred guided user experience when a supported host plugin exists; CLI/spec remains the current universal path and automation substrate until plugin feasibility is proven.
+- Agent/CLI marketplace plugin UX should be the preferred guided user experience when a supported full-plugin host exists; limited adapters and CLI/spec remain the fallback paths until full plugin feasibility is proven.
 - CI should be an optional enforcement adapter, not the assumed user path.
 - Deterministic tooling should live in a top-level harness toolkit path such as `tools/harness/`, implemented with TypeScript 6, managed with Bun for repository development, use Biome/Lefthook once the user provides configuration, and ship as a Node-compatible npm CLI.
 - Existing `agent-coding` skills should be classified only after the substrate and execution loop exist; they may be kept, rewritten, merged, extracted, or deleted if the new substrate supersedes them.
@@ -96,7 +107,7 @@ Use a north-star layered model:
 
 - **Tier 0: Harness-as-code substrate** — `harness.yaml`, schemas, examples, artifact conventions, and versioning.
 - **Tier 1: Deterministic CLI tooling** — `init`, `validate`, `migrate`, `run`, `doctor`, `eval run`, `trace validate/import`, `verify`, `gc`, and `report`.
-- **Tier 2: Host marketplace plugins** — preferred guided UX where a host marketplace/extension surface can distribute the plugin and host APIs support repo discovery, report rendering, annotations, and repair actions.
+- **Tier 2: Agent/CLI marketplace plugins** — preferred guided UX where a coding-agent marketplace surface can distribute the plugin and host APIs support repo discovery, report rendering, annotations, and repair actions; limited adapters stay explicitly limited when that full UX is not proven.
 - **Tier 3: Portable skills** — fallback agent adapters that consume substrate evidence and delegate work.
 - **Tier 4: Optional CI adapters** — blocking or advisory checks for teams that want enforcement.
 - **Tier 5: Recurring profiles** — entropy auditor, doc gardener, eval curator, trace reviewer, and similar maintenance loops.
@@ -109,7 +120,7 @@ Within that layered model, separate these contracts:
 - **Behavioral eval suites** are task/run artifacts with versioning, environments, verifiers, holdouts, and result logs.
 - **Agent runner contracts** define how a model/provider, task, sandbox, approval policy, trace output, and verifier compose into an executable harness run.
 - **Trace/artifact schemas** describe what evidence agents and tools produce or consume; host runtimes may produce the trace, but this repo should define the expected shape.
-- **Plugin capability and repair-action contracts** keep marketplace plugins thin, safe adapters over CLI artifacts rather than second sources of truth.
+- **Plugin capability and repair-action contracts** keep marketplace plugins and limited adapters safe projections over CLI artifacts rather than second sources of truth.
 - **Agent profiles** are recurring or long-running roles that consume skills, doctor output, eval results, and traces; they are not just new skills with a different name.
 
 ## Rubber-duck critique incorporated

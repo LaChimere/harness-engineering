@@ -9,7 +9,7 @@ The core deliverable is not a new skill. The core deliverable is a versioned har
 - `harness.yaml` as the repo-local source of truth.
 - JSON schemas for spec, policy, agent invocation, trace, eval task, run result, doctor result, plugin capability, repair actions, and GC evidence.
 - A deterministic `harness` CLI for init, validation, agent runs, doctor checks, eval/trace validation, migrations, GC audits, and reports.
-- Host marketplace plugins as the default interactive product surface for users who want guided setup, dashboards, repairs, and trace/eval navigation.
+- Agent/CLI marketplace plugins as the default interactive product surface for users who want guided setup, dashboards, repairs, and trace/eval navigation, but only when a full-plugin capability tier is proven.
 - Optional CI adapters that turn harness drift into objective change feedback for teams that want enforcement.
 - Skills as portable agent-facing adapters over the same artifacts.
 
@@ -24,7 +24,7 @@ This means:
 - Optimize for durable harness properties: reproducibility, isolation, traceability, evalability, policy enforcement, continuity, and garbage collection.
 - Prefer machine-checkable artifacts over prompt-only instructions.
 - Prefer host-agnostic substrate over any single app, plugin, or skill installer.
-- Prefer the best user entrypoint for each job: plugin for interactive UX, CLI/spec for guarantees, skills for portable agent orchestration, CI for optional enforcement.
+- Prefer the best user entrypoint for each job: full plugin for rich interactive UX, limited adapter for host-native command/tool entrypoints, CLI/spec for guarantees, skills for portable agent orchestration, CI for optional enforcement.
 - Treat compatibility as a migration concern, not a veto. Existing users should get a transition path, but preserving the current skill graph is not a design goal.
 - Allow breaking changes when they produce a materially stronger harness, as long as they are staged, documented, and backed by replacement paths.
 
@@ -34,15 +34,15 @@ Use a layered entrypoint strategy:
 
 | Entrypoint | Role | Why |
 |---|---|---|
-| **Host marketplace plugin** | Default guided user experience when Codex, Claude, Copilot CLI, IDE, or another host exposes a mature marketplace/extension surface | Meets users where they already run agents; can discover repos, initialize harnesses, show dashboards, run checks/evals, surface repairs, and navigate traces/reports |
+| **Agent/CLI marketplace plugin** | Default guided user experience when Codex, Claude Code, GitHub Copilot CLI, or a comparable agent host exposes a mature marketplace surface | Meets users where they already run coding agents; can discover repos, initialize harnesses, show dashboards or report summaries, run checks/evals, surface repairs, and navigate traces/reports when the full-plugin tier is proven |
 | **CLI + `harness.yaml`** | Canonical substrate and source of truth | Host-agnostic, deterministic, scriptable, usable without an agent or plugin |
 | **Skills adapter** | Universal agent fallback | Works anywhere the skill pack can be installed; interprets artifacts and delegates implementation |
 | **CI adapter** | Optional enforcement path | Prevents harness drift from depending on subjective agent behavior when a team wants blocking checks |
 
-North-star default for most users after a supported host marketplace/extension has been verified:
+North-star default for most users after a supported agent/CLI marketplace full-plugin tier has been verified:
 
 ```text
-Install Harness Engineering plugin from the host marketplace/extension page
+Install Harness Engineering plugin from the coding-agent marketplace
 Open repo
 Initialize Harness
 Review dashboard
@@ -51,7 +51,9 @@ Fix with agent
 Optional: add CI enforcement
 ```
 
-Until Stage 8 verifies and Stage 9 ships a real marketplace/extension plugin, user-facing docs must lead with the CLI-first path and describe plugin-first as the intended UX, not as an available install path. If no plugin exists for the user's host, the universal fallback is the CLI path. This is not a lesser contract; it is the same substrate without the guided UI. The commands below are target CLI commands for Stage 3+ implementation; Stage 2 only defines the schemas and examples they will consume:
+If Stage 8 finds only limited adapters, this north-star journey remains aspirational for this slug. The shipped Stage 9 surface must instead describe the exact command, hook, MCP, or skill-pack workflow it supports and label dashboards, annotations, background runs, repair UI, or trace navigation as unavailable unless those capabilities were proven.
+
+Until Stage 8 verifies a real agent/CLI marketplace full-plugin tier and Stage 9 ships it, user-facing docs must lead with the CLI-first path and describe plugin-first as the intended UX, not as an available install path. If no proven adapter exists for the user's host, the universal fallback is the CLI path. This is not a lesser contract; it is the same substrate without the guided UI. Limited adapters may supplement the CLI path only with the specific host-native commands, hooks, MCP tools, or skills proven in Stage 8. The commands below are target CLI commands for Stage 3+ implementation; Stage 2 only defines the schemas and examples they will consume:
 
 ```text
 npx @lachimere/harness-engineering init
@@ -64,19 +66,42 @@ npx @lachimere/harness-engineering report
 Plugin selection should be explicit:
 
 ```text
-Supported marketplace/extension plugin available -> use marketplace plugin-first guided setup.
-No supported plugin for this host -> use CLI-first setup.
+Full agent/CLI marketplace plugin feasible -> use marketplace plugin-first guided setup.
+Only limited agent/CLI adapter feasible -> use limited adapter for commands/hooks/MCP/skills over CLI; do not claim rich plugin UX.
+No supported agent/CLI marketplace adapter -> use CLI-first setup.
 No plugin but agent assistance wanted -> use CLI substrate plus a vetted native adapter or documented `agent-coding` compatibility path.
 Team wants blocking checks -> add optional CI adapter.
 ```
 
-The plugin should be the best day-to-day UX where available, and the preferred install path should be the user's existing agent host marketplace or extension page rather than a separate manual bootstrap. Marketplace installation is the product-level default because it can hide CLI setup, place harness reports next to the agent workflow, and expose **Initialize Harness** / **Fix with Agent** actions without requiring the user to understand schemas first. The CLI/spec must still remain canonical because plugins are host-specific and cannot be the only durable harness.
+The full-plugin tier should be the best day-to-day UX where available, and the preferred install path should be the user's existing coding-agent marketplace rather than a separate manual bootstrap. Marketplace installation is the product-level default only after Stage 8 proves it can hide CLI setup, place harness reports next to the agent workflow, and expose **Initialize Harness** / **Fix with Agent** actions without requiring the user to understand schemas first. The CLI/spec must still remain canonical because plugins are host-specific and cannot be the only durable harness.
 
-Plugins should bundle or auto-manage a pinned CLI dependency when the host permits it. Manual install guidance is only an acceptable fallback for constrained hosts, and the plugin must detect a missing or incompatible CLI before exposing actions such as **Initialize Harness**. CLI resolution order should be explicit: repo-pinned compatible CLI first, then plugin-bundled CLI, then user-installed CLI. If no compatible CLI is available, the plugin may bootstrap one through the host-approved package mechanism; otherwise it must refuse write actions and offer a migration or install path. The first plugin target should be chosen only after confirming that the host marketplace/extension model can distribute the plugin and that its runtime APIs can discover repo-local specs, run or display CLI reports, attach review/session annotations, trigger repair actions, and manage the CLI. If Codex, Claude, Copilot CLI, or IDE plugin APIs are not ready, ship the strongest available plugin-style adapter first and keep GitHub Actions/Checks as an optional enforcement adapter rather than the default user entrypoint.
+Adapters should bundle or auto-manage a pinned CLI dependency when the host permits it. Manual install guidance is only an acceptable fallback for constrained hosts, and the adapter must detect a missing or incompatible CLI before exposing actions such as **Initialize Harness**. CLI resolution order should be explicit: repo-pinned compatible CLI first, then adapter-bundled CLI, then user-installed CLI. If no compatible CLI is available, the adapter may bootstrap one through the host-approved package mechanism; otherwise it must refuse write actions and offer a migration or install path.
+
+Stage 8 must classify each host into a capability tier before choosing Stage 9 scope. All tiers remain adapters over Tier 0-1 artifacts; "limited adapter" means the host cannot support the full rich UX, not that it may create its own contract.
+
+| Tier | Meaning | Stage 9 consequence |
+|---|---|---|
+| Full plugin | Marketplace-distributed agent/CLI host plugin can manage the CLI and support the required report, annotation, background, repair, and trace UX as an adapter over CLI/schema artifacts. | Implement the full selected-host adapter. |
+| Limited adapter | Agent/CLI host install or discovery surface can distribute commands, skills, hooks, MCP tools, or similar entrypoints that invoke the CLI, but cannot support the full rich plugin UX. | Implement only the proven limited adapter surface and label missing UX as unavailable. |
+| CLI-first fallback | No agent/CLI marketplace target can safely distribute and run an adapter without violating source-of-truth or trust boundaries. | Skip or defer Stage 9 adapter implementation and keep CLI-first public docs. |
+| Future adapter evidence | IDE-only or CI-only extension surfaces may support useful UX but are not the corrected Stage 8/9 target. | Record as out-of-scope evidence only; use a separate future planning slug before selection. |
+
+Tier thresholds:
+
+- **Candidate boundary:** an in-scope Stage 8 candidate must be a named coding-agent or CLI host surface that users install into the agent workflow, not a general IDE marketplace, CI system, or hosted review/checks surface. It must expose commands, hooks, tools, plugins, MCP servers, or equivalent agent-facing extension points that can operate with a repository workspace.
+- **Capability status:** each matrix capability must be classified as `yes`, `partial`, `no`, or `unknown`, with an explicit fallback behavior of `supported`, `hide`, `disable`, `cli-redirect`, `advisory-only`, or `hard-error`.
+- **Distribution evidence:** distribution may be a formal marketplace, built-in command/hook discovery, MCP server registry/package, skill-pack mechanism, or comparable agent/CLI install surface. General IDE extension stores do not satisfy the corrected Stage 8 boundary.
+- **Full plugin threshold:** marketplace distribution, CLI bootstrap/resolution, repo filesystem discovery, CLI invocation or equivalent command execution, report/evidence rendering, annotation or session feedback, background run affordances, repair preview/approval affordances, trace/report deep links, and no authoritative host-only state are all classified `yes` and backed by official docs, source/release evidence, or reproducible host behavior.
+- **Limited adapter core capabilities:** distribution or install discovery, repo discovery or explicit repo-root input, CLI bootstrap/resolution guidance, CLI invocation/tool execution, compatibility detection, and no authoritative host-only state.
+- **Rich UX capabilities:** report/evidence rendering, annotation or session feedback, background run affordances, repair preview/approval affordances, and trace/report deep links.
+- **Limited adapter threshold:** all limited-adapter core capabilities are classified `yes` or `partial` with safe fallbacks, but one or more rich UX capabilities are missing or advisory-only.
+- **CLI-first fallback threshold:** distribution, repo access, CLI execution, or trust/approval boundaries are `no` or `unknown` in a way that makes even a limited adapter overpromise or violate the substrate boundary.
+
+The first adapter target should be chosen only after confirming that an agent/CLI marketplace or install model can distribute the adapter and that its runtime APIs can discover repo-local specs, run or display CLI reports, attach review/session annotations, trigger repair actions, and manage the CLI at the claimed tier. If Codex, Claude Code, GitHub Copilot CLI, and named comparable agent/CLI surfaces are not ready, Stage 8 should choose the CLI-first fallback for Stage 9 instead of redirecting to an IDE-specific adapter. IDE extension hosts remain out-of-scope future evidence for this roadmap stage, not fallback Stage 9 targets.
 
 ## Distribution decision
 
-Use a TypeScript 6 CLI distributed through Node/npm as the first substrate distribution path because it matches the existing `npx` install habit and keeps cross-platform adoption simple. Repo development should use Bun as the package manager/test runner/bundler where appropriate, with Biome and Lefthook added when implementation begins using the user-provided configuration. The public CLI must remain Node-compatible and must not require end users or host plugins to install Bun first. For most users, the intended product installation is through the relevant host marketplace/extension page; that plugin should bundle, pin, or bootstrap the CLI behind the scenes.
+Use a TypeScript 6 CLI distributed through Node/npm as the first substrate distribution path because it matches the existing `npx` install habit and keeps cross-platform adoption simple. Repo development should use Bun as the package manager/test runner/bundler where appropriate, with Biome and Lefthook added when implementation begins using the user-provided configuration. The public CLI must remain Node-compatible and must not require end users or host adapters to install Bun first. For most users, the intended product installation is through the relevant coding-agent marketplace only after Stage 8 proves a full-plugin tier; a limited adapter may add host-native commands or tools but must remain labeled limited. Any adapter should bundle, pin, or bootstrap the CLI behind the scenes when the host permits it.
 
 Proposed package shape:
 
@@ -95,7 +120,7 @@ The repository should commit Bun's text lockfile and keep TypeScript checks expl
 
 `harness.yaml` should pin a schema version and CLI version range so downstream repos can adopt upgrades deliberately.
 
-Plugin packages should also pin the CLI/schema compatibility range they support. A plugin upgrade may expose a newer UI, but it must not silently rewrite `harness.yaml` or upgrade schema versions without an explicit `harness migrate` step that previews changes, records evidence, and can be reproduced without the plugin.
+Adapter packages should also pin the CLI/schema compatibility range they support. An adapter upgrade may expose a newer UI, but it must not silently rewrite `harness.yaml` or upgrade schema versions without an explicit `harness migrate` step that previews changes, records evidence, and can be reproduced without the adapter.
 
 ## Research-driven principles
 
@@ -164,8 +189,7 @@ examples/
   reports/
 
 plugins/
-  copilot/
-  github/
+  <stage8-selected-agent-cli-host>/   # created only after Stage 8 selects a feasible target
 
 skills/
   harness-engineering/        # optional native portable adapter after substrate exists
@@ -251,19 +275,19 @@ The key point is composition: the spec points to policies, eval suites, trace lo
 |---|---|---|---|
 | 0 | Harness-as-code substrate | `harness.yaml`, JSON schemas, examples, versioning, artifact conventions | Source of truth; works without any agent |
 | 1 | Deterministic CLI tooling | `init`, `validate`, `migrate`, `run`, `doctor`, `eval run`, `trace validate/import`, `verify`, `gc`, `report` | Mechanical guarantees for plugin, agent, automation, and CI adapters |
-| 2 | Host marketplace plugins | Rich host UX: buttons, widgets, review/session annotations, scheduled runs, report navigation | Best UX where supported; installed from the user's existing agent/IDE marketplace and adapted over Tier 0-1 |
+| 2 | Agent/CLI marketplace adapters | Rich host UX when the full-plugin tier is proven; otherwise limited commands, hooks, MCP tools, or skills over the CLI when feasible | Best UX where supported; always adapted over Tier 0-1 and labeled by proven capability tier |
 | 3 | Portable skills | Agent-facing assessment, routing, planning, execution guidance | Universal fallback; consumes substrate evidence |
 | 4 | CI adapters | Optional blocking or advisory checks in CI systems | Enforcement when teams want it; never required for local/plugin use |
 | 5 | Recurring profiles | Entropy auditor, doc gardener, eval curator, trace reviewer | Optional maintenance loops over artifacts |
 
 ### User journeys
 
-1. **Marketplace plugin guided setup (north-star after host feasibility)**
-   - User installs the Harness Engineering plugin from a supported host marketplace or extension page.
+1. **Marketplace plugin guided setup (north-star after full-plugin host feasibility)**
+   - User installs the Harness Engineering plugin from a supported coding-agent marketplace.
    - The plugin detects whether `harness.yaml` exists.
    - If missing, the plugin offers **Initialize Harness** and calls the CLI substrate to create the baseline.
-   - The plugin shows harness health: schema validity, doctor findings, eval status, trace coverage, policy/sandbox gaps, and GC suggestions.
-   - The plugin offers **Fix with Agent** for changes that require design, decomposition, or implementation; those actions must use the repair-action contract.
+   - The plugin shows harness health only for capabilities proven by Stage 8: schema validity, doctor findings, eval status, trace coverage, policy/sandbox gaps, or GC suggestions.
+   - The plugin offers **Fix with Agent** only when the selected host proves repair preview/approval support; those actions must use the repair-action contract.
 
 2. **CLI-first mechanical baseline (available before plugins after the relevant CLI stages land)**
    - User runs `harness init` after Stage 3 implements the initial CLI.
@@ -324,7 +348,8 @@ Stage 2 should define the minimum viable shapes, not only file names.
 - **Model profile schema:** include provider, model id, tool-call format (`openai-function`, `anthropic-tool-use`, `mcp`, `raw-json`), context window, reasoning budget, prompt/tool-result formatting, and known quirks.
 - **Failure taxonomy schema:** include starter codes such as `tool-error`, `timeout`, `loop-detected`, `verification-failure`, `context-loss`, `routing-miss`, `premature-completion`, and `no-progress-edit-churn`.
 - **Doctor check and verifier trust model:** local checks and verifiers must declare trust level, sandbox requirements, allowed inputs/outputs, and whether they may access network, secrets, or host files.
-- **Plugin capability schema:** define host, distribution surface, CLI management mode, supported actions, unsupported-action fallbacks, annotation support, background-run support, and repair-action support. Stage 2 may provide provisional minimum shapes, but Stage 8 must revalidate them against the host capability matrix before Stage 9 consumes them.
+- **Plugin capability schema:** define host, surface kind, capability tier, distribution surface, CLI management mode, stable evidence ids, evidence links, supported actions, unsupported-action fallbacks, annotation support, background-run support, and repair-action support. Stage 2 may provide provisional minimum shapes, but Stage 8 must revalidate them against the host capability matrix before Stage 9 consumes them.
+- **Adapter scope manifest:** Stage 9 must produce a schema-backed machine-readable manifest, or extend the selected adapter package metadata with the revalidated plugin-capability schema shape, declaring implemented capabilities, unavailable capabilities, fallback behavior, required Stage 8 matrix evidence ids, CLI/schema compatibility, and trust/write boundaries. This manifest is the source used to validate that the Stage 9 adapter scope is a subset of Stage 8-proven capabilities.
 - **Repair-action schema:** define target files, risk class, preview diff, equivalent CLI command, approval state, sandbox requirement, rollback notes, and evidence links. Stage 2 may provide provisional minimum shapes, but Stage 8/9 must confirm host-specific repair UX before writes are enabled.
 - **GC evidence schema:** include category, severity, confidence, evidence refs, proposed cleanup slice, blast radius, atomicity notes, and promotion/retirement decision refs.
 
@@ -335,7 +360,7 @@ Stage 2 should define the minimum viable shapes, not only file names.
 | Harness substrate | Owns `harness.yaml`, schemas, examples, artifact conventions, and versioning |
 | Harness CLI | Owns deterministic local operations: init, validate, migrate, run, doctor, eval run, trace validate/import, verify, GC audit, report |
 | CI adapters | Run CLI checks in stages and publish objective results |
-| Host marketplace plugins | Provide the best interactive UX by visualizing and acting on substrate artifacts; first target must be validated against marketplace distribution and host APIs |
+| Agent/CLI marketplace plugins | Provide the best interactive UX by visualizing and acting on substrate artifacts when the full-plugin tier is proven; first target must be validated against agent/CLI marketplace distribution and host APIs |
 | Native agent adapters | Optional portable agent UX over substrate evidence; added only after CLI/schema contracts exist |
 | `agent-coding` compatibility path | External migration/adaptation path for existing skills; not assumed present in this repo |
 | Behavioral eval suite | Task-level outcomes, holdouts, deterministic verifiers, LLM-judge calibration policy |
@@ -370,7 +395,7 @@ Skills should be classified after the substrate and execution loop are defined. 
   - Explain that `npx skills add https://github.com/LaChimere/agent-coding` remains a migration-source path but is not the primary mechanical foundation or an endorsed default until Stage 13 audits compatibility.
   - Choose canonical locations: proposed `schemas/`, `tools/harness/`, `examples/`, `plugins/`, and `skills/`.
   - Pin the initial CLI package name (`@lachimere/harness-engineering`), binary name (`harness`), schema publication mechanism, schema compatibility policy, and `harness migrate` posture.
-  - Define marketplace plugin-support language: "host marketplace plugin-first after a supported plugin exists; CLI-first until then."
+  - Define marketplace plugin-support language: "agent/CLI marketplace plugin-first after a full-plugin tier is proven; limited adapter if only limited capability is proven; CLI-first until then."
   - Add a Gate 1 disposition for `agent-coding`: whether it stays a separate skills distribution, becomes a compatibility package, is gradually folded in, or is deprecated after replacement paths exist.
 - **Acceptance criteria:**
   - README includes a host/path quickstart matrix: current documented CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
@@ -487,41 +512,54 @@ Skills should be classified after the substrate and execution loop are defined. 
   - Fixtures demonstrate calibrated blocking, advisory-only, and below-threshold judge cases.
   - The docs state how to treat low-agreement or stale judges.
 
-### Stage 8: Plugin marketplace/API feasibility and target selection
+### Stage 8: Agent/CLI marketplace adapter feasibility and target selection
 
-- **Goal:** Verify the marketplace plugin-first UX before committing to a host-specific implementation.
+- **Goal:** Verify the agent/CLI marketplace plugin-first UX before committing to a host-specific implementation.
 - **Dependencies:** Stage 3, Stage 4, Stage 5, and Stage 6.
 - **Allowed changes:**
-  - Evaluate candidate agent hosts such as Codex, Claude, Copilot CLI, IDEs, or another host with a real marketplace/extension distribution path. Treat GitHub Checks/Actions primarily as optional CI adapters unless they expose an agent-host plugin surface.
-  - Verify whether the host marketplace can distribute the plugin and whether the runtime can discover repo-local specs, run or display CLI reports, attach review/session annotations, trigger agent repair, and manage or bundle the CLI.
-  - Choose the first plugin target or explicitly document why the first release must use CLI-first while plugin remains a target.
+  - Evaluate candidate agent/CLI marketplace hosts such as Codex, Claude Code, GitHub Copilot CLI, and named comparable coding-agent hosts with a real marketplace, command/hook discovery, MCP registry, skill-pack mechanism, or equivalent install path.
+  - Classify each host as `full-plugin`, `limited-adapter`, `cli-first-fallback`, or `future-adapter-evidence` based on proven capabilities.
+  - Treat IDE-only, CI-only, and hosted checks/review surfaces as out-of-scope future evidence rather than Stage 9 candidates.
+  - Treat GitHub Checks/Actions primarily as optional CI adapters unless they expose an agent-host plugin surface.
+  - Verify whether the agent/CLI marketplace can distribute the adapter and whether the runtime can discover repo-local specs, run or display CLI reports, attach review/session annotations, trigger agent repair, and manage or bundle the CLI.
+  - Choose the first agent/CLI marketplace plugin or limited-adapter target only at the capability tier that evidence supports, or explicitly document why the first release must use CLI-first while plugin remains a target.
 - **Acceptance criteria:**
-  - The review produces a per-host capability matrix covering marketplace distribution, CLI bundling/bootstrap, filesystem access, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
-  - The capability matrix has a durable format that Stage 9 can consume or cite.
+  - The review assigns each host a capability tier and explains which Stage 9 scope, if any, that tier permits.
+  - The matrix distinguishes in-scope candidates from out-of-scope future evidence; IDE-only, CI-only, and hosted checks/review surfaces cannot be selected for Stage 9 in this slug.
+  - The review produces a per-host capability matrix covering agent/CLI marketplace or install distribution, CLI bundling/bootstrap, filesystem access, CLI invocation, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
+  - Capability evidence entries include stable `evidence_id`, source date, source type, positive/partial/negative finding, and reproduction or inspection notes. Acceptable source types are official docs, source/release evidence, marketplace or registry metadata, maintainer statements, or local reproduction notes dated within the Stage 8 review unless intentionally marked historical.
+  - The capability matrix has a durable format that Stage 9 can consume or cite, with fields for `host`, `surface_kind`, `candidate_status`, `tier`, `capabilities`, `evidence_ids`, `evidence`, `fallback`, and `stage9_consequence`.
+  - Matrix completeness and cross-artifact invariants are validated with schema fixture tests or equivalent automated checks.
   - The provisional plugin-capability and repair-action schemas from Stage 2 are revalidated against the host capability matrix.
-  - The chosen plugin target has documented marketplace/extension distribution evidence and API evidence for the required UX.
-  - If a plugin target is feasible, proceed to Stage 9.
-  - If no rich plugin target is feasible, skip Stage 9, update docs to make CLI-first the default until a plugin exists, and do not promise an unavailable plugin.
+  - If a target is chosen, it has documented agent/CLI marketplace distribution evidence and API evidence for the tier-specific supported capabilities proven by Stage 8.
+  - If only a limited adapter is feasible, Stage 9 scope is limited to that limited adapter and must not claim full plugin UX.
+  - If a full-plugin target is feasible, proceed to full Stage 9 adapter implementation.
+  - If no in-scope full-plugin or limited-adapter target is feasible, skip or defer Stage 9, update docs to make CLI-first the default until an adapter exists, and do not promise an unavailable plugin.
+  - If every named host is classified as limited-adapter, the north-star journey is either rewritten to the proven limited workflow for Stage 9 or explicitly labeled aspirational until a full-plugin host exists.
 
-### Stage 9: Conditional plugin adapter MVP
+### Stage 9: Conditional adapter MVP
 
-- **Goal:** Provide the best guided user entrypoint for the selected host.
+- **Goal:** Provide the best guided user entrypoint for the selected and proven capability tier.
 - **Dependencies:** Stage 8.
-- **Likely files:** `plugins/<target>/`, adapter docs, examples.
+- **Likely files:** `plugins/<target>/` or `adapters/<target>/`, adapter docs, examples.
 - **Allowed changes:**
-  - Implement the selected plugin or plugin-style adapter.
-  - Discover `harness.yaml`, initialize through the CLI substrate, render doctor/eval/trace reports, create supported annotations, and offer "Fix with Agent" actions where available.
-  - Publish or package through the selected host marketplace/extension mechanism when available.
+  - Implement the selected full plugin or limited adapter, but only for capabilities proven by the Stage 8 matrix.
+  - Add a schema-backed machine-readable adapter scope manifest, or equivalent revalidated plugin-capability metadata, declaring implemented capabilities, unavailable capabilities, fallback behavior, required Stage 8 matrix evidence ids, CLI/schema compatibility, and trust/write boundaries.
+  - Discover `harness.yaml`, initialize through the CLI substrate, render doctor/eval/trace reports, create supported annotations, and offer "Fix with Agent" actions only where the selected tier supports them.
+  - Publish or package through the selected agent/CLI marketplace mechanism when available and verified.
   - Bundle, pin, or clearly bootstrap the CLI dependency.
-  - Keep plugin behavior as an adapter over CLI/schema artifacts.
-- **Prohibited changes:** Do not reimplement doctor checks or eval verifiers in plugin code; do not store authoritative plugin-only state; do not write repo files except through CLI-backed init/migrate/repair actions.
+  - Keep adapter behavior as an adapter over CLI/schema artifacts.
+- **Prohibited changes:** Do not reimplement doctor checks or eval verifiers in adapter code; do not store authoritative adapter-only state; do not write repo files except through CLI-backed init/migrate/repair actions.
 - **Acceptance criteria:**
-  - A user can install from the selected host marketplace/extension surface and follow plugin-first setup without separately guessing CLI prerequisites.
-  - The plugin bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance must include missing/incompatible CLI detection and repair prompts.
-  - The plugin resolves CLI versions in this order: repo-pinned compatible CLI, plugin-bundled CLI, then user-installed CLI.
-  - The plugin refuses write actions when no compatible CLI/schema version exists.
-  - Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands so the same repair is reproducible without the plugin.
-  - The plugin does not create a second source of truth; any plugin-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+  - A user can install or enable the selected host surface at the capability tier proven in Stage 8 without separately guessing CLI prerequisites.
+  - Automated validation proves the Stage 9 adapter scope manifest or equivalent revalidated plugin-capability metadata is a subset of capabilities proven in the Stage 8 matrix.
+  - The adapter bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance must include missing/incompatible CLI detection and repair prompts.
+  - The adapter resolves CLI versions in this order: repo-pinned compatible CLI, adapter-bundled CLI, then user-installed CLI.
+  - The adapter refuses write actions when no compatible CLI/schema version exists.
+  - Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands only when Stage 8 proves the selected host has preview and approval affordances.
+  - Limited adapters without proven preview and approval affordances keep repair actions advisory: show the equivalent CLI command, explain required approval/risk, and do not execute writes through the host surface.
+  - The adapter does not create a second source of truth; any adapter-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+  - Any UX capability not proven in Stage 8 is absent or clearly labeled unavailable, not implied by the package.
 
 ### Stage 10: Native execution loop and continuity adapter
 
@@ -555,7 +593,7 @@ Skills should be classified after the substrate and execution loop are defined. 
 ### Stage 12: Native agent-facing harness-engineering adapter
 
 - **Goal:** Add portable agent UX after the substrate and execution loop exist.
-- **Dependencies:** Stage 10. Stage 9 integration is optional because skills must remain usable when no plugin target is feasible.
+- **Dependencies:** Stage 10. Stage 9 integration is optional because skills must remain usable when no adapter target is feasible.
 - **Likely files:** `skills/harness-engineering/*` or another explicitly chosen adapter path, README.
 - **Allowed changes:**
   - Add read-only assessment/design workflow for downstream repositories.
@@ -645,7 +683,7 @@ Skills should be classified after the substrate and execution loop are defined. 
 - **Should wait for Stage 5:** Stage 6 agent runner and first end-to-end behavioral eval needs concrete eval task/verifier vocabulary.
 - **Should wait for Stage 5 and Stage 6:** Stage 7 LLM-judge policy needs concrete eval/run-result vocabulary.
 - **Should wait for Stage 4, Stage 5, and Stage 6:** Stage 8 plugin feasibility needs real artifacts to assess host APIs and marketplace UX.
-- **Conditional after Stage 8:** Stage 9 plugin MVP starts only if Stage 8 verifies a feasible target; otherwise skip Stage 9 and keep CLI-first fallback until a plugin target exists.
+- **Conditional after Stage 8:** Stage 9 adapter MVP starts only if Stage 8 verifies a feasible full-plugin or limited-adapter target; otherwise skip Stage 9 and keep CLI-first fallback until an agent/CLI marketplace target exists.
 - **Can start after Stage 4, Stage 5, and Stage 6:** Stage 10 native execution-loop adapter can proceed once schemas, CLI, doctor, eval, and trace artifacts are available.
 - **Should wait for Stage 4, Stage 5, Stage 6, and Stage 7:** Stage 11 optional CI adapters need concrete checks and artifacts plus judge-blocking policy; they should not block plugin feasibility or CLI-first UX.
 - **Should wait for Stage 10:** Stage 12 skill adapter needs the substrate-aware execution loop but should not depend on plugin availability.
@@ -663,7 +701,7 @@ Use `plan-parallel-work` after Gate 1 if multiple agents will implement the stag
 - **Plugin feasibility:** Plugin UX is the desired product surface, but host APIs must be verified before promising install steps.
 - **Plugin lock-in:** Plugin UX can be excellent but must not become the only path or define host-specific contract semantics.
 - **Plugin/CLI version skew:** Plugin actions must resolve repo-pinned, bundled, and user-installed CLI versions deterministically and refuse unsafe writes on incompatibility.
-- **False marketplace promises:** Until Stage 8 verifies a real host marketplace/extension path, public docs should lead with CLI-first setup and mark plugin-first as planned.
+- **False marketplace promises:** Until Stage 8 verifies a real agent/CLI marketplace path and capability tier, public docs should lead with CLI-first setup and mark plugin-first as planned.
 - **Unsafe local checks/verifiers:** Local doctor checks and eval verifiers must run under declared sandbox/trust policy rather than inheriting host privileges silently.
 - **CI lock-in:** GitHub Actions should be one optional example, not the CI contract; CLI exit semantics and artifacts must remain portable.
 - **Skills drift:** Portable skills may drift from schemas if they duplicate contract text. Skills should reference substrate docs and consume artifacts.
@@ -679,17 +717,19 @@ Use `plan-parallel-work` after Gate 1 if multiple agents will implement the stag
 
 Status: approved by the user on 2026-05-20. Treat these decisions as the approved Gate 1 baseline unless a later planning update explicitly changes them.
 
+Stage 8 correction note: later review supersedes any generic "host marketplace" reading of decisions 3, 5, 7, and 11. For this slug, the relevant Stage 8/9 targets are agent/CLI marketplace or install surfaces; IDE-only surfaces are future evidence only.
+
 1. Primary identity: "harness-as-code platform for AI coding agents".
 2. Canonical source of truth: `harness.yaml` plus versioned schemas.
-3. Best user entry strategy: host marketplace/extension plugin-first guided UX after a supported host is verified; CLI-first is the current universal path until then; skills are audited portable fallback adapters; CI is optional enforcement.
+3. Best user entry strategy: agent/CLI marketplace plugin-first guided UX after a supported full-plugin tier is verified; limited adapters are labeled as limited; CLI-first is the current universal path until then; skills are audited portable fallback adapters; CI is optional enforcement.
 4. CLI distribution and toolchain: first implementation via TypeScript 6, Bun for repository package management, Biome/Lefthook with user-provided configuration, and a Node-compatible npm CLI with package `@lachimere/harness-engineering`, binary `harness`, explicit schema publication mechanism, compatibility policy, and `harness migrate` strategy.
-5. First plugin target: defer selection to Stage 8; no plugin install path or specific host target is promised as available at Gate 1 until marketplace/extension distribution and host APIs are verified.
+5. First plugin target: defer selection to Stage 8; no plugin install path or specific host target is promised as available at Gate 1 until agent/CLI marketplace distribution, host APIs, and capability tier are verified.
 6. `agent-coding` disposition: keep it as separate skills distribution, create a compatibility package, fold selected behavior into this repo, or deprecate only after replacement paths exist.
-7. Canonical locations: `schemas/`, `tools/harness/`, `examples/`, `plugins/`, native adapter paths such as `skills/`, and compatibility docs under `adapters/`; optional enforcement examples live under adapter docs, not as a required `.github/workflows/` path.
+7. Canonical locations: `schemas/`, `tools/harness/`, `examples/`, selected-host paths under `plugins/` after Stage 8, native adapter paths such as `skills/`, and compatibility docs under `adapters/`; optional enforcement examples live under adapter docs, not as a required `.github/workflows/` path.
 8. Shared primitives: harness spec, schemas, context map, environment, approval/sandbox policy, agent runner, trace, eval task, run-result log, doctor result, plugin capability, repair action, continuity, self-verification evidence, model profile, failure taxonomy, and GC evidence.
 9. Doctor/eval separation: deterministic doctor checks and behavioral eval suites have different contracts.
 10. First behavioral proof: the roadmap must reach an end-to-end `harness run` / `harness eval run` milestone before GC expansion or recurring profiles.
-11. Roadmap order: substrate -> CLI -> doctor/verifier -> agent-runner/eval/trace -> plugin feasibility and execution loop -> conditional plugin MVP -> optional CI -> native adapter -> compatibility inventory -> GC -> recurring profiles.
+11. Roadmap order: substrate -> CLI -> doctor/verifier -> agent-runner/eval/trace -> agent/CLI adapter feasibility and execution loop -> conditional adapter MVP -> optional CI -> native adapter -> compatibility inventory -> GC -> recurring profiles.
 12. Current repo state is not a design constraint: this clean-slate repo can choose native structure first and only import/adapt old skills deliberately.
 13. Existing `agent-coding` skills are still evidence: do not copy, delete, or merge them until the substrate or adapter replacement demonstrates it preserves or supersedes their behavior.
 14. `scan-image-vulnerabilities` classification is deferred to the `agent-coding` compatibility inventory unless this repo defines a security-tooling harness extension point.

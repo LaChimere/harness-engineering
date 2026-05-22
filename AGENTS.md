@@ -25,7 +25,7 @@ This repository is the canonical harness-as-code platform for AI coding agents. 
 
 - Stage 2 defines schemas before commands consume them.
 - Stage 3 implements the initial CLI.
-- Stage 8 must verify host marketplace/API feasibility before any plugin install path or specific host target is promised as available.
+- Stage 8 must verify agent/CLI marketplace or install-surface feasibility before any plugin/adapter install path or specific host target is promised as available. IDE-only extension hosts are future evidence, not corrected Stage 8/9 targets.
 - Stage 13 must audit `agent-coding` compatibility before importing, rewriting, or deprecating external skills.
 
 ## Toolchain decisions

@@ -6,14 +6,14 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
 
-Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is Stage 8: plugin marketplace/API feasibility and target selection.
+Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is Stage 8: agent/CLI marketplace adapter feasibility and tiered target selection.
 
 ## Goals
 
 - Establish `harness.yaml` plus versioned schemas as the canonical substrate.
 - Ship a deterministic `harness` CLI before relying on plugins or skills.
 - Prove the platform can run a model through a harness via `harness run` and an end-to-end behavioral eval.
-- Keep marketplace plugins as the north-star UX, but do not promise a plugin path until host marketplace/API feasibility is proven.
+- Keep agent/CLI marketplace plugins as the north-star UX, but do not promise a plugin path until agent/CLI marketplace or install-surface feasibility and capability tier are proven.
 - Treat `agent-coding` skills as external behavior to audit, adapt, extract, or replace after the substrate exists.
 - Make GC, recurring profiles, and adapters evidence-driven rather than prompt-only.
 
@@ -21,7 +21,7 @@ Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is S
 
 - Do not import or vendor `agent-coding` skills before the compatibility inventory decides their disposition.
 - Do not make `npx skills add https://github.com/LaChimere/agent-coding` the default quickstart.
-- Do not ship a plugin-first install path before Stage 8 proves a real host marketplace/extension path.
+- Do not ship a plugin-first install path before Stage 8 proves a real agent/CLI marketplace path and capability tier.
 - Do not implement subjective "AI slop" scoring as a doctor or GC category.
 - Do not let plugins, CI adapters, or skills create a second source of truth outside the CLI/schema substrate.
 
@@ -50,8 +50,8 @@ Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is S
 | 5 | Eval task contract and deterministic verifier runner | Stage 2, Stage 3 | Verifier-only eval path proves oracle pass and broken twin fail deterministically |
 | 6 | Agent runner, first behavioral eval, and trace normalization | Stage 2, Stage 3, Stage 5 | `harness run` and `harness eval run` produce trace, run-result, verifier result, and scoreboard artifacts |
 | 7 | LLM-judge and inferential-review policy | Stage 5, Stage 6 | LLM judge outputs are calibrated or advisory-only; blocking semantics are explicit |
-| 8 | Plugin marketplace/API feasibility and target selection | Stage 3, Stage 4, Stage 5, Stage 6 | Per-host capability matrix decides whether a plugin MVP is feasible and prevents unavailable plugin promises |
-| 9 | Conditional plugin adapter MVP | Stage 8 | If feasible, first plugin renders CLI artifacts and supports safe repair actions without a second source of truth |
+| 8 | Agent/CLI marketplace feasibility and tiered target selection | Stage 3, Stage 4, Stage 5, Stage 6 | Per-host capability matrix decides whether a full plugin, limited adapter, or CLI-first fallback is feasible and prevents unavailable plugin promises |
+| 9 | Conditional adapter MVP | Stage 8 | If feasible, first adapter implements only capabilities proven by Stage 8 without a second source of truth |
 | 10 | Native execution loop and continuity adapter | Stage 2, Stage 3, Stage 4, Stage 5, Stage 6 | Native implementation loop consumes substrate evidence and enforces completion/startup gates |
 | 11 | Optional CI adapters | Stage 3, Stage 4, Stage 5, Stage 6, Stage 7 | Teams can opt into portable CI enforcement; uncalibrated judges remain advisory |
 | 12 | Native agent-facing harness-engineering adapter | Stage 10 | Portable agent UX reads substrate evidence and produces assessment/rollout plans |
@@ -123,23 +123,33 @@ Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is S
 - Fixtures demonstrate calibrated blocking, advisory-only, and below-threshold judge cases.
 - Docs state how to treat low-agreement or stale judges.
 
-### Stage 8: Plugin marketplace/API feasibility and target selection
+### Stage 8: Agent/CLI marketplace adapter feasibility and target selection
 
-- The review produces a per-host capability matrix covering marketplace distribution, CLI bundling/bootstrap, filesystem access, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
-- The capability matrix has a durable format that Stage 9 can consume or cite.
-- The provisional plugin-capability and repair-action schemas from Stage 2 are revalidated against the host capability matrix.
-- The chosen plugin target has documented marketplace/extension distribution evidence and API evidence for the required UX.
-- If a plugin target is feasible, proceed to Stage 9.
-- If no rich plugin target is feasible, skip Stage 9, update docs to make CLI-first the default until a plugin exists, and do not promise an unavailable plugin.
+- The review produces a per-host capability matrix focused on Codex, Claude Code, GitHub Copilot CLI, and named comparable coding-agent/CLI surfaces that satisfy the candidate boundary.
+- IDE-only extension hosts may be recorded as future adapter evidence, but cannot be selected as the first Stage 9 target in this slug.
+- The matrix assigns each host a capability tier: full plugin, limited adapter, CLI-first fallback, or future adapter evidence.
+- The matrix defines in-scope candidates as coding-agent or CLI host surfaces with agent-facing extension points; IDE-only, CI-only, and hosted checks/review surfaces are out of scope for Stage 9 selection.
+- The matrix records stable evidence ids, evidence links with source date, acceptable source type, positive/partial/negative finding, reproduction or inspection note, and `yes`/`partial`/`no`/`unknown` status for each capability.
+- The capability matrix covers agent/CLI marketplace or install distribution, CLI bundling/bootstrap, filesystem access, CLI invocation, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
+- The capability matrix has a durable format that Stage 9 can consume or cite, with fields for host, surface kind, candidate status, tier, capability statuses, stable evidence ids, evidence entries, fallback behavior, and Stage 9 consequence.
+- The provisional plugin-capability and repair-action schemas from Stage 2 are revalidated against the host capability matrix, including whether they need tier, surface-kind, evidence-id, evidence-link, fallback, or adapter-scope manifest fields before Stage 9 consumes them.
+- If a target is chosen, it has documented agent/CLI marketplace distribution evidence and API evidence for the tier-specific supported capabilities proven by Stage 8.
+- If a full-plugin target is feasible, proceed to full Stage 9 adapter implementation.
+- If only a limited adapter is feasible, proceed to a limited Stage 9 adapter only if the docs and scope clearly label missing rich UX as unavailable.
+- If no in-scope full-plugin or limited-adapter target is feasible, skip or defer Stage 9, update docs to make CLI-first the default until an adapter exists, and do not promise an unavailable plugin.
+- If every named host only qualifies as a limited adapter, Stage 8 reconciles the user journey by either rewriting Stage 9 docs to the proven limited workflow or explicitly labeling the full-plugin journey aspirational.
 
-### Stage 9: Conditional plugin adapter MVP
+### Stage 9: Conditional adapter MVP
 
-- A user can install from the selected host marketplace/extension surface and follow plugin-first setup without separately guessing CLI prerequisites.
-- The plugin bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance includes missing/incompatible CLI detection and repair prompts.
-- The plugin resolves CLI versions in this order: repo-pinned compatible CLI, plugin-bundled CLI, then user-installed CLI.
-- The plugin refuses write actions when no compatible CLI/schema version exists.
-- Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands so the same repair is reproducible without the plugin.
-- The plugin does not create a second source of truth; any plugin-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+- A user can install or enable the selected host surface at the capability tier proven by Stage 8 without separately guessing CLI prerequisites.
+- A schema-backed machine-readable adapter scope manifest, or equivalent revalidated plugin-capability metadata, declares implemented capabilities, unavailable capabilities, fallback behavior, required Stage 8 matrix evidence ids, CLI/schema compatibility, and trust/write boundaries.
+- Automated validation proves the adapter scope manifest or equivalent revalidated plugin-capability metadata is a subset of capabilities proven in the Stage 8 matrix.
+- The adapter bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance includes missing/incompatible CLI detection and repair prompts.
+- The adapter resolves CLI versions in this order: repo-pinned compatible CLI, adapter-bundled CLI, then user-installed CLI.
+- The adapter refuses write actions when no compatible CLI/schema version exists.
+- Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands only when Stage 8 proves host preview and approval affordances; limited adapters without those affordances keep repairs advisory and redirect to CLI execution.
+- The adapter does not create a second source of truth; any adapter-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+- Any rich UX capability not proven in Stage 8 is absent or clearly labeled unavailable.
 
 ### Stage 10: Native execution loop and continuity adapter
 
@@ -232,7 +242,7 @@ Doctor output validates substrate health before eval runs. The run must produce 
 
 Includes Stage 7 through Stage 11.
 
-This adds calibrated inferential review, verifies whether marketplace plugins are feasible, optionally ships a plugin MVP, and provides optional CI adapters. If no plugin target is feasible, docs stay CLI-first and do not promise a plugin install path.
+This adds calibrated inferential review, verifies whether agent/CLI marketplace plugins or limited adapters are feasible, optionally ships an adapter MVP, and provides optional CI adapters. If no agent/CLI marketplace target is feasible, docs stay CLI-first and do not promise a plugin install path.
 
 ### Milestone D: Agent and migration adapters
 
@@ -255,7 +265,8 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 - Doctor stages must include an entropy pass confirming docs, examples, fixtures, and shared validation helpers still describe one coherent substrate.
 - Eval stages must prove oracle pass and broken twin fail.
 - Agent-runner stages must include deterministic stub/recorded execution for CI and reviewers without API keys.
-- Plugin stages must prove the plugin is a thin adapter over CLI/schema artifacts and cannot create a second source of truth.
+- Plugin/adapter stages must prove the selected host surface is an adapter over CLI/schema artifacts and cannot create a second source of truth.
+- Stage 8 must define and run automated matrix validation for completeness, enum validity, and evidence presence. Stage 9 must validate its adapter scope manifest or equivalent revalidated plugin-capability metadata against the Stage 8 matrix so implemented scope is a subset of proven capabilities.
 - Migration stages must document before/after workflows for any supported, moved, extracted, deprecated, or unsupported `agent-coding` skill path.
 
 ## Stage 1 decisions to document
@@ -272,7 +283,7 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
   - deprecate only after replacement paths exist.
 - Host/path quickstart matrix wording:
   - CLI-first documented as the current default path, with implementation planned for Stage 3,
-  - marketplace plugins planned pending Stage 8,
+  - agent/CLI marketplace plugins or limited adapters planned pending Stage 8,
   - skills compatibility pending Stage 13,
   - CI optional after Stage 11.
 
@@ -281,7 +292,7 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 - The repo has a documented, working CLI-first harness baseline.
 - The platform can run at least one end-to-end behavioral eval through `harness run` / `harness eval run`.
 - Traces, run-results, verifier results, and reports are schema-backed and reproducible.
-- Plugin feasibility is either proven and followed by a plugin MVP, or explicitly deferred with CLI-first docs.
+- Agent/CLI marketplace feasibility is either proven at a full-plugin or limited-adapter tier and followed by a matching MVP, or explicitly deferred with CLI-first docs.
 - Optional CI enforcement is portable and does not assume GitHub as the only host.
 - Native agent adapters and `agent-coding` compatibility are clearly separated.
 - GC and recurring profiles operate over real evidence artifacts, not subjective prose.

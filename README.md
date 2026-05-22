@@ -15,11 +15,11 @@ The roadmap is approved in `plans/harness-engineering-platform/`. The initial sc
 | Entrypoint | Status now | Intended role | First stage that makes it concrete |
 |---|---|---|---|
 | CLI plus `harness.yaml` | Initial Stage 7 CLI exists locally with `init`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, future GC, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization; Stage 7 implements inferential judge policy validation. |
-| Host marketplace plugin | Planned north-star UX only. No plugin install path is promised yet. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported agent or IDE hosts. | Stage 8 verifies feasibility; Stage 9 ships a plugin only if feasible. |
+| Agent/CLI marketplace adapter or plugin | Planned north-star UX only. No plugin install path is promised yet. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Stage 8 verifies feasibility; Stage 9 ships a full plugin or limited adapter only if feasible. |
 | `agent-coding` skills compatibility | External migration-source evidence. Compatibility is not audited yet. | Portable fallback or compatibility path after the substrate exists and each skill is classified. | Stage 13. |
 | CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Stage 11. |
 
-Until a real marketplace plugin is verified and shipped, the public path stays CLI-first. The Stage 7 local command shape is:
+Until a real agent/CLI full-plugin tier is verified and shipped, the public path stays CLI-first. Limited adapters may add host-native commands or tools only after Stage 8 proves them. The Stage 7 local command shape is:
 
 ```bash
 bun run build
@@ -44,7 +44,7 @@ The npm package metadata and `harness` binary mapping exist, but the package has
 |---|---|---|
 | 0 | Harness-as-code substrate | `harness.yaml`, schemas, examples, artifact conventions, and versioning. |
 | 1 | Deterministic CLI | Current `init`, `validate`, `migrate`, `run`, `doctor`, `eval`, `trace`, `verify`, and `report`; future `gc` remains planned for Stage 14. |
-| 2 | Host marketplace plugins | Rich guided UX where a supported host marketplace and runtime APIs exist. |
+| 2 | Agent/CLI marketplace adapters | Rich guided UX only where a supported full-plugin host and runtime APIs exist; otherwise limited commands/hooks/MCP/skills over the CLI when proven feasible. |
 | 3 | Portable skills | Agent-facing adapters that consume substrate artifacts. |
 | 4 | Optional CI adapters | Objective enforcement or advisory checks for teams that opt in. |
 | 5 | Recurring profiles | Entropy, docs, eval, trace, and maintenance loops over evidence artifacts. |
@@ -55,7 +55,7 @@ The npm package metadata and `harness` binary mapping exist, but the package has
 - Public binary: `harness`.
 - Implementation language: TypeScript 6.
 - Repository package manager: Bun.
-- Public runtime target: Node-compatible CLI output. Users and host plugins must not need Bun to run the published CLI.
+- Public runtime target: Node-compatible CLI output. Users and host adapters must not need Bun to run the published CLI.
 - Type checking: explicit `tsc --noEmit`.
 - Formatting/linting: Biome, using user-provided configuration when implementation begins.
 - Git hooks: Lefthook, using user-provided configuration when implementation begins.
@@ -96,4 +96,4 @@ The approved roadmap lives in:
 - `plans/harness-engineering-platform/plan.md`
 - `plans/harness-engineering-platform/todo.md`
 
-Stages 1 through 7 are implemented in the current roadmap. The next implementation target is Stage 8: plugin marketplace/API feasibility and target selection.
+Stages 1 through 7 are implemented in the current roadmap. The next implementation target is Stage 8: agent/CLI marketplace adapter feasibility and tiered target selection.

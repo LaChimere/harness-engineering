@@ -264,64 +264,85 @@ Stage 7 validation evidence:
 - policy-violation smoke for `examples/judges/results/policy-violations/blocking-low-agreement.json`
 - `git diff --check`
 
-## Stage 8: Plugin marketplace/API feasibility and target selection
+## Stage 8: Agent/CLI marketplace adapter feasibility and target selection
 
-- [ ] Define candidate host list.
-- [ ] Evaluate marketplace/extension distribution for each host.
+- [ ] Define candidate host list focused on Codex, Claude Code, GitHub Copilot CLI, and named comparable coding-agent/CLI surfaces that satisfy the candidate boundary.
+- [ ] Define in-scope candidate boundary: coding-agent or CLI host, marketplace/install/discovery surface, agent-facing extension point, repository workspace access path, and CLI invocation or bootstrap path.
+- [x] Scrub README and AGENTS Stage 8 wording so public docs say agent/CLI marketplace or limited adapter, not generic host marketplace or IDE host.
+- [ ] Record IDE-only, CI-only, and hosted checks/review surfaces, if researched, as out-of-scope future evidence rather than Stage 9 candidates.
+- [ ] Define capability tier thresholds: full plugin, limited adapter, CLI-first fallback, and future adapter evidence.
+- [ ] Split limited-adapter core capabilities from rich UX capabilities before classifying hosts.
+- [ ] Define capability statuses (`yes`, `partial`, `no`, `unknown`) and fallback behaviors (`supported`, `hide`, `disable`, `cli-redirect`, `advisory-only`, `hard-error`) before classifying hosts.
+- [ ] Evaluate agent/CLI marketplace, command/hook discovery, MCP registry, skill-pack mechanism, or equivalent install distribution for each host.
 - [ ] Evaluate CLI bundling/bootstrap for each host.
 - [ ] Evaluate filesystem access.
+- [ ] Evaluate CLI invocation or tool execution.
 - [ ] Evaluate CLI report rendering.
 - [ ] Evaluate annotation APIs.
 - [ ] Evaluate background runs.
 - [ ] Evaluate repair-action UI.
 - [ ] Evaluate trace deep-links.
-- [ ] Define capability matrix schema or durable format for Stage 9 consumption.
-- [ ] Produce per-host capability matrix.
-- [ ] Revalidate provisional plugin-capability schema against matrix.
-- [ ] Revalidate provisional repair-action schema against matrix.
-- [ ] Choose first plugin target or explicitly document CLI-first until plugin exists.
+- [ ] Define capability matrix schema or durable format for Stage 9 consumption, with fields for host, surface kind, candidate status, tier, capability statuses, stable evidence ids, evidence entries, fallback behavior, and Stage 9 consequence.
+- [ ] Define evidence-link requirements for matrix entries: stable `evidence_id`, source date, acceptable source type, positive/partial/negative finding, and reproduction or inspection note.
+- [ ] Define matrix-to-Stage 9 decision rules that map proven capabilities to implemented, hidden, disabled, CLI-redirected, advisory-only, or hard-error behavior.
+- [ ] Produce per-host capability matrix with a capability tier and Stage 9 consequence for every host.
+- [ ] Revalidate provisional plugin-capability schema against matrix, including whether tier, surface kind, evidence ids, evidence links, fallback fields, and adapter scope manifest fields are required.
+- [ ] Revalidate provisional repair-action schema against matrix, including advisory-only behavior for limited adapters without proven preview/approval affordances.
+- [ ] Validate matrix completeness and cross-artifact invariants with schema fixture tests or equivalent automated checks.
+- [ ] Choose first full-plugin target, choose a limited adapter target with explicit UX limits, or explicitly document CLI-first until an adapter exists.
 - [ ] Update docs to avoid unavailable plugin promises.
 - [ ] Run `git diff --check`.
 
 ### Stage 8 acceptance criteria
 
-- [ ] Capability matrix covers marketplace distribution, CLI bundling/bootstrap, filesystem access, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
-- [ ] Capability matrix has a durable format that Stage 9 can consume or cite.
-- [ ] Provisional plugin-capability and repair-action schemas from Stage 2 are revalidated against host APIs.
-- [ ] Chosen plugin target has documented marketplace/extension distribution evidence and API evidence for the required UX.
-- [ ] If a plugin target is feasible, proceed to Stage 9.
-- [ ] If no rich plugin target is feasible, skip Stage 9, update docs to make CLI-first the default until a plugin exists, and do not promise an unavailable plugin.
+- [ ] Capability matrix focuses on Codex, Claude Code, GitHub Copilot CLI, and named comparable coding-agent/CLI surfaces that satisfy the candidate boundary.
+- [ ] Capability matrix distinguishes in-scope candidates from out-of-scope future evidence; IDE-only, CI-only, and hosted checks/review surfaces cannot be selected for Stage 9 in this slug.
+- [ ] Capability matrix assigns each host a capability tier and explains the permitted Stage 9 scope.
+- [ ] Capability tiers have explicit thresholds so two reviewers would classify the same evidence consistently.
+- [ ] Capability matrix covers agent/CLI marketplace or install distribution, CLI bundling/bootstrap, filesystem access, CLI invocation, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
+- [ ] Capability matrix has a durable format that Stage 9 can consume or cite, with fields for host, surface kind, candidate status, tier, capability statuses, stable evidence ids, evidence entries, fallback behavior, and Stage 9 consequence.
+- [ ] Capability matrix evidence links identify stable `evidence_id`, source date, acceptable source type, positive/partial/negative finding, and reproduction or inspection note.
+- [ ] Provisional plugin-capability and repair-action schemas from Stage 2 are revalidated against host APIs and the capability matrix shape.
+- [ ] Matrix completeness and cross-artifact invariants are validated with schema fixture tests or equivalent automated checks.
+- [ ] If a target is chosen, it has documented agent/CLI marketplace distribution evidence and API evidence for the tier-specific supported capabilities proven by Stage 8.
+- [ ] If a full-plugin target is feasible, proceed to full Stage 9 adapter implementation.
+- [ ] If only a limited adapter is feasible, Stage 9 scope is explicitly limited to the limited adapter and docs do not imply rich plugin UX.
+- [ ] If no in-scope full-plugin or limited-adapter target is feasible, skip or defer Stage 9, update docs to make CLI-first the default until an adapter exists, and do not promise an unavailable plugin.
+- [ ] If every named host only qualifies as a limited adapter, Stage 8 reconciles the user journey by rewriting Stage 9 docs to the proven limited workflow or explicitly labeling the full-plugin journey aspirational.
 
-## Stage 9: Conditional plugin adapter MVP
+## Stage 9: Conditional adapter MVP
 
-- [ ] Implement selected plugin or plugin-style adapter only if Stage 8 finds a feasible target.
-- [ ] Package through selected host marketplace/extension mechanism when available.
-- [ ] Discover repo-local `harness.yaml`.
-- [ ] Initialize through CLI substrate.
-- [ ] Render doctor/eval/trace reports from CLI JSON/Markdown outputs.
-- [ ] Create supported annotations.
-- [ ] Implement supported repair actions through CLI-backed init/migrate/repair flows only.
-- [ ] Bundle, pin, or bootstrap CLI dependency.
-- [ ] Implement CLI resolution order: repo-pinned compatible CLI, plugin-bundled CLI, then user-installed CLI.
+- [ ] Implement selected full plugin or limited adapter only if Stage 8 finds a feasible target.
+- [ ] Add a schema-backed machine-readable adapter scope manifest, or equivalent revalidated plugin-capability metadata, declaring implemented capabilities, unavailable capabilities, fallback behavior, required Stage 8 matrix evidence ids, CLI/schema compatibility, and trust/write boundaries.
+- [ ] Validate the adapter scope manifest or equivalent revalidated plugin-capability metadata against the Stage 8 matrix so implemented scope is a subset of proven capabilities.
+- [ ] Package through selected agent/CLI marketplace mechanism only if Stage 8 proves that mechanism.
+- [ ] Discover repo-local `harness.yaml` only through a repository access path proven in Stage 8.
+- [ ] Initialize through CLI substrate only when Stage 8 proves write-capable CLI invocation and approval/trust boundaries.
+- [ ] Render doctor/eval/trace reports from CLI JSON/Markdown outputs only for report surfaces proven in Stage 8.
+- [ ] Create supported annotations only for annotation/session feedback APIs proven in Stage 8.
+- [ ] Implement supported repair actions through CLI-backed init/migrate/repair flows only when Stage 8 proves repair preview/approval affordances.
+- [ ] Bundle, pin, or bootstrap CLI dependency only through mechanisms proven in Stage 8.
+- [ ] Implement CLI resolution order: repo-pinned compatible CLI, adapter-bundled CLI, then user-installed CLI.
 - [ ] Detect repo-pinned CLI version from `harness.yaml` `engines.cli`.
 - [ ] Refuse write actions on CLI/schema incompatibility.
-- [ ] Ensure plugin does not reimplement doctor checks or eval verifiers.
-- [ ] Ensure plugin-local cache is non-authoritative and reconstructible.
-- [ ] Ensure repair actions show preview diffs.
-- [ ] Ensure repair actions use approval policy.
-- [ ] Ensure repair actions declare risk class.
-- [ ] Ensure repair actions emit equivalent CLI commands.
-- [ ] Run plugin tests for supported host.
+- [ ] Ensure adapter does not reimplement doctor checks or eval verifiers.
+- [ ] Ensure adapter-local cache is non-authoritative and reconstructible.
+- [ ] For full-plugin targets with proven preview/approval affordances, ensure repair actions show preview diffs, use approval policy, declare risk class, and emit equivalent CLI commands.
+- [ ] For limited adapters without proven preview/approval affordances, keep repair actions advisory: show the equivalent CLI command, explain approval/risk, and do not execute writes through the host surface.
+- [ ] Run adapter tests for the selected host surface and capability tier.
 - [ ] Run `git diff --check`.
 
 ### Stage 9 acceptance criteria
 
-- [ ] A user can install from the selected host marketplace/extension surface and follow plugin-first setup without separately guessing CLI prerequisites.
-- [ ] The plugin bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance includes missing/incompatible CLI detection and repair prompts.
-- [ ] The plugin resolves CLI versions in this order: repo-pinned compatible CLI, plugin-bundled CLI, then user-installed CLI.
-- [ ] The plugin refuses write actions when no compatible CLI/schema version exists.
-- [ ] Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands.
-- [ ] Plugin does not create a second source of truth; plugin-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+- [ ] A user can install or enable the selected host surface at the capability tier proven by Stage 8 without separately guessing CLI prerequisites.
+- [ ] Automated validation proves the adapter scope manifest or equivalent revalidated plugin-capability metadata is a subset of capabilities proven in the Stage 8 matrix.
+- [ ] The adapter bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance includes missing/incompatible CLI detection and repair prompts.
+- [ ] The adapter resolves CLI versions in this order: repo-pinned compatible CLI, adapter-bundled CLI, then user-installed CLI.
+- [ ] The adapter refuses write actions when no compatible CLI/schema version exists.
+- [ ] Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands only when Stage 8 proves host preview and approval affordances.
+- [ ] Limited adapters without proven preview and approval affordances keep repair actions advisory and redirect write execution to the CLI.
+- [ ] Adapter does not create a second source of truth; adapter-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+- [ ] Any rich UX capability not proven in Stage 8 is absent or clearly labeled unavailable.
 
 ## Stage 10: Native execution loop and continuity adapter
 
@@ -411,6 +432,7 @@ Stage 7 validation evidence:
 - [ ] Review `refresh-related-docs`.
 - [ ] Review `achieve-goal`.
 - [ ] Review `scan-image-vulnerabilities`.
+- [ ] For `scan-image-vulnerabilities`, explicitly decide whether this slug defines a security-tooling extension point; otherwise classify it as an optional external utility rather than a core harness primitive.
 - [ ] Classify each as:
   - [ ] native-adapter candidate,
   - [ ] external compatibility helper,
@@ -525,6 +547,8 @@ Stage 7 validation evidence:
 - [ ] Fixtures or examples demonstrate each profile stopping when its condition is met.
 
 ## Cross-cutting checks before each stage
+
+Use this as a reusable checklist before starting each future stage; unchecked items here are not evidence that completed stages regressed.
 
 - [ ] Confirm the stage has one logical purpose.
 - [ ] Confirm intermediate repo state remains useful and not misleading.

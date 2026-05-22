@@ -169,6 +169,14 @@
       "schema": "schemas/run-result.schema.json"
     },
     {
+      "path": "examples/verifier-results/schema-smoke.json",
+      "schema": "schemas/verifier-result.schema.json"
+    },
+    {
+      "path": "examples/verifier-results/schema-smoke-failed.json",
+      "schema": "schemas/verifier-result.schema.json"
+    },
+    {
       "path": "examples/scoreboards/self-test.json",
       "schema": "schemas/scoreboard.schema.json"
     },
@@ -194,6 +202,50 @@
     },
     {
       "path": "examples/judges/results/stale-advisory.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/agreement-score-mismatch.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/below-threshold-high-score.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/blocking-future-calibrated-at.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/blocking-low-agreement.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/blocking-stale-by-date.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/blocking-too-few-samples.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/judge-id-mismatch.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/metric-mismatch.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/policy-digest-mismatch.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/policy-id-mismatch.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/policy-violations/stale-fresh-date.json",
       "schema": "schemas/judge-result.schema.json"
     },
     {
@@ -223,6 +275,12 @@
     {
       "path": "examples/gc/evidence.json",
       "schema": "schemas/gc-evidence.schema.json"
+    }
+  ],
+  "referenced_evidence": [
+    {
+      "path": "examples/checks/doc-links.yaml",
+      "reason": "Local doctor-check definition referenced by examples/harness.yaml; trust and sandbox requirements are declared on the harness doctor registration."
     }
   ],
   "invalid": [

@@ -76,7 +76,10 @@ function validateGeneratedRunArtifacts(
 ): void {
   const runResultIssues = schemas.validate('run-result', run.runResult).map(formatValidationIssue);
   const traceIssues = schemas.validate('trace', run.trace).map(formatValidationIssue);
-  const issues = [...runResultIssues, ...traceIssues];
+  const verifierResultIssues = schemas
+    .validate('verifier-result', run.verifierResult)
+    .map(formatValidationIssue);
+  const issues = [...runResultIssues, ...traceIssues, ...verifierResultIssues];
   if (issues.length > 0) {
     throw new CliError(
       `harness run produced invalid artifacts: ${issues.join('; ')}`,

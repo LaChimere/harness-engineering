@@ -1703,7 +1703,7 @@ test('report validates judge results linked from run-result artifacts', async ()
         suite_id: 'harness-self-test',
         task_id: 'schema-smoke',
         task_version: '1.0.0',
-        dataset_hash: 'sha256:0b327293fe4cc3ebef6126c1ee7531b310ed50a3397576de46a0170dac2aed7f',
+        dataset_hash: 'sha256:8f8141fadd48bd417cad7d3ab7d3a60746383b434ff6c1ec922656d4fe40a0cb',
         split: 'optimization',
         model_profile: 'harness://verifier-only/no-model',
         harness_version: '0.1.0',
@@ -1815,7 +1815,7 @@ test('eval validate proves oracle pass and broken twin fail deterministically', 
     expect(getString(runResult, 'task_id')).toBe('schema-smoke');
     expect(getString(runResult, 'task_version')).toBe('1.0.0');
     expect(getString(runResult, 'dataset_hash')).toBe(
-      'sha256:0b327293fe4cc3ebef6126c1ee7531b310ed50a3397576de46a0170dac2aed7f',
+      'sha256:8f8141fadd48bd417cad7d3ab7d3a60746383b434ff6c1ec922656d4fe40a0cb',
     );
     expect(getString(runResult, 'split')).toBe('optimization');
     expect(getString(runResult, 'model_profile')).toBe('harness://verifier-only/no-model');
@@ -1875,6 +1875,7 @@ test('eval validate appends run results and writes verifier artifacts', async ()
       throw new Error('run result did not include verifier_result');
     }
     const verifierArtifact = JSON.parse(await readFile(join(root, verifierResult), 'utf8'));
+    expect(schemas.validate('verifier-result', verifierArtifact)).toEqual([]);
     expect(getString(verifierArtifact, 'schema_version')).toBe('0.1.0');
     expect(getString(verifierArtifact, 'run_id')).toBe(runId);
     expect(getString(verifierArtifact, 'status')).toBe(
@@ -2155,6 +2156,7 @@ test('run executes a deterministic stub task and writes agent artifacts', async 
   expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(1);
 
   const verifierResult = JSON.parse(await readFile(join(root, verifierResultPath), 'utf8'));
+  expect(schemas.validate('verifier-result', verifierResult)).toEqual([]);
   expect(getString(verifierResult, 'status')).toBe('passed');
   const agentOutputPath = requiredStringForTest(summary, 'agent_output');
   expect(await readFile(join(root, agentOutputPath), 'utf8')).toContain('schema-smoke passes');

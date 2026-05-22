@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/verifier-result.schema.json",
+  "title": "Verifier result",
+  "description": "Deterministic verifier execution evidence linked from run-result artifacts.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "verifier_id",
+    "run_id",
+    "case",
+    "expected_status",
+    "candidate",
+    "status",
+    "harness_status",
+    "summary",
+    "timed_out"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "verifier_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "case": {
+      "type": "string",
+      "enum": ["oracle", "broken-twin"]
+    },
+    "expected_status": {
+      "type": "string",
+      "enum": ["passed", "failed"]
+    },
+    "candidate": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "error", "skipped"]
+    },
+    "harness_status": {
+      "type": "string",
+      "enum": ["passed", "failed", "error"]
+    },
+    "summary": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "timed_out": {
+      "type": "boolean"
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "signal": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    }
+  },
+  "additionalProperties": false
+}

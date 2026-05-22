@@ -69,6 +69,14 @@ def validate_valid_fixtures(
             sys.exit(1)
 
 
+def validate_referenced_evidence(manifest: dict[str, Any]) -> None:
+    for item in manifest.get("referenced_evidence", []):
+        path = ROOT / item["path"]
+        if not path.is_file():
+            print(f"REFERENCED evidence is missing: {item['path']}", file=sys.stderr)
+            sys.exit(1)
+
+
 def validate_invalid_fixtures(
     manifest: dict[str, Any],
     schemas: dict[pathlib.Path, dict[str, Any]],
@@ -903,12 +911,14 @@ def main() -> None:
     schemas, registry = load_schemas()
     manifest = json.loads((ROOT / "examples/fixtures/manifest.json").read_text())
     validate_valid_fixtures(manifest, schemas, registry)
+    validate_referenced_evidence(manifest)
     validate_invalid_fixtures(manifest, schemas, registry)
     validate_custom_checks(manifest)
     print(
         "schema validation ok: "
         f"{len(schemas)} schemas, "
         f"{len(manifest['valid'])} valid fixtures, "
+        f"{len(manifest.get('referenced_evidence', []))} referenced evidence artifacts, "
         f"{len(manifest['invalid'])} schema-invalid fixtures, "
         f"{len(manifest.get('custom_invalid', []))} custom-invalid fixtures"
     )

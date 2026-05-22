@@ -116,6 +116,9 @@ async function runEvalRun(args: readonly string[], context: CommandContext): Pro
     ...evalRun.runs.flatMap((run) =>
       schemas.validate('trace', run.trace).map(formatValidationIssue),
     ),
+    ...evalRun.runs.flatMap((run) =>
+      schemas.validate('verifier-result', run.verifierResult).map(formatValidationIssue),
+    ),
     ...schemas.validate('scoreboard', evalRun.scoreboard).map(formatValidationIssue),
   ];
   if (issues.length > 0) {
@@ -208,9 +211,13 @@ async function runEvalValidate(
   const invalidRunResultIssues = validation.runResults.flatMap((runResult) =>
     schemas.validate('run-result', runResult).map(formatValidationIssue),
   );
-  if (invalidRunResultIssues.length > 0) {
+  const invalidVerifierResultIssues = validation.verifierResults.flatMap((verifierResult) =>
+    schemas.validate('verifier-result', verifierResult.result).map(formatValidationIssue),
+  );
+  const invalidArtifactIssues = [...invalidRunResultIssues, ...invalidVerifierResultIssues];
+  if (invalidArtifactIssues.length > 0) {
     throw new CliError(
-      `Eval validate produced invalid run-result output: ${invalidRunResultIssues.join('; ')}`,
+      `Eval validate produced invalid artifacts: ${invalidArtifactIssues.join('; ')}`,
       ExitCode.internalError,
     );
   }

@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 
+import { validateAdapterScopeAgainstMatrix } from '../../src/lib/adapter-scope.ts';
 import { loadDocument } from '../../src/lib/files.ts';
 import {
   getArray,
@@ -48,6 +49,7 @@ interface InvalidFixture {
 interface CustomInvalidFixture {
   readonly path: string;
   readonly check: string;
+  readonly matrix?: string;
   readonly expected_missing_code?: string;
   readonly expected_error_code?: string;
   readonly expected_message_contains?: string;
@@ -56,6 +58,7 @@ interface CustomInvalidFixture {
 interface CustomValidFixture {
   readonly path: string;
   readonly check: string;
+  readonly matrix?: string;
 }
 
 test('schema-invalid fixtures fail with their manifest-declared reason', async () => {
@@ -102,14 +105,14 @@ test('schema-valid fixtures pass their declared schemas', async () => {
 test('custom-valid fixtures pass semantic checks', async () => {
   const manifest = await loadManifest();
   for (const fixture of manifest.custom_valid ?? []) {
-    expect(runCustomCheck(fixture.check, await loadDocument(fixture.path), manifest)).toEqual([]);
+    expect(await runCustomCheck(fixture, await loadDocument(fixture.path), manifest)).toEqual([]);
   }
 });
 
 test('custom-invalid fixtures fail with their manifest-declared reason', async () => {
   const manifest = await loadManifest();
   for (const fixture of manifest.custom_invalid ?? []) {
-    const errors = runCustomCheck(fixture.check, await loadDocument(fixture.path), manifest);
+    const errors = await runCustomCheck(fixture, await loadDocument(fixture.path), manifest);
     expect(errors.length).toBeGreaterThan(0);
     if (fixture.expected_message_contains !== undefined) {
       expect(errors.some((error) => error.includes(fixture.expected_message_contains ?? ''))).toBe(
@@ -182,17 +185,42 @@ function missingTaxonomyCodes(
   return [...requiredCodes].filter((code) => !actualCodes.has(code)).sort();
 }
 
-function runCustomCheck(check: string, document: unknown, manifest: Manifest): readonly string[] {
-  switch (check) {
+async function runCustomCheck(
+  fixture: CustomValidFixture | CustomInvalidFixture,
+  document: unknown,
+  manifest: Manifest,
+): Promise<readonly string[]> {
+  switch (fixture.check) {
     case 'failure_taxonomy_required_codes':
       return missingTaxonomyCodes(new Set(manifest.failure_taxonomy_required_codes), document).map(
         (code) => `missing starter code: ${code}`,
       );
     case 'plugin_capability_matrix_invariants':
       return validatePluginCapabilityMatrix(document, manifest.plugin_capability_matrix_invariants);
+    case 'adapter_scope_matrix_subset':
+      return validateAdapterScopeAgainstMatrix(
+        document,
+        await loadDocument(adapterScopeMatrixPath(fixture, document)),
+      ).errors;
     default:
-      throw new Error(`Unknown custom check: ${check}`);
+      throw new Error(`Unknown custom check: ${fixture.check}`);
   }
+}
+
+function adapterScopeMatrixPath(
+  fixture: CustomValidFixture | CustomInvalidFixture,
+  document: unknown,
+): string {
+  if (fixture.matrix !== undefined) {
+    return fixture.matrix;
+  }
+  if (isObject(document)) {
+    const matrixRef = getString(document, 'matrix_ref');
+    if (matrixRef !== undefined) {
+      return matrixRef;
+    }
+  }
+  throw new Error(`Custom check ${fixture.check} requires a matrix path.`);
 }
 
 function matrixError(code: string, message: string): string {

@@ -137,6 +137,7 @@ def validate_custom_checks(manifest: dict[str, Any]) -> None:
             item["check"],
             load_document(ROOT / item["path"]),
             manifest,
+            item,
         )
         if errors:
             print(f"CUSTOM valid fixture failed: {item['path']}", file=sys.stderr)
@@ -149,6 +150,7 @@ def validate_custom_checks(manifest: dict[str, Any]) -> None:
             item["check"],
             load_document(ROOT / item["path"]),
             manifest,
+            item,
         )
         if not errors:
             print(
@@ -197,7 +199,7 @@ def validate_custom_checks(manifest: dict[str, Any]) -> None:
 
 
 def run_custom_check(
-    check: str, document: Any, manifest: dict[str, Any]
+    check: str, document: Any, manifest: dict[str, Any], item: dict[str, Any]
 ) -> list[str]:
     if check == "failure_taxonomy_required_codes":
         required_codes = set(manifest["failure_taxonomy_required_codes"])
@@ -207,6 +209,17 @@ def run_custom_check(
         return validate_plugin_capability_matrix(
             document,
             manifest["plugin_capability_matrix_invariants"],
+        )
+    if check == "adapter_scope_matrix_subset":
+        matrix_path = item.get("matrix")
+        if not isinstance(matrix_path, str) and isinstance(document, dict):
+            matrix_path = document.get("matrix_ref")
+        if not isinstance(matrix_path, str):
+            print("adapter_scope_matrix_subset requires a matrix path", file=sys.stderr)
+            sys.exit(1)
+        return validate_adapter_scope_against_matrix(
+            document,
+            load_document(ROOT / matrix_path),
         )
     print(f"Unknown custom check: {check}", file=sys.stderr)
     sys.exit(1)
@@ -519,6 +532,372 @@ def validate_matrix_decision(
                 f"stage9_consequence: {host_consequence}",
             )
         )
+
+
+CAPABILITY_DIMENSIONS = [
+    "agent_cli_install_distribution",
+    "cli_bundling_bootstrap",
+    "filesystem_access",
+    "cli_invocation",
+    "cli_report_rendering",
+    "annotation_apis",
+    "background_runs",
+    "repair_action_ui",
+    "trace_deep_links",
+]
+
+REQUIRED_LIMITED_ADAPTER_CAPABILITIES = [
+    "agent_cli_install_distribution",
+    "cli_bundling_bootstrap",
+    "filesystem_access",
+    "cli_invocation",
+    "cli_report_rendering",
+]
+
+FALLBACK_RANKS = {
+    "supported": 0,
+    "cli-redirect": 1,
+    "advisory-only": 2,
+    "disable": 3,
+    "hide": 3,
+    "hard-error": 4,
+}
+
+
+def adapter_error(code: str, message: str) -> str:
+    return f"[{code}] {message}"
+
+
+def validate_adapter_scope_against_matrix(document: Any, matrix: Any) -> list[str]:
+    if not isinstance(document, dict):
+        return [adapter_error("ASM_SCOPE_TYPE", "adapter scope must be an object")]
+    if not isinstance(matrix, dict):
+        return [adapter_error("ASM_MATRIX_TYPE", "plugin capability matrix must be an object")]
+
+    errors: list[str] = []
+    selected_host_id = document.get("selected_host_id")
+    decision = matrix.get("decision") if isinstance(matrix.get("decision"), dict) else None
+    matrix_selected_host_id = decision.get("selected_host_id") if decision is not None else None
+    if not isinstance(selected_host_id, str):
+        errors.append(adapter_error("ASM_SELECTED_HOST_MISSING", "adapter scope is missing selected_host_id"))
+    if not isinstance(matrix_selected_host_id, str):
+        errors.append(
+            adapter_error(
+                "ASM_MATRIX_DECISION_UNSUPPORTED",
+                "Stage 9 adapter validation requires a matrix decision with a selected host",
+            )
+        )
+    elif isinstance(selected_host_id, str) and selected_host_id != matrix_selected_host_id:
+        errors.append(
+            adapter_error(
+                "ASM_SELECTED_HOST_MISMATCH",
+                f"adapter selected_host_id {selected_host_id} must match matrix decision {matrix_selected_host_id}",
+            )
+        )
+
+    selected_host = find_adapter_matrix_host(matrix, selected_host_id) if isinstance(selected_host_id, str) else None
+    if isinstance(selected_host_id, str) and selected_host is None:
+        errors.append(
+            adapter_error(
+                "ASM_SELECTED_HOST_UNKNOWN",
+                f"adapter selected_host_id {selected_host_id} is not present in matrix hosts",
+            )
+        )
+    if selected_host is not None:
+        validate_adapter_selected_host_fields(document, selected_host, decision, selected_host_id, errors)
+        validate_adapter_cli_management(document, selected_host, selected_host_id, errors)
+        validate_adapter_capabilities(document, matrix, selected_host, selected_host_id, errors)
+        validate_adapter_write_classes(document, selected_host, selected_host_id, errors)
+    validate_adapter_local_state(document, errors)
+    return errors
+
+
+def find_adapter_matrix_host(matrix: dict[str, Any], host_id: str) -> dict[str, Any] | None:
+    for host in matrix.get("hosts", []):
+        if not isinstance(host, dict):
+            continue
+        host_info = host.get("host")
+        if isinstance(host_info, dict) and host_info.get("id") == host_id:
+            return host
+    return None
+
+
+def validate_adapter_selected_host_fields(
+    scope: dict[str, Any],
+    host: dict[str, Any],
+    decision: dict[str, Any] | None,
+    host_id: str,
+    errors: list[str],
+) -> None:
+    if decision is not None and decision.get("selected_tier") != "limited-adapter":
+        errors.append(
+            adapter_error(
+                "ASM_MATRIX_TIER_UNSUPPORTED",
+                "Stage 9 adapter validation currently requires a limited-adapter matrix decision",
+            )
+        )
+    for scope_field, host_field in [
+        ("capability_tier", "tier"),
+        ("stage9_consequence", "stage9_consequence"),
+        ("surface_kind", "surface_kind"),
+        ("distribution_surface", "distribution_surface"),
+    ]:
+        scope_value = scope.get(scope_field)
+        host_value = host.get(host_field)
+        if isinstance(scope_value, str) and isinstance(host_value, str) and scope_value != host_value:
+            errors.append(
+                adapter_error(
+                    "ASM_SELECTED_HOST_FIELD_MISMATCH",
+                    f"{scope_field} {scope_value} must match {host_id}.{host_field} {host_value}",
+                )
+            )
+    if host.get("candidate_status") != "in-scope-candidate":
+        errors.append(adapter_error("ASM_HOST_OUT_OF_SCOPE", f"{host_id} is not an in-scope Stage 9 candidate"))
+    if host.get("tier") != "limited-adapter":
+        errors.append(
+            adapter_error(
+                "ASM_HOST_TIER_UNSUPPORTED",
+                f"{host_id} must be selected at limited-adapter tier for this Stage 9 adapter scope",
+            )
+        )
+
+
+def validate_adapter_cli_management(
+    scope: dict[str, Any],
+    host: dict[str, Any],
+    host_id: str,
+    errors: list[str],
+) -> None:
+    scope_modes = {mode for mode in scope.get("cli_management_modes", []) if isinstance(mode, str)}
+    host_modes = {mode for mode in host.get("cli_management_modes", []) if isinstance(mode, str)}
+    for field in ["cli_management_modes", "cli_resolution_order"]:
+        for mode in scope.get(field, []):
+            if isinstance(mode, str) and mode not in host_modes:
+                errors.append(
+                    adapter_error(
+                        "ASM_CLI_MODE_UNSUPPORTED",
+                        f"{field} includes {mode}, which is not proven for {host_id}",
+                    )
+                )
+            if field == "cli_resolution_order" and isinstance(mode, str) and mode not in scope_modes:
+                errors.append(
+                    adapter_error(
+                        "ASM_RESOLUTION_ORDER_UNMAPPED",
+                        f"cli_resolution_order includes {mode}, which is not declared in cli_management_modes",
+                    )
+                )
+    cli_compatibility = scope.get("cli_compatibility")
+    host_cli = cli_compatibility.get("host_cli") if isinstance(cli_compatibility, dict) else None
+    host_cli_id = host_cli.get("host_id") if isinstance(host_cli, dict) else None
+    if isinstance(host_cli_id, str) and host_cli_id != host_id:
+        errors.append(
+            adapter_error(
+                "ASM_HOST_CLI_MISMATCH",
+                f"cli_compatibility.host_cli.host_id {host_cli_id} must match selected host {host_id}",
+            )
+        )
+
+
+def validate_adapter_capabilities(
+    scope: dict[str, Any],
+    matrix: dict[str, Any],
+    host: dict[str, Any],
+    host_id: str,
+    errors: list[str],
+) -> None:
+    matrix_dimensions = {dimension for dimension in matrix.get("capability_dimensions", []) if isinstance(dimension, str)}
+    for dimension in CAPABILITY_DIMENSIONS:
+        if dimension not in matrix_dimensions:
+            errors.append(adapter_error("ASM_MATRIX_DIMENSION_MISSING", f"matrix is missing {dimension}"))
+
+    host_evidence_ids = collect_adapter_host_evidence_ids(host)
+    host_capabilities = host.get("capabilities") if isinstance(host.get("capabilities"), dict) else None
+    coverage: dict[str, str] = {}
+    validate_adapter_capability_entries(
+        scope,
+        "implemented_capabilities",
+        "implemented",
+        host_capabilities,
+        host_evidence_ids,
+        coverage,
+        host_id,
+        errors,
+    )
+    validate_adapter_capability_entries(
+        scope,
+        "unavailable_capabilities",
+        "unavailable",
+        host_capabilities,
+        host_evidence_ids,
+        coverage,
+        host_id,
+        errors,
+    )
+
+    for dimension in CAPABILITY_DIMENSIONS:
+        if dimension not in coverage:
+            errors.append(
+                adapter_error(
+                    "ASM_CAPABILITY_COVERAGE",
+                    f"adapter scope must classify {dimension} as implemented or unavailable",
+                )
+            )
+    for dimension in REQUIRED_LIMITED_ADAPTER_CAPABILITIES:
+        if coverage.get(dimension) != "implemented":
+            errors.append(
+                adapter_error(
+                    "ASM_REQUIRED_CAPABILITY_UNAVAILABLE",
+                    f"limited adapter scope requires implemented capability {dimension}",
+                )
+            )
+
+
+def validate_adapter_capability_entries(
+    scope: dict[str, Any],
+    field: str,
+    classification: str,
+    host_capabilities: dict[str, Any] | None,
+    host_evidence_ids: set[str],
+    coverage: dict[str, str],
+    host_id: str,
+    errors: list[str],
+) -> None:
+    for index, entry in enumerate(scope.get(field, [])):
+        if not isinstance(entry, dict):
+            continue
+        capability = entry.get("capability")
+        if not isinstance(capability, str):
+            continue
+        if capability in coverage:
+            errors.append(adapter_error("ASM_CAPABILITY_DUPLICATE", f"{capability} is declared more than once"))
+        coverage[capability] = classification
+        matrix_capability = host_capabilities.get(capability) if host_capabilities is not None else None
+        if not isinstance(matrix_capability, dict):
+            errors.append(
+                adapter_error(
+                    "ASM_CAPABILITY_UNKNOWN",
+                    f"{field}[{index}] references capability {capability}, which is not present for {host_id}",
+                )
+            )
+            continue
+        if (
+            classification == "implemented"
+            and (
+                matrix_capability.get("status") != "yes"
+                or matrix_capability.get("fallback") != "supported"
+            )
+        ):
+            errors.append(
+                adapter_error(
+                    "ASM_CAPABILITY_OVERCLAIM",
+                    f"{capability} cannot be implemented because {host_id} matrix status is "
+                    f"{matrix_capability.get('status')} with {matrix_capability.get('fallback')} fallback",
+                )
+            )
+        validate_adapter_fallback_conservatism(
+            entry.get("fallback"),
+            matrix_capability.get("fallback"),
+            capability,
+            errors,
+        )
+        validate_adapter_capability_evidence(entry, matrix_capability, host_evidence_ids, capability, errors)
+
+
+def collect_adapter_host_evidence_ids(host: dict[str, Any]) -> set[str]:
+    ids: set[str] = set()
+    for evidence in host.get("evidence", []):
+        if isinstance(evidence, dict) and isinstance(evidence.get("evidence_id"), str):
+            ids.add(evidence["evidence_id"])
+    return ids
+
+
+def validate_adapter_fallback_conservatism(
+    adapter_fallback: Any,
+    matrix_fallback: Any,
+    capability: str,
+    errors: list[str],
+) -> None:
+    adapter_rank = FALLBACK_RANKS.get(adapter_fallback)
+    matrix_rank = FALLBACK_RANKS.get(matrix_fallback)
+    if adapter_rank is not None and matrix_rank is not None and adapter_rank < matrix_rank:
+        errors.append(
+            adapter_error(
+                "ASM_FALLBACK_OVERCLAIM",
+                f"{capability} fallback {adapter_fallback} is less conservative than matrix fallback {matrix_fallback}",
+            )
+        )
+
+
+def validate_adapter_capability_evidence(
+    entry: dict[str, Any],
+    matrix_capability: dict[str, Any],
+    host_evidence_ids: set[str],
+    capability: str,
+    errors: list[str],
+) -> None:
+    capability_evidence_ids = {
+        evidence_id for evidence_id in matrix_capability.get("evidence_ids", []) if isinstance(evidence_id, str)
+    }
+    for evidence_id in entry.get("evidence_ids", []):
+        if not isinstance(evidence_id, str):
+            continue
+        if evidence_id not in host_evidence_ids:
+            errors.append(
+                adapter_error(
+                    "ASM_EVIDENCE_DANGLING",
+                    f"{capability} references missing selected-host evidence_id {evidence_id}",
+                )
+            )
+        elif evidence_id not in capability_evidence_ids:
+            errors.append(
+                adapter_error(
+                    "ASM_EVIDENCE_NOT_CAPABILITY",
+                    f"{capability} references evidence_id {evidence_id} outside the matrix capability evidence",
+                )
+            )
+
+
+def validate_adapter_write_classes(
+    scope: dict[str, Any],
+    host: dict[str, Any],
+    host_id: str,
+    errors: list[str],
+) -> None:
+    host_capabilities = host.get("capabilities") if isinstance(host.get("capabilities"), dict) else None
+    repair_capability = host_capabilities.get("repair_action_ui") if host_capabilities is not None else None
+    preview_backed_proven = (
+        isinstance(repair_capability, dict)
+        and repair_capability.get("status") == "yes"
+        and repair_capability.get("fallback") == "supported"
+    )
+    write_classes = scope.get("write_classes")
+    if not isinstance(write_classes, dict):
+        return
+    for write_class in ["init", "migrate", "repair"]:
+        config = write_classes.get(write_class)
+        if (
+            isinstance(config, dict)
+            and config.get("mode") == "preview-backed"
+            and not preview_backed_proven
+        ):
+            errors.append(
+                adapter_error(
+                    "ASM_WRITE_MODE_OVERCLAIM",
+                    f"{write_class} cannot be preview-backed because {host_id}.repair_action_ui is not fully supported",
+                )
+            )
+
+
+def validate_adapter_local_state(scope: dict[str, Any], errors: list[str]) -> None:
+    local_state = scope.get("local_state")
+    if isinstance(local_state, dict) and local_state.get("authoritative") is True:
+        errors.append(
+            adapter_error(
+                "ASM_LOCAL_STATE_AUTHORITATIVE",
+                "adapter-local state must be non-authoritative and reconstructible",
+            )
+        )
+
 
 def main() -> None:
     schemas, registry = load_schemas()

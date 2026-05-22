@@ -1,6 +1,6 @@
 # Harness schema conventions
 
-Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 7 consumes the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas through deterministic CLI commands and offline report validation. Stage 8 revalidates the provisional plugin-capability and repair-action posture through an agent/CLI capability matrix before any Stage 9 adapter consumes it.
+Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 7 consumes the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas through deterministic CLI commands and offline report validation. Stage 8 revalidates the provisional plugin-capability and repair-action posture through an agent/CLI capability matrix before any Stage 9 adapter consumes it. Stage 9 adds an adapter-scope manifest and subset validator for the selected limited-adapter target without making the adapter a separate source of truth.
 
 All schemas use JSON Schema draft 2020-12 and local relative `$ref` links. Validation tools should load every file in `schemas/` into an offline registry keyed by each schema's versioned `$id`; validation must not require network access.
 
@@ -57,7 +57,9 @@ Stage 8 adds `plugin-capability-matrix.schema.json` as the durable feasibility a
 
 `examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json` records the Stage 8 decision: Codex CLI, Claude Code, and GitHub Copilot CLI reach limited-adapter tier; Gemini CLI remains CLI-first fallback because bootstrap and background-agent support are not proven enough for limited-adapter scope. GitHub Copilot CLI is selected as the first limited-adapter target. No full-plugin target is claimed; under current evidence, full-plugin remains aspirational until every rich UX capability is proven.
 
-`repair-action.schema.json` remains provisional. Stage 8 keeps preview-backed repair actions separate from limited-adapter advisory repair behavior; Stage 9 must extend repair or adapter-scope metadata before any host surface executes write-class repairs.
+Stage 9 adds `adapter-scope.schema.json` and the canonical `examples/adapters/github-copilot-cli/adapter-scope.json`. The scope manifest declares implemented capabilities, unavailable capabilities, fallback behavior, selected-host evidence ids, CLI/schema compatibility, write-class modes, non-authoritative local state, and trust boundaries. `harness adapter validate` and fixture custom checks prove that scope is a subset of the selected host row in the Stage 8 matrix.
+
+`repair-action.schema.json` remains provisional, but now distinguishes `repair_mode: preview-backed` from `repair_mode: advisory-only`. Preview-backed repair actions still require `preview_diff`; advisory-only repairs omit preview diffs, include an advisory block, and redirect write execution to equivalent CLI commands.
 
 ## Taxonomies
 
@@ -69,7 +71,7 @@ Stage 15 GC expansion depends on this Stage 7 judge calibration policy before an
 
 ## Fixture validation
 
-Schema stages ship canonical valid examples, focused invalid fixtures, and custom semantic checks for invariants that JSON Schema cannot express. Stage 8 matrix custom checks are mandatory for consumers because they validate selected-host consistency, evidence-id references, tier thresholds, and out-of-scope surface boundaries that plain JSON Schema cannot fully express. Install validator dependencies outside the repository and run:
+Schema stages ship canonical valid examples, focused invalid fixtures, and custom semantic checks for invariants that JSON Schema cannot express. Stage 8 matrix custom checks are mandatory for consumers because they validate selected-host consistency, evidence-id references, tier thresholds, and out-of-scope surface boundaries that plain JSON Schema cannot fully express. Stage 9 adapter-scope custom checks are mandatory because they validate selected-host alignment, capability subset claims, CLI-management-mode subsets, evidence-id references, write-class limits, and non-authoritative adapter state. Install validator dependencies outside the repository and run:
 
 ```bash
 python3 -m pip install --target /tmp/harness-schema-validation -r examples/fixtures/requirements.txt

@@ -326,39 +326,49 @@ Stage 8 validation evidence:
 
 ## Stage 9: Conditional adapter MVP
 
-- [ ] Implement selected full plugin or limited adapter only if Stage 8 finds a feasible target.
-- [ ] Add a schema-backed machine-readable adapter scope manifest, or equivalent revalidated plugin-capability metadata, declaring implemented capabilities, unavailable capabilities, fallback behavior, required Stage 8 matrix evidence ids, CLI/schema compatibility, and trust/write boundaries.
-- [ ] Validate the adapter scope manifest or equivalent revalidated plugin-capability metadata against the Stage 8 matrix so implemented scope is a subset of proven capabilities.
-- [ ] Extend `schemas/repair-action.schema.json` with advisory-only versus preview-backed repair mode, or equivalent adapter-scope metadata, before any Stage 9 host surface executes write-class repairs.
-- [ ] Add repair-action or adapter-scope fixtures proving advisory-only limited-adapter behavior before write-class repairs are exposed.
-- [ ] Package through selected agent/CLI marketplace mechanism only if Stage 8 proves that mechanism.
-- [ ] Discover repo-local `harness.yaml` only through a repository access path proven in Stage 8.
-- [ ] Initialize through CLI substrate only when Stage 8 proves write-capable CLI invocation and approval/trust boundaries.
-- [ ] Render doctor/eval/trace reports from CLI JSON/Markdown outputs only for report surfaces proven in Stage 8.
-- [ ] Create supported annotations only for annotation/session feedback APIs proven in Stage 8.
-- [ ] Implement supported repair actions through CLI-backed init/migrate/repair flows only when Stage 8 proves repair preview/approval affordances.
-- [ ] Bundle, pin, or bootstrap CLI dependency only through mechanisms proven in Stage 8.
-- [ ] Implement CLI resolution order: repo-pinned compatible CLI, adapter-bundled CLI, then user-installed CLI.
-- [ ] Detect repo-pinned CLI version from `harness.yaml` `engines.cli`.
-- [ ] Refuse write actions on CLI/schema incompatibility.
-- [ ] Ensure adapter does not reimplement doctor checks or eval verifiers.
-- [ ] Ensure adapter-local cache is non-authoritative and reconstructible.
-- [ ] For full-plugin targets with proven preview/approval affordances, ensure repair actions show preview diffs, use approval policy, declare risk class, and emit equivalent CLI commands.
-- [ ] For limited adapters without proven preview/approval affordances, keep repair actions advisory: show the equivalent CLI command, explain approval/risk, and do not execute writes through the host surface.
-- [ ] Run adapter tests for the selected host surface and capability tier.
-- [ ] Run `git diff --check`.
+Status note: Stage 9 currently ships the schema-backed GitHub Copilot CLI limited-adapter scope and `harness adapter validate`; it does not ship an installable host package because no concrete host package manifest/install format has been proven for this repository. Where the original checklist says "adapter-bundled," the selected Stage 8 matrix currently proves `bootstrap` instead of `bundled`, so the scope manifest declares repo-pinned, bootstrap-managed, then user-installed resolution. Runtime CLI resolution and host packaging remain pending.
+
+- [x] Implement selected full plugin or limited adapter only if Stage 8 finds a feasible target.
+- [x] Add a schema-backed machine-readable adapter scope manifest, or equivalent revalidated plugin-capability metadata, declaring implemented capabilities, unavailable capabilities, fallback behavior, required Stage 8 matrix evidence ids, CLI/schema compatibility, and trust/write boundaries.
+- [x] Validate the adapter scope manifest or equivalent revalidated plugin-capability metadata against the Stage 8 matrix so implemented scope is a subset of proven capabilities.
+- [x] Extend `schemas/repair-action.schema.json` with advisory-only versus preview-backed repair mode, or equivalent adapter-scope metadata, before any Stage 9 host surface executes write-class repairs.
+- [x] Add repair-action or adapter-scope fixtures proving advisory-only limited-adapter behavior before write-class repairs are exposed.
+- [ ] Package through selected agent/CLI marketplace mechanism only if Stage 8 proves that mechanism. _(Deferred: host package format remains unproven.)_
+- [ ] Discover repo-local `harness.yaml` only through a repository access path proven in Stage 8. _(Deferred: runtime adapter pending.)_
+- [ ] Initialize through CLI substrate only when Stage 8 proves write-capable CLI invocation and approval/trust boundaries. _(Deferred: runtime adapter pending.)_
+- [ ] Render doctor/eval/trace reports from CLI JSON/Markdown outputs only for report surfaces proven in Stage 8. _(Deferred: runtime adapter pending.)_
+- [ ] Create supported annotations only for annotation/session feedback APIs proven in Stage 8. _(Deferred: runtime adapter pending; current scope labels durable annotations advisory-only.)_
+- [x] Keep repair actions CLI-backed and advisory in the current scope manifest; preview-backed repair remains schema-supported but not claimed by the un-packaged limited-adapter runtime.
+- [x] Declare bundle, pin, or bootstrap CLI dependency modes only through mechanisms proven in Stage 8.
+- [x] Declare CLI resolution order: repo-pinned compatible CLI, adapter-bundled or bootstrap-managed CLI when proven, then user-installed CLI.
+- [ ] Detect repo-pinned CLI version from `harness.yaml` `engines.cli`. _(Deferred: runtime adapter pending.)_
+- [x] Require adapter-scope metadata to refuse write actions on CLI/schema incompatibility.
+- [x] Ensure adapter does not reimplement doctor checks or eval verifiers.
+- [x] Ensure adapter-local cache is non-authoritative and reconstructible.
+- [x] For full-plugin targets with proven preview/approval affordances, ensure repair actions show preview diffs, use approval policy, declare risk class, and emit equivalent CLI commands. Current status: no full-plugin target selected; preview-backed schema fixtures cover the contract without claiming a host package.
+- [x] For limited adapters without proven preview/approval affordances, keep repair actions advisory: show the equivalent CLI command, explain approval/risk, and do not execute writes through the host surface.
+- [x] Run adapter tests for the selected host surface and capability tier.
+- [x] Run `git diff --check`.
+
+Verification evidence:
+
+- `bun run check`
+- `bun run test:unit`
+- `bun run build`
+- `PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py`
+- `git diff --check`
 
 ### Stage 9 acceptance criteria
 
-- [ ] A user can install or enable the selected host surface at the capability tier proven by Stage 8 without separately guessing CLI prerequisites.
-- [ ] Automated validation proves the adapter scope manifest or equivalent revalidated plugin-capability metadata is a subset of capabilities proven in the Stage 8 matrix.
-- [ ] The adapter bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance includes missing/incompatible CLI detection and repair prompts.
-- [ ] The adapter resolves CLI versions in this order: repo-pinned compatible CLI, adapter-bundled CLI, then user-installed CLI.
-- [ ] The adapter refuses write actions when no compatible CLI/schema version exists.
-- [ ] Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands only when Stage 8 proves host preview and approval affordances.
-- [ ] Limited adapters without proven preview and approval affordances keep repair actions advisory and redirect write execution to the CLI.
-- [ ] Adapter does not create a second source of truth; adapter-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
-- [ ] Any rich UX capability not proven in Stage 8 is absent or clearly labeled unavailable.
+- [ ] A user can install or enable the selected host surface at the capability tier proven by Stage 8 without separately guessing CLI prerequisites. _(Deferred: host package format and runtime adapter pending.)_
+- [x] Automated validation proves the adapter scope manifest or equivalent revalidated plugin-capability metadata is a subset of capabilities proven in the Stage 8 matrix.
+- [ ] The adapter bundles or auto-manages a pinned CLI dependency unless the host forbids it; constrained-host manual guidance includes missing/incompatible CLI detection and repair prompts. _(Deferred: runtime adapter pending; scope manifest only declares bootstrap-compatible behavior.)_
+- [ ] The adapter resolves CLI versions in this order: repo-pinned compatible CLI, adapter-bundled or bootstrap-managed CLI when proven, then user-installed CLI. _(Deferred: runtime adapter pending; scope manifest validates the declared order.)_
+- [ ] The adapter refuses write actions when no compatible CLI/schema version exists. _(Deferred: runtime adapter pending; scope manifest requires this behavior.)_
+- [x] Repair actions show preview diffs, use the approval policy, declare risk class, and emit equivalent CLI commands only when Stage 8 proves host preview and approval affordances.
+- [x] Limited adapters without proven preview and approval affordances keep repair actions advisory and redirect write execution to the CLI.
+- [x] Adapter does not create a second source of truth; adapter-local cache is non-authoritative, reconstructible, and excluded from CLI/CI behavior.
+- [x] Any rich UX capability not proven in Stage 8 is absent or clearly labeled unavailable.
 
 ## Stage 10: Native execution loop and continuity adapter
 

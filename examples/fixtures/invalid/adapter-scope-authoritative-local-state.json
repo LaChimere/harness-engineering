@@ -1,0 +1,97 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "adapter_id": "authoritative-local-state",
+  "matrix_ref": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+  "selected_host_id": "github-copilot-cli",
+  "capability_tier": "limited-adapter",
+  "stage9_consequence": "proceed-limited-adapter",
+  "surface_kind": "agent-cli-marketplace-plugin",
+  "distribution_surface": "agent-cli-marketplace",
+  "cli_management_modes": ["repo-pinned"],
+  "cli_resolution_order": ["repo-pinned"],
+  "cli_compatibility": {
+    "harness_cli": {
+      "executable": "harness",
+      "version_range": ">=0.1 <0.2"
+    },
+    "host_cli": {
+      "host_id": "github-copilot-cli",
+      "executable": "copilot",
+      "version_range": "*",
+      "detection_command": {
+        "command": "copilot --version"
+      }
+    },
+    "schema_ranges": {
+      "adapter-scope": ">=0.1 <0.2",
+      "plugin-capability-matrix": ">=0.1 <0.2",
+      "repair-action": ">=0.1 <0.2"
+    },
+    "missing_or_incompatible_behavior": {
+      "detects": true,
+      "refuse_write_actions": true,
+      "repair_prompt": "Install a compatible CLI."
+    }
+  },
+  "implemented_capabilities": [
+    {
+      "capability": "cli_invocation",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-invocation"],
+      "user_label": "CLI invocation",
+      "note": "Schema-focused invalid fixture."
+    }
+  ],
+  "unavailable_capabilities": [
+    {
+      "capability": "trace_deep_links",
+      "fallback": "cli-redirect",
+      "evidence_ids": ["github-copilot-cli-trace"],
+      "user_label": "Trace links",
+      "reason": "Schema-focused invalid fixture."
+    }
+  ],
+  "write_classes": {
+    "init": {
+      "mode": "advisory-only",
+      "executes_in_host": false,
+      "equivalent_cli_command": {
+        "command": "harness init"
+      },
+      "approval_policy": "examples/policies/approval-policy.yaml",
+      "risk_boundary": "Schema-focused invalid fixture."
+    },
+    "migrate": {
+      "mode": "advisory-only",
+      "executes_in_host": false,
+      "equivalent_cli_command": {
+        "command": "harness migrate --dry-run"
+      },
+      "approval_policy": "examples/policies/approval-policy.yaml",
+      "risk_boundary": "Schema-focused invalid fixture."
+    },
+    "repair": {
+      "mode": "advisory-only",
+      "executes_in_host": false,
+      "equivalent_cli_command": {
+        "command": "harness migrate --dry-run"
+      },
+      "approval_policy": "examples/policies/approval-policy.yaml",
+      "risk_boundary": "Schema-focused invalid fixture."
+    }
+  },
+  "local_state": {
+    "authoritative": true,
+    "cache_paths": [],
+    "reconstructible_from": ["harness.yaml"],
+    "cli_ci_behavior": "excluded"
+  },
+  "trust_boundaries": {
+    "source_of_truth": "harness-cli-schema-artifacts",
+    "doctor_reimplementation": false,
+    "eval_reimplementation": false,
+    "writes_only_through_cli": true,
+    "credential_handling": "No credentials embedded."
+  }
+}

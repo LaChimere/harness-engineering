@@ -1,0 +1,10 @@
+{
+  "selected_host_id": "github-copilot-cli",
+  "cli_compatibility": {
+    "host_cli": {
+      "host_id": "openai-codex-cli"
+    }
+  },
+  "implemented_capabilities": [],
+  "unavailable_capabilities": []
+}

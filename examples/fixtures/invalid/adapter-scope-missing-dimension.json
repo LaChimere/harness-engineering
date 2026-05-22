@@ -1,0 +1,11 @@
+{
+  "selected_host_id": "github-copilot-cli",
+  "implemented_capabilities": [
+    {
+      "capability": "agent_cli_install_distribution",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-install"]
+    }
+  ],
+  "unavailable_capabilities": []
+}

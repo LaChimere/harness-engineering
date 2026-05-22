@@ -1,0 +1,7 @@
+{
+  "selected_host_id": "github-copilot-cli",
+  "cli_management_modes": ["bundled"],
+  "cli_resolution_order": ["repo-pinned", "bundled"],
+  "implemented_capabilities": [],
+  "unavailable_capabilities": []
+}

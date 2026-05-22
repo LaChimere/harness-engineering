@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/repair-action.schema.json",
   "title": "Repair action",
-  "$comment": "provisional; Stage 8/9 must confirm host-specific repair UX before writes are enabled.",
+  "$comment": "provisional; Stage 9 distinguishes preview-backed repairs from advisory-only limited-adapter repair prompts.",
   "type": "object",
   "required": [
     "schema_version",
@@ -10,7 +10,7 @@
     "action_id",
     "target_files",
     "risk_class",
-    "preview_diff",
+    "repair_mode",
     "equivalent_cli_command",
     "approval_state",
     "sandbox_requirement",
@@ -38,6 +38,10 @@
     "risk_class": {
       "$ref": "common.schema.json#/$defs/riskClass"
     },
+    "repair_mode": {
+      "type": "string",
+      "enum": ["preview-backed", "advisory-only"]
+    },
     "preview_diff": {
       "type": "string",
       "minLength": 1,
@@ -61,7 +65,59 @@
     },
     "evidence_links": {
       "$ref": "common.schema.json#/$defs/evidenceLinks"
+    },
+    "advisory": {
+      "type": "object",
+      "required": ["reason", "write_execution", "approval_guidance"],
+      "properties": {
+        "reason": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "write_execution": {
+          "const": "cli-only"
+        },
+        "approval_guidance": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "repair_mode": {
+            "const": "preview-backed"
+          }
+        },
+        "required": ["repair_mode"]
+      },
+      "then": {
+        "required": ["preview_diff"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "repair_mode": {
+            "const": "advisory-only"
+          }
+        },
+        "required": ["repair_mode"]
+      },
+      "then": {
+        "required": ["advisory"],
+        "properties": {
+          "approval_state": {
+            "enum": ["proposed", "rejected"]
+          }
+        },
+        "not": {
+          "required": ["preview_diff"]
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

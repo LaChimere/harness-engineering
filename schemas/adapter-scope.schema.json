@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/adapter-scope.schema.json",
+  "title": "Adapter scope",
+  "$comment": "provisional Stage 9 limited-adapter scope manifest; semantic subset checks against the Stage 8 capability matrix are required before an adapter can be treated as enabled.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "x-stability",
+    "adapter_id",
+    "matrix_ref",
+    "selected_host_id",
+    "capability_tier",
+    "stage9_consequence",
+    "surface_kind",
+    "distribution_surface",
+    "cli_management_modes",
+    "cli_resolution_order",
+    "cli_compatibility",
+    "implemented_capabilities",
+    "unavailable_capabilities",
+    "write_classes",
+    "local_state",
+    "trust_boundaries"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "x-stability": {
+      "const": "provisional"
+    },
+    "adapter_id": {
+      "$ref": "plugin-capability.schema.json#/$defs/stableId"
+    },
+    "matrix_ref": {
+      "$ref": "#/$defs/repoRelativeArtifactPath"
+    },
+    "selected_host_id": {
+      "$ref": "plugin-capability.schema.json#/$defs/stableId"
+    },
+    "capability_tier": {
+      "$ref": "plugin-capability.schema.json#/$defs/capabilityTier"
+    },
+    "stage9_consequence": {
+      "$ref": "plugin-capability.schema.json#/$defs/stage9Consequence"
+    },
+    "surface_kind": {
+      "$ref": "plugin-capability.schema.json#/$defs/surfaceKind"
+    },
+    "distribution_surface": {
+      "$ref": "plugin-capability.schema.json#/$defs/distributionSurface"
+    },
+    "cli_management_modes": {
+      "$ref": "#/$defs/cliManagementModes"
+    },
+    "cli_resolution_order": {
+      "$comment": "Ordered-subset relationship to cli_management_modes is enforced by required adapter-scope semantic validation.",
+      "$ref": "#/$defs/cliManagementModes"
+    },
+    "cli_compatibility": {
+      "type": "object",
+      "required": ["harness_cli", "host_cli", "schema_ranges", "missing_or_incompatible_behavior"],
+      "properties": {
+        "harness_cli": {
+          "type": "object",
+          "required": ["executable", "version_range"],
+          "properties": {
+            "executable": {
+              "$ref": "common.schema.json#/$defs/nonEmptyString"
+            },
+            "version_range": {
+              "$ref": "common.schema.json#/$defs/schemaRange"
+            }
+          },
+          "additionalProperties": false
+        },
+        "host_cli": {
+          "type": "object",
+          "required": ["host_id", "executable", "version_range", "detection_command"],
+          "properties": {
+            "host_id": {
+              "$ref": "plugin-capability.schema.json#/$defs/stableId"
+            },
+            "executable": {
+              "$ref": "common.schema.json#/$defs/nonEmptyString"
+            },
+            "version_range": {
+              "$ref": "common.schema.json#/$defs/schemaRange"
+            },
+            "detection_command": {
+              "$ref": "common.schema.json#/$defs/command"
+            }
+          },
+          "additionalProperties": false
+        },
+        "schema_ranges": {
+          "type": "object",
+          "required": ["adapter-scope", "plugin-capability-matrix", "repair-action"],
+          "properties": {
+            "adapter-scope": {
+              "$ref": "common.schema.json#/$defs/schemaRange"
+            },
+            "plugin-capability-matrix": {
+              "$ref": "common.schema.json#/$defs/schemaRange"
+            },
+            "repair-action": {
+              "$ref": "common.schema.json#/$defs/schemaRange"
+            }
+          },
+          "additionalProperties": {
+            "$ref": "common.schema.json#/$defs/schemaRange"
+          }
+        },
+        "missing_or_incompatible_behavior": {
+          "type": "object",
+          "required": ["detects", "refuse_write_actions", "repair_prompt"],
+          "properties": {
+            "detects": {
+              "const": true
+            },
+            "refuse_write_actions": {
+              "const": true
+            },
+            "repair_prompt": {
+              "$ref": "common.schema.json#/$defs/nonEmptyString"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "implemented_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/adapterCapability"
+      }
+    },
+    "unavailable_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/unavailableCapability"
+      }
+    },
+    "write_classes": {
+      "type": "object",
+      "required": ["init", "migrate", "repair"],
+      "properties": {
+        "init": {
+          "$ref": "#/$defs/writeClass"
+        },
+        "migrate": {
+          "$ref": "#/$defs/writeClass"
+        },
+        "repair": {
+          "$ref": "#/$defs/writeClass"
+        }
+      },
+      "additionalProperties": false
+    },
+    "local_state": {
+      "type": "object",
+      "required": ["authoritative", "cache_paths", "reconstructible_from", "cli_ci_behavior"],
+      "properties": {
+        "authoritative": {
+          "const": false
+        },
+        "cache_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/repoRelativeArtifactPath"
+          }
+        },
+        "reconstructible_from": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/repoRelativeArtifactPath"
+          }
+        },
+        "cli_ci_behavior": {
+          "const": "excluded"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trust_boundaries": {
+      "type": "object",
+      "required": [
+        "source_of_truth",
+        "doctor_reimplementation",
+        "eval_reimplementation",
+        "writes_only_through_cli",
+        "credential_handling"
+      ],
+      "properties": {
+        "source_of_truth": {
+          "const": "harness-cli-schema-artifacts"
+        },
+        "doctor_reimplementation": {
+          "const": false
+        },
+        "eval_reimplementation": {
+          "const": false
+        },
+        "writes_only_through_cli": {
+          "const": true
+        },
+        "credential_handling": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "cliManagementModes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "plugin-capability.schema.json#/$defs/cliManagementMode"
+      },
+      "uniqueItems": true
+    },
+    "repoRelativeArtifactPath": {
+      "$ref": "common.schema.json#/$defs/artifactRef",
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "^/"
+          },
+          {
+            "pattern": "(^|/)\\.\\.(/|$)"
+          },
+          {
+            "pattern": "://"
+          }
+        ]
+      }
+    },
+    "capabilityDimension": {
+      "$ref": "plugin-capability-matrix.schema.json#/$defs/capabilityDimension"
+    },
+    "adapterCapability": {
+      "type": "object",
+      "required": ["capability", "fallback", "evidence_ids", "user_label", "note"],
+      "properties": {
+        "capability": {
+          "$ref": "#/$defs/capabilityDimension"
+        },
+        "fallback": {
+          "$ref": "plugin-capability.schema.json#/$defs/fallbackBehavior"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidenceIds"
+        },
+        "user_label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "note": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "unavailableCapability": {
+      "type": "object",
+      "required": ["capability", "fallback", "evidence_ids", "user_label", "reason"],
+      "properties": {
+        "capability": {
+          "$ref": "#/$defs/capabilityDimension"
+        },
+        "fallback": {
+          "$ref": "plugin-capability.schema.json#/$defs/fallbackBehavior"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidenceIds"
+        },
+        "user_label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "reason": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidenceIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "plugin-capability.schema.json#/$defs/stableId"
+      },
+      "uniqueItems": true
+    },
+    "writeMode": {
+      "type": "string",
+      "enum": ["preview-backed", "advisory-only", "disabled"]
+    },
+    "writeClass": {
+      "type": "object",
+      "required": [
+        "mode",
+        "executes_in_host",
+        "equivalent_cli_command",
+        "approval_policy",
+        "risk_boundary"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/writeMode"
+        },
+        "executes_in_host": {
+          "const": false
+        },
+        "equivalent_cli_command": {
+          "$ref": "common.schema.json#/$defs/command"
+        },
+        "approval_policy": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "risk_boundary": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

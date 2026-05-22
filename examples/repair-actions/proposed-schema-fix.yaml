@@ -4,6 +4,7 @@ action_id: fix-schema-example
 target_files:
   - examples/fixtures/invalid/harness-with-plugin-key.yaml
 risk_class: low
+repair_mode: preview-backed
 preview_diff: |
   diff --git a/examples/fixtures/invalid/harness-with-plugin-key.yaml b/examples/fixtures/invalid/harness-with-plugin-key.yaml
   --- a/examples/fixtures/invalid/harness-with-plugin-key.yaml

@@ -1,3 +1,4 @@
+import { runAdapterCommand } from './commands/adapter.ts';
 import { runDoctorCommand } from './commands/doctor.ts';
 import { runEvalCommand } from './commands/eval.ts';
 import { runInit } from './commands/init.ts';
@@ -42,6 +43,8 @@ export async function runCli(args: readonly string[], context: RunContext): Prom
     switch (command) {
       case 'init':
         return await runInit(commandArgs, commandContext);
+      case 'adapter':
+        return await runAdapterCommand(commandArgs, commandContext);
       case 'validate':
         return await runValidate(commandArgs, commandContext);
       case 'migrate':
@@ -77,6 +80,7 @@ function helpText(): string {
 
 Commands:
   init       Create a schema-valid starter harness baseline.
+  adapter    Validate limited-adapter scope against the capability matrix.
   validate   Validate harness.yaml shape, engines, and composed references.
   migrate    Emit dry-run/no-op migration evidence.
   doctor     Run deterministic structural harness checks.

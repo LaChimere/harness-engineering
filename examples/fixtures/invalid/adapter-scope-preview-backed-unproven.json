@@ -1,0 +1,10 @@
+{
+  "selected_host_id": "claude-code",
+  "implemented_capabilities": [],
+  "unavailable_capabilities": [],
+  "write_classes": {
+    "repair": {
+      "mode": "preview-backed"
+    }
+  }
+}

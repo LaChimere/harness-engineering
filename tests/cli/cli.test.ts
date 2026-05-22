@@ -163,6 +163,99 @@ test('validate rejects composed references that escape root', async () => {
   expect(result.stdout).toContain('environment escapes root');
 });
 
+test('adapter validate proves selected scope is a subset of the Stage 8 matrix', async () => {
+  const result = await run(['adapter', 'validate']);
+  expect(result.code).toBe(ExitCode.ok);
+  expect(result.stdout).toContain('harness adapter validate ok');
+  expect(result.stdout).toContain('host: github-copilot-cli');
+  expect(result.stdout).toContain('tier: limited-adapter');
+  expect(result.stdout).toContain('capabilities: 7 implemented, 2 unavailable');
+  expect(result.stdout).toContain(
+    'write classes: init=advisory-only, migrate=advisory-only, repair=advisory-only',
+  );
+});
+
+test('adapter validate rejects scope that overclaims partial matrix capabilities', async () => {
+  const root = await tempRoot();
+  await mkdir(join(root, 'examples/adapters/github-copilot-cli'), { recursive: true });
+  await mkdir(join(root, 'examples/plugin-capabilities'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json'),
+    await readFile('examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json', 'utf8'),
+  );
+  const scope = await loadDocument('examples/adapters/github-copilot-cli/adapter-scope.json');
+  if (!isObject(scope)) {
+    throw new Error('adapter scope fixture must be an object');
+  }
+  const invalidScope = {
+    ...scope,
+    implemented_capabilities: [
+      ...jsonObjects(getArray(scope, 'implemented_capabilities')),
+      {
+        capability: 'annotation_apis',
+        fallback: 'supported',
+        evidence_ids: ['github-copilot-cli-hooks'],
+        user_label: 'Durable inline annotations',
+        note: 'Invalidly promotes partial annotation support.',
+      },
+    ],
+    unavailable_capabilities: jsonObjects(getArray(scope, 'unavailable_capabilities')).filter(
+      (capability) => getString(capability, 'capability') !== 'annotation_apis',
+    ),
+  };
+  await writeFile(
+    join(root, 'examples/adapters/github-copilot-cli/adapter-scope.json'),
+    JSON.stringify(invalidScope, null, 2),
+  );
+
+  const result = await run(['adapter', 'validate'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('ASM_CAPABILITY_OVERCLAIM');
+  expect(result.stdout).toContain('annotation_apis cannot be implemented');
+});
+
+test('adapter validate rejects resolution order modes absent from scope management modes', async () => {
+  const root = await tempRoot();
+  await mkdir(join(root, 'examples/adapters/github-copilot-cli'), { recursive: true });
+  await mkdir(join(root, 'examples/plugin-capabilities'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json'),
+    await readFile('examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json', 'utf8'),
+  );
+  const scope = await loadDocument('examples/adapters/github-copilot-cli/adapter-scope.json');
+  if (!isObject(scope)) {
+    throw new Error('adapter scope fixture must be an object');
+  }
+  await writeFile(
+    join(root, 'examples/adapters/github-copilot-cli/adapter-scope.json'),
+    JSON.stringify(
+      {
+        ...scope,
+        cli_management_modes: ['repo-pinned', 'bootstrap'],
+        cli_resolution_order: ['repo-pinned', 'user-installed'],
+      },
+      null,
+      2,
+    ),
+  );
+
+  const result = await run(['adapter', 'validate'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('ASM_RESOLUTION_ORDER_UNMAPPED');
+  expect(result.stdout).toContain('user-installed');
+});
+
+test('adapter validate rejects scope and matrix paths that escape root', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  await mkdir(root);
+  await writeFile(join(parent, 'adapter-scope.json'), '{}');
+
+  const result = await run(['adapter', 'validate', '--scope', '../adapter-scope.json'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Adapter scope escapes root');
+});
+
 test('verify consumes explicit verification evidence without requiring harness.yaml', async () => {
   const result = await run(['verify', '--spec', 'tests/cli/fixtures/verification-failed.yaml']);
   expect(result.code).toBe(ExitCode.validationError);

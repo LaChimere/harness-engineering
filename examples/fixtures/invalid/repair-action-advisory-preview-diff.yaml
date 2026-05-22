@@ -1,0 +1,35 @@
+schema_version: "0.1.0"
+x-stability: provisional
+action_id: advisory-with-preview
+target_files:
+  - examples/harness.yaml
+risk_class: low
+repair_mode: advisory-only
+preview_diff: |
+  diff --git a/examples/harness.yaml b/examples/harness.yaml
+  --- a/examples/harness.yaml
+  +++ b/examples/harness.yaml
+  @@ -1 +1 @@
+  -schema_version: "0.0.0"
+  +schema_version: "0.1.0"
+equivalent_cli_command:
+  command: harness migrate --dry-run --output .harness/repairs/advisory-with-preview.yaml
+  timeout_seconds: 300
+approval_state: proposed
+sandbox_requirement: worktree
+trust_requirements:
+  trust_level: sandboxed
+  sandbox_required: worktree
+  network_access: false
+  secret_access: false
+  host_file_access: false
+  allowed_inputs:
+    - examples/harness.yaml
+  allowed_outputs:
+    - .harness/repairs/advisory-with-preview.yaml
+rollback_notes: No host write is executed.
+evidence_links: []
+advisory:
+  reason: Advisory repairs must redirect to CLI evidence rather than carry host preview diffs.
+  write_execution: cli-only
+  approval_guidance: Run the equivalent CLI command and review its generated evidence.

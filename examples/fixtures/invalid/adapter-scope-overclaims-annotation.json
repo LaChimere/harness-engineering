@@ -1,0 +1,16 @@
+{
+  "selected_host_id": "github-copilot-cli",
+  "implemented_capabilities": [
+    {
+      "capability": "annotation_apis",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-hooks"]
+    }
+  ],
+  "unavailable_capabilities": [],
+  "write_classes": {
+    "repair": {
+      "mode": "advisory-only"
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "adapter_id": "github-copilot-cli-limited-adapter",
+  "matrix_ref": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+  "selected_host_id": "github-copilot-cli",
+  "capability_tier": "limited-adapter",
+  "stage9_consequence": "proceed-limited-adapter",
+  "surface_kind": "agent-cli-marketplace-plugin",
+  "distribution_surface": "agent-cli-marketplace",
+  "cli_management_modes": ["repo-pinned", "bootstrap", "user-installed"],
+  "cli_resolution_order": ["repo-pinned", "bootstrap", "user-installed"],
+  "cli_compatibility": {
+    "harness_cli": {
+      "executable": "harness",
+      "version_range": ">=0.1 <0.2"
+    },
+    "host_cli": {
+      "host_id": "github-copilot-cli",
+      "executable": "copilot",
+      "version_range": "*",
+      "detection_command": {
+        "command": "copilot --version",
+        "timeout_seconds": 30
+      }
+    },
+    "schema_ranges": {
+      "adapter-scope": ">=0.1 <0.2",
+      "plugin-capability-matrix": ">=0.1 <0.2",
+      "repair-action": ">=0.1 <0.2"
+    },
+    "missing_or_incompatible_behavior": {
+      "detects": true,
+      "refuse_write_actions": true,
+      "repair_prompt": "Install or select a compatible harness CLI before enabling write-class adapter actions."
+    }
+  },
+  "implemented_capabilities": [
+    {
+      "capability": "agent_cli_install_distribution",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-install"],
+      "user_label": "GitHub Copilot CLI install or marketplace setup",
+      "note": "Adapter enablement can rely on the Stage 8-proven Copilot CLI install and marketplace distribution path."
+    },
+    {
+      "capability": "cli_bundling_bootstrap",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-bootstrap"],
+      "user_label": "Harness CLI bootstrap",
+      "note": "The adapter resolves a repo-pinned harness CLI first, then a bootstrap-managed CLI, then a user-installed CLI."
+    },
+    {
+      "capability": "filesystem_access",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-filesystem"],
+      "user_label": "Repository file access",
+      "note": "All reads and writes remain bounded by repository paths and the harness CLI/schema artifacts."
+    },
+    {
+      "capability": "cli_invocation",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-invocation"],
+      "user_label": "Harness CLI invocation",
+      "note": "Adapter actions invoke deterministic harness CLI commands rather than reimplementing doctor, eval, trace, or repair behavior."
+    },
+    {
+      "capability": "cli_report_rendering",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-report"],
+      "user_label": "CLI-backed report rendering",
+      "note": "Reports are rendered from harness CLI JSON or Markdown output and cite the source artifact paths."
+    },
+    {
+      "capability": "background_runs",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-autopilot"],
+      "user_label": "Background CLI runs",
+      "note": "Long-running work can stay CLI-backed and budgeted while the host provides background execution affordances."
+    },
+    {
+      "capability": "repair_action_ui",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-repair"],
+      "user_label": "Host-supported repair preview and approval",
+      "note": "Stage 8 proves host repair preview and approval affordances. The current un-packaged scope still keeps write classes advisory-only until a runtime adapter can safely execute host-surface writes."
+    }
+  ],
+  "unavailable_capabilities": [
+    {
+      "capability": "annotation_apis",
+      "fallback": "advisory-only",
+      "evidence_ids": ["github-copilot-cli-hooks"],
+      "user_label": "Durable inline annotations",
+      "reason": "Stage 8 found hooks but no public durable annotation API, so annotations remain advisory text until a host API is proven."
+    },
+    {
+      "capability": "trace_deep_links",
+      "fallback": "cli-redirect",
+      "evidence_ids": ["github-copilot-cli-trace"],
+      "user_label": "Structured trace deep links",
+      "reason": "Stage 8 found transcript sharing, but no stable item-level trace deep-link API; users are redirected to CLI trace artifacts."
+    }
+  ],
+  "write_classes": {
+    "init": {
+      "mode": "advisory-only",
+      "executes_in_host": false,
+      "equivalent_cli_command": {
+        "command": "harness init",
+        "timeout_seconds": 300
+      },
+      "approval_policy": "examples/policies/approval-policy.yaml",
+      "risk_boundary": "Show the equivalent CLI command and require the user to run it in a trusted repository checkout."
+    },
+    "migrate": {
+      "mode": "advisory-only",
+      "executes_in_host": false,
+      "equivalent_cli_command": {
+        "command": "harness migrate --dry-run",
+        "timeout_seconds": 300
+      },
+      "approval_policy": "examples/policies/approval-policy.yaml",
+      "risk_boundary": "Never apply migrations through the host surface; use previewable CLI migration evidence."
+    },
+    "repair": {
+      "mode": "advisory-only",
+      "executes_in_host": false,
+      "equivalent_cli_command": {
+        "command": "harness migrate --dry-run --output .harness/repairs/<repair-id>.yaml",
+        "timeout_seconds": 300
+      },
+      "approval_policy": "examples/policies/approval-policy.yaml",
+      "risk_boundary": "Limited adapter repairs are prompts with equivalent commands, not host-executed file writes."
+    }
+  },
+  "local_state": {
+    "authoritative": false,
+    "cache_paths": [".harness/adapters/github-copilot-cli/cache.json"],
+    "reconstructible_from": [
+      "harness.yaml",
+      "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "examples/adapters/github-copilot-cli/adapter-scope.json"
+    ],
+    "cli_ci_behavior": "excluded"
+  },
+  "trust_boundaries": {
+    "source_of_truth": "harness-cli-schema-artifacts",
+    "doctor_reimplementation": false,
+    "eval_reimplementation": false,
+    "writes_only_through_cli": true,
+    "credential_handling": "The adapter scope does not embed or require credentials; any future host credential access must be declared through harness credential references."
+  }
+}

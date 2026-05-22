@@ -1,0 +1,28 @@
+schema_version: "0.1.0"
+x-stability: provisional
+action_id: advisory-approved
+target_files:
+  - examples/harness.yaml
+risk_class: low
+repair_mode: advisory-only
+equivalent_cli_command:
+  command: harness migrate --dry-run --output .harness/repairs/advisory-approved.yaml
+  timeout_seconds: 300
+approval_state: approved
+sandbox_requirement: worktree
+trust_requirements:
+  trust_level: sandboxed
+  sandbox_required: worktree
+  network_access: false
+  secret_access: false
+  host_file_access: false
+  allowed_inputs:
+    - examples/harness.yaml
+  allowed_outputs:
+    - .harness/repairs/advisory-approved.yaml
+rollback_notes: No host write is executed.
+evidence_links: []
+advisory:
+  reason: Advisory repairs must not be marked approved for host execution.
+  write_execution: cli-only
+  approval_guidance: Run the equivalent CLI command and review its generated evidence.

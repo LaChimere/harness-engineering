@@ -1,0 +1,11 @@
+{
+  "selected_host_id": "github-copilot-cli",
+  "implemented_capabilities": [
+    {
+      "capability": "cli_invocation",
+      "fallback": "supported",
+      "evidence_ids": ["github-copilot-cli-repair"]
+    }
+  ],
+  "unavailable_capabilities": []
+}

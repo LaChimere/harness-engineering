@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1.0",
+  "result_id": "judge-policy-digest-mismatch",
+  "run_id": "stage7-semantic-invalid-run",
+  "policy_ref": "examples/judges/policy.yaml",
+  "policy_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "policy_id": "harness-self-test-judge-policy",
+  "judge_id": "harness-self-test-reviewer",
+  "produced_at": "2026-05-21T00:00:00Z",
+  "effect": "advisory",
+  "calibration": {
+    "status": "uncalibrated",
+    "labeled_sample_count": 0,
+    "agreement_metric": "percent_agreement"
+  },
+  "finding": {
+    "severity": "warning",
+    "summary": "Policy digest mismatch.",
+    "rationale": "Report validation must reject judge results that do not pin the bytes of their referenced policy.",
+    "confidence": 0.4
+  },
+  "uncertainty_notes": ["Policy digest mismatch invalidates the judge result."],
+  "evidence": []
+}

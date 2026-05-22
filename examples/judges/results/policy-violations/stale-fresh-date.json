@@ -1,0 +1,33 @@
+{
+  "schema_version": "0.1.0",
+  "result_id": "judge-stale-fresh-date",
+  "run_id": "stage7-semantic-invalid-run",
+  "policy_ref": "examples/judges/policy.yaml",
+  "policy_digest": "sha256:16c624712971179282d2178dba74cf1be6946127b25d31677230f67e43d829f1",
+  "policy_id": "harness-self-test-judge-policy",
+  "judge_id": "harness-self-test-reviewer",
+  "produced_at": "2026-01-15T00:00:00Z",
+  "effect": "advisory",
+  "calibration": {
+    "status": "stale",
+    "labeled_sample_count": 5,
+    "agreement_metric": "percent_agreement",
+    "agreement_score": 0.8,
+    "calibrated_at": "2026-01-01T00:00:00Z",
+    "examples": [
+      { "id": "sample-1", "human_label": "acceptable", "judge_label": "acceptable" },
+      { "id": "sample-2", "human_label": "unacceptable", "judge_label": "unacceptable" },
+      { "id": "sample-3", "human_label": "acceptable", "judge_label": "acceptable" },
+      { "id": "sample-4", "human_label": "supported", "judge_label": "supported" },
+      { "id": "sample-5", "human_label": "unacceptable", "judge_label": "acceptable" }
+    ]
+  },
+  "finding": {
+    "severity": "warning",
+    "summary": "Fresh calibration is incorrectly marked stale.",
+    "rationale": "Report validation must reject stale status when artifact timestamps are still inside the freshness window.",
+    "confidence": 0.7
+  },
+  "uncertainty_notes": ["Fresh calibration should not be marked stale."],
+  "evidence": []
+}

@@ -1,0 +1,17 @@
+schema_version: "0.1.0"
+policy_id: alternate-judge-policy
+judge_id: alternate-reviewer
+description: Alternate valid policy used to prove explicit policy overrides must match result policy_ref.
+rubric:
+  - id: correctness
+    description: Judge whether the candidate answer satisfies the task.
+    scale: binary
+    passing_label: acceptable
+calibration:
+  labeled_sample_minimum: 5
+  agreement_metric: percent_agreement
+  blocking_threshold: 0.8
+  stale_after_days: 90
+  below_threshold_consequence: advisory-only
+uncertainty_notes:
+  - This policy is not the policy referenced by the starter judge-result fixtures.

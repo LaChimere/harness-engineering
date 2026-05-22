@@ -89,8 +89,36 @@
       "schema": "schemas/run-result.schema.json"
     },
     {
+      "path": "examples/run-results/run-result-with-judge.json",
+      "schema": "schemas/run-result.schema.json"
+    },
+    {
       "path": "examples/scoreboards/self-test.json",
       "schema": "schemas/scoreboard.schema.json"
+    },
+    {
+      "path": "examples/judges/policy.yaml",
+      "schema": "schemas/judge-policy.schema.json"
+    },
+    {
+      "path": "examples/judges/alternate-policy.yaml",
+      "schema": "schemas/judge-policy.schema.json"
+    },
+    {
+      "path": "examples/judges/results/calibrated-blocking.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/advisory-only.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/below-threshold.json",
+      "schema": "schemas/judge-result.schema.json"
+    },
+    {
+      "path": "examples/judges/results/stale-advisory.json",
+      "schema": "schemas/judge-result.schema.json"
     },
     {
       "path": "examples/plugin-capabilities/provisional-host.json",
@@ -304,6 +332,64 @@
       "expected_keyword": "required",
       "expected_path": ["splits", 0, "failure_buckets"],
       "expected_message_contains": "'agent-failure'"
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-policy-missing-rubric.yaml",
+      "schema": "schemas/judge-policy.schema.json",
+      "reason": "Judge policies must include a rubric before they can produce advisory or blocking review.",
+      "expected_keyword": "required",
+      "expected_path": [],
+      "expected_message_contains": "'rubric'"
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-policy-missing-threshold.yaml",
+      "schema": "schemas/judge-policy.schema.json",
+      "reason": "Judge policies must include a numeric blocking threshold.",
+      "expected_keyword": "required",
+      "expected_path": ["calibration"],
+      "expected_message_contains": "'blocking_threshold'"
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-result-blocking-uncalibrated.json",
+      "schema": "schemas/judge-result.schema.json",
+      "reason": "Uncalibrated judge results must remain advisory-only.",
+      "expected_keyword": "const",
+      "expected_path": ["effect"]
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-result-blocking-below-threshold.json",
+      "schema": "schemas/judge-result.schema.json",
+      "reason": "Below-threshold judge results must remain advisory-only.",
+      "expected_keyword": "const",
+      "expected_path": ["effect"]
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-result-blocking-stale.json",
+      "schema": "schemas/judge-result.schema.json",
+      "reason": "Stale judge results must remain advisory-only.",
+      "expected_keyword": "const",
+      "expected_path": ["effect"]
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-result-blocking-warning.json",
+      "schema": "schemas/judge-result.schema.json",
+      "reason": "Blocking judge findings must have error or critical severity.",
+      "expected_keyword": "enum",
+      "expected_path": ["finding", "severity"]
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-result-unknown-metric.json",
+      "schema": "schemas/judge-result.schema.json",
+      "reason": "Judge results must use a known agreement metric.",
+      "expected_keyword": "enum",
+      "expected_path": ["calibration", "agreement_metric"]
+    },
+    {
+      "path": "examples/fixtures/invalid/judge-result-uri-policy-ref.json",
+      "schema": "schemas/judge-result.schema.json",
+      "reason": "Judge result policy references must be repo-relative paths for offline report validation.",
+      "expected_keyword": "not",
+      "expected_path": ["policy_ref"]
     }
   ],
   "failure_taxonomy_required_codes": [

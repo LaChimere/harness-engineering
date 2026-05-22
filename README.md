@@ -6,7 +6,7 @@ The product goal is a versioned harness substrate that makes agent work reproduc
 
 ## Current status
 
-This repository has completed Stage 6: Agent runner, first behavioral eval, and trace normalization.
+This repository has completed Stage 7: LLM-judge and inferential-review policy.
 
 The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. No marketplace plugin, CI adapter, native skill adapter, or live model runner is available from this repository today.
 
@@ -14,12 +14,12 @@ The roadmap is approved in `plans/harness-engineering-platform/`. The initial sc
 
 | Entrypoint | Status now | Intended role | First stage that makes it concrete |
 |---|---|---|---|
-| CLI plus `harness.yaml` | Initial Stage 6 CLI exists locally with `init`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, and `report`. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, GC, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization. |
+| CLI plus `harness.yaml` | Initial Stage 7 CLI exists locally with `init`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, future GC, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization; Stage 7 implements inferential judge policy validation. |
 | Host marketplace plugin | Planned north-star UX only. No plugin install path is promised yet. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported agent or IDE hosts. | Stage 8 verifies feasibility; Stage 9 ships a plugin only if feasible. |
 | `agent-coding` skills compatibility | External migration-source evidence. Compatibility is not audited yet. | Portable fallback or compatibility path after the substrate exists and each skill is classified. | Stage 13. |
 | CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Stage 11. |
 
-Until a real marketplace plugin is verified and shipped, the public path stays CLI-first. The Stage 6 local command shape is:
+Until a real marketplace plugin is verified and shipped, the public path stays CLI-first. The Stage 7 local command shape is:
 
 ```bash
 bun run build
@@ -31,6 +31,7 @@ node dist/index.js eval run --file examples/harness.yaml
 node dist/index.js trace validate --file examples/harness.yaml
 node dist/index.js verify --spec examples/verification/stage3-self-verification.yaml
 node dist/index.js report --file examples/harness.yaml --doctor-result examples/doctor/results/pass.json
+node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/advisory-only.json
 ```
 
 Use `node dist/index.js init` from a downstream target repository to create a starter `harness.yaml`; the source checkout keeps its canonical starter under `examples/harness.yaml`.
@@ -42,7 +43,7 @@ The npm package metadata and `harness` binary mapping exist, but the package has
 | Tier | Surface | Responsibility |
 |---|---|---|
 | 0 | Harness-as-code substrate | `harness.yaml`, schemas, examples, artifact conventions, and versioning. |
-| 1 | Deterministic CLI | `init`, `validate`, `migrate`, `run`, `doctor`, `eval`, `trace`, `verify`, `gc`, and `report`. |
+| 1 | Deterministic CLI | Current `init`, `validate`, `migrate`, `run`, `doctor`, `eval`, `trace`, `verify`, and `report`; future `gc` remains planned for Stage 14. |
 | 2 | Host marketplace plugins | Rich guided UX where a supported host marketplace and runtime APIs exist. |
 | 3 | Portable skills | Agent-facing adapters that consume substrate artifacts. |
 | 4 | Optional CI adapters | Objective enforcement or advisory checks for teams that opt in. |
@@ -95,4 +96,4 @@ The approved roadmap lives in:
 - `plans/harness-engineering-platform/plan.md`
 - `plans/harness-engineering-platform/todo.md`
 
-The next implementation target after Stage 6 is Stage 7: LLM-judge and inferential-review policy.
+Stages 1 through 7 are implemented in the current roadmap. The next implementation target is Stage 8: plugin marketplace/API feasibility and target selection.

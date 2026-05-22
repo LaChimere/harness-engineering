@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
 
-Stages 1, 2, 3, 4, 5, and 6 are complete. The next implementation target is Stage 7: LLM-judge and inferential-review policy.
+Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is Stage 8: plugin marketplace/API feasibility and target selection.
 
 ## Goals
 

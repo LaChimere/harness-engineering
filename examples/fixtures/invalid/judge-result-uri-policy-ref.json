@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1.0",
+  "result_id": "judge-uri-policy-ref-001",
+  "run_id": "stage7-example-run",
+  "policy_ref": "https://example.invalid/judge-policy.yaml",
+  "policy_digest": "sha256:16c624712971179282d2178dba74cf1be6946127b25d31677230f67e43d829f1",
+  "policy_id": "harness-self-test-judge-policy",
+  "judge_id": "harness-self-test-reviewer",
+  "produced_at": "2026-05-21T00:00:00Z",
+  "effect": "blocking",
+  "calibration": {
+    "status": "passed",
+    "labeled_sample_count": 5,
+    "agreement_metric": "percent_agreement",
+    "agreement_score": 0.8,
+    "calibrated_at": "2026-05-21T00:00:00Z",
+    "examples": [
+      { "id": "sample-1", "human_label": "acceptable", "judge_label": "acceptable" },
+      { "id": "sample-2", "human_label": "unacceptable", "judge_label": "unacceptable" },
+      { "id": "sample-3", "human_label": "acceptable", "judge_label": "acceptable" },
+      { "id": "sample-4", "human_label": "supported", "judge_label": "supported" },
+      { "id": "sample-5", "human_label": "unacceptable", "judge_label": "acceptable" }
+    ]
+  },
+  "finding": {
+    "severity": "error",
+    "summary": "Candidate behavior contradicts the calibrated correctness rubric.",
+    "rationale": "The judge result is allowed to block only because the policy minimum sample count and agreement threshold are satisfied.",
+    "confidence": 0.86
+  },
+  "uncertainty_notes": [
+    "Blocking is limited to the calibrated rubric dimension and does not replace deterministic verifier evidence."
+  ],
+  "evidence": [
+    {
+      "path": "examples/run-results/run-result.json",
+      "media_type": "application/json",
+      "description": "Run result reviewed by the judge."
+    }
+  ]
+}

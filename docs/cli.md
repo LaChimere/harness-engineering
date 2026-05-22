@@ -1,6 +1,6 @@
 # Harness CLI
 
-Stage 6 includes the initial deterministic `harness` CLI, Harness doctor MVP, verifier-only eval validation, deterministic stub agent runs, behavioral eval runs, and trace validation/import. It consumes the Stage 2 schemas and examples, but it still does not implement plugin, CI, skill, live model execution behavior, or formal GC behavior.
+Stage 7 includes the initial deterministic `harness` CLI, Harness doctor MVP, verifier-only eval validation, deterministic stub agent runs, behavioral eval runs, trace validation/import, and offline LLM-judge policy/result validation. It consumes the Stage 2 schemas and examples, but it still does not implement plugin, CI, skill, live model execution behavior, or formal GC behavior.
 
 ## Commands
 
@@ -14,7 +14,7 @@ harness eval validate --file examples/harness.yaml
 harness eval run --file examples/harness.yaml
 harness trace validate --file examples/harness.yaml
 harness verify --spec examples/verification/stage3-self-verification.yaml
-harness report
+harness report --file examples/harness.yaml --judge-result examples/judges/results/advisory-only.json
 ```
 
 `harness init` writes a schema-valid starter baseline: `harness.yaml`, curated `examples/` artifacts, and local `.harness/` directories used by the starter references. It refuses to overwrite starter-managed files unless `--force` is passed and does not emit plugin or CI adapter keys.
@@ -51,9 +51,28 @@ Eval validation emits Markdown by default or JSON with `--format json`. `--outpu
 
 `harness trace validate` validates a configured set of trace examples or one explicit trace artifact against `schemas/trace.schema.json`. `harness trace import --input <trace> --output <path>` copies an already-normalized trace only after schema validation and refuses output paths that escape the selected root or traverse symlinks.
 
-`harness verify` consumes explicit self-verification evidence shaped by `schemas/self-verification.schema.json`. It validates the evidence document and reports the statuses already recorded in `acceptance_checks`. It does not inspect harness structure, execute checks, run verifiers, run agents, or infer behavioral quality; structural inspection belongs to current `doctor`, while behavioral execution remains later `eval` and `run` work.
+`harness verify` consumes explicit self-verification evidence shaped by `schemas/self-verification.schema.json`. It validates the evidence document and reports the statuses already recorded in `acceptance_checks`. It does not inspect harness structure, execute checks, run verifiers, run agents, or infer behavioral quality; structural inspection belongs to current `doctor`, while behavioral execution belongs to `eval` and `run`.
 
-`harness report` summarizes the harness and optional artifact inputs while citing every artifact path it summarized. It can include doctor results, individual run-result JSON artifacts, traces, and Stage 6 scoreboard summaries. `--run-result` expects one JSON object artifact; it does not parse multi-line `.jsonl` ledgers.
+`harness report` summarizes the harness and optional artifact inputs while citing every artifact path it summarized. It can include doctor results, individual run-result JSON artifacts, traces, Stage 6 scoreboard summaries, and Stage 7 judge policy/result artifacts. `--run-result` expects one JSON object artifact; it does not parse multi-line `.jsonl` ledgers. If that run result links `judge_results`, report validates each linked judge result, its referenced policy, policy digest, and matching `run_id`.
+
+With `--judge-result <path>`, report validates the result against `schemas/judge-result.schema.json`, resolves the local `policy_ref`, validates that policy against `schemas/judge-policy.schema.json`, checks the policy digest, and checks the result against the policy. `--judge-policy <path>` can be passed to summarize a policy directly or to require a result's `policy_ref` to match that explicit policy.
+
+Judge outputs are inferential evidence, not deterministic verifier results. Run results may link them with `judge_results`, but Stage 7 does not let judge findings rewrite `status`, `execution.verifier_status`, `verifier_result`, or scoreboard failure buckets. Future CI/plugin adapters must consume the same judge policy artifacts rather than inventing their own blocking rules.
+
+An LLM judge result can be `blocking` only when report validation confirms all of the following:
+
+- the result references the same `policy_id` and `judge_id` as the policy;
+- the agreement metric matches the policy;
+- the policy digest matches the referenced policy artifact bytes;
+- the labeled sample count is at least the policy minimum;
+- the result's agreement score matches its calibration examples;
+- the calibration status is `passed`;
+- the agreement score is at or above the numeric blocking threshold;
+- the artifact timestamps show the calibration is not stale or from the future.
+
+Uncalibrated, below-threshold, and stale judge results are advisory-only. Staleness is recorded by the result producer as `calibration.status: stale`; `harness report` also checks artifact timestamps against `stale_after_days` without using wall-clock time, so reviewing the same artifact remains reproducible.
+
+The starter policy uses `percent_agreement` with `labeled_sample_minimum: 5` and `blocking_threshold: 0.8`. A passing calibration example is `4 matching labels / 5 labeled samples = 0.8`, which can support blocking if the result is otherwise valid. A failing example is `3 / 5 = 0.6`; it must be recorded as `below-threshold` and advisory-only. If a previously passing judge is marked `stale`, it is also advisory-only until fresh calibration evidence is produced.
 
 ## Root path semantics
 
@@ -79,6 +98,8 @@ For `harness doctor`, process exit status is computed from the top-level doctor 
 For `harness eval validate`, process exit status is computed from the top-level eval validation status: `passed` exits `0`; `failed` and `error` exit `1`. A broken twin that fails as expected contributes a failed run-result with `failure_code: verification-failure`, but the overall eval validation still passes when the expected oracle and broken-twin outcomes both hold.
 
 For `harness run` and `harness eval run`, process exit status is computed from the top-level agent-run status: `passed` exits `0`; `failed` and `error` exit `1`. The deterministic broken-twin case contributes an `agent-failure` run result, but the overall `eval run` passes when the broken twin fails as expected and the oracle passes.
+
+For `harness report`, invalid judge policy/result schemas or judge results that attempt to block without satisfying their referenced policy exit `1`.
 
 ## Verification spec format
 

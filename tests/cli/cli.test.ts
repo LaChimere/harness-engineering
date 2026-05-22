@@ -382,6 +382,269 @@ test('report cites the artifact paths it summarizes', async () => {
   expect(result.stdout).toContain('  - harness.yaml');
 });
 
+test('report validates judge policy and advisory or blocking judge results', async () => {
+  const cases: readonly {
+    readonly path: string;
+    readonly effect: string;
+    readonly calibration: string;
+    readonly agreement?: string;
+  }[] = [
+    {
+      path: 'examples/judges/results/calibrated-blocking.json',
+      effect: 'blocking',
+      calibration: 'passed',
+      agreement: '0.8 percent_agreement',
+    },
+    {
+      path: 'examples/judges/results/advisory-only.json',
+      effect: 'advisory',
+      calibration: 'uncalibrated',
+    },
+    {
+      path: 'examples/judges/results/below-threshold.json',
+      effect: 'advisory',
+      calibration: 'below-threshold',
+      agreement: '0.6 percent_agreement',
+    },
+    {
+      path: 'examples/judges/results/stale-advisory.json',
+      effect: 'advisory',
+      calibration: 'stale',
+      agreement: '0.8 percent_agreement',
+    },
+  ] as const;
+
+  for (const fixture of cases) {
+    const result = await run([
+      'report',
+      '--file',
+      'examples/harness.yaml',
+      '--judge-result',
+      fixture.path,
+    ]);
+    expect(result.code).toBe(ExitCode.ok);
+    expect(result.stderr).toBe('');
+    expect(result.stdout).toContain(`- judge result: ${fixture.path}`);
+    expect(result.stdout).toContain('  policy: examples/judges/policy.yaml');
+    expect(result.stdout).toContain(`  effect: ${fixture.effect}`);
+    expect(result.stdout).toContain(`  calibration: ${fixture.calibration}`);
+    if (fixture.agreement !== undefined) {
+      expect(result.stdout).toContain(`  agreement: ${fixture.agreement}`);
+    }
+  }
+
+  const policySummary = await run([
+    'report',
+    '--file',
+    'examples/harness.yaml',
+    '--judge-policy',
+    'examples/judges/policy.yaml',
+    '--judge-result',
+    'examples/judges/results/calibrated-blocking.json',
+  ]);
+  expect(policySummary.code).toBe(ExitCode.ok);
+  expect(policySummary.stdout).toContain('- judge policy: examples/judges/policy.yaml');
+  expect(policySummary.stdout).toContain('  labeled sample minimum: 5');
+  expect(policySummary.stdout).toContain('  blocking threshold: 0.8');
+});
+
+test('report rejects judge results that try to block without satisfied policy', async () => {
+  const semanticInvalidCases = [
+    {
+      path: 'examples/judges/results/policy-violations/blocking-low-agreement.json',
+      message: 'agreement_score 0.6 is below blocking threshold 0.8',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/blocking-too-few-samples.json',
+      message: 'labeled_sample_count 4 is below policy minimum 5',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/policy-id-mismatch.json',
+      message: 'policy_id different-policy does not match harness-self-test-judge-policy',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/judge-id-mismatch.json',
+      message: 'judge_id different-judge does not match harness-self-test-reviewer',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/metric-mismatch.json',
+      message: 'agreement_metric cohen_kappa does not match percent_agreement',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/below-threshold-high-score.json',
+      message: 'below-threshold result has agreement_score 0.8 at or above 0.8',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/blocking-stale-by-date.json',
+      message: 'calibration age 505 days exceeds stale_after_days 90; status must be stale',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/blocking-future-calibrated-at.json',
+      message: 'calibration.calibrated_at must not be after produced_at',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/stale-fresh-date.json',
+      message: 'stale calibration status requires age > stale_after_days 90, got 14 days',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/policy-digest-mismatch.json',
+      message:
+        'policy_digest sha256:0000000000000000000000000000000000000000000000000000000000000000 does not match',
+    },
+    {
+      path: 'examples/judges/results/policy-violations/agreement-score-mismatch.json',
+      message: 'agreement_score 0.99 does not match calibration examples percent_agreement 0.8',
+    },
+  ] as const;
+
+  for (const fixture of semanticInvalidCases) {
+    const result = await run([
+      'report',
+      '--file',
+      'examples/harness.yaml',
+      '--judge-result',
+      fixture.path,
+    ]);
+    expect(result.code).toBe(ExitCode.validationError);
+    expect(result.stderr).toContain('Judge result violates policy');
+    expect(result.stderr).toContain(fixture.message);
+  }
+
+  const schemaInvalid = await run([
+    'report',
+    '--file',
+    'examples/harness.yaml',
+    '--judge-result',
+    'examples/fixtures/invalid/judge-result-blocking-uncalibrated.json',
+  ]);
+  expect(schemaInvalid.code).toBe(ExitCode.validationError);
+  expect(schemaInvalid.stderr).toContain('judge result artifact failed schema validation');
+
+  const mismatchedPolicyPath = await run([
+    'report',
+    '--file',
+    'examples/harness.yaml',
+    '--judge-policy',
+    'examples/judges/alternate-policy.yaml',
+    '--judge-result',
+    'examples/judges/results/calibrated-blocking.json',
+  ]);
+  expect(mismatchedPolicyPath.code).toBe(ExitCode.validationError);
+  expect(mismatchedPolicyPath.stderr).toContain('does not match --judge-policy');
+
+  const invalidPolicy = await run([
+    'report',
+    '--file',
+    'examples/harness.yaml',
+    '--judge-policy',
+    'examples/fixtures/invalid/judge-policy-missing-rubric.yaml',
+    '--judge-result',
+    'examples/judges/results/calibrated-blocking.json',
+  ]);
+  expect(invalidPolicy.code).toBe(ExitCode.validationError);
+  expect(invalidPolicy.stderr).toContain('judge policy artifact failed schema validation');
+
+  const mismatchedRunResult = await run([
+    'report',
+    '--file',
+    'examples/harness.yaml',
+    '--run-result',
+    'examples/run-results/run-result.json',
+    '--judge-result',
+    'examples/judges/results/calibrated-blocking.json',
+  ]);
+  expect(mismatchedRunResult.code).toBe(ExitCode.validationError);
+  expect(mismatchedRunResult.stderr).toContain(
+    'run_id stage7-example-run does not match run result run-schema-smoke-001',
+  );
+  expect(mismatchedRunResult.stderr).toContain('is not linked from run result judge_results');
+});
+
+test('report validates judge results linked from run-result artifacts', async () => {
+  const valid = await run([
+    'report',
+    '--file',
+    'examples/harness.yaml',
+    '--run-result',
+    'examples/run-results/run-result-with-judge.json',
+  ]);
+  expect(valid.code).toBe(ExitCode.ok);
+  expect(valid.stdout).toContain('- run result: examples/run-results/run-result-with-judge.json');
+  expect(valid.stdout).toContain('  status: passed');
+  expect(valid.stdout).toContain('  judge results: 1');
+
+  const root = await tempRoot();
+  await run(['init'], root);
+  await mkdir(join(root, 'examples/judges/results/policy-violations'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/judges/results/policy-violations/blocking-low-agreement.json'),
+    await readFile('examples/judges/results/policy-violations/blocking-low-agreement.json', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'run-result-with-invalid-judge.json'),
+    JSON.stringify(
+      {
+        schema_version: '0.1.0',
+        run_id: 'stage7-semantic-invalid-run',
+        kind: 'eval',
+        suite_id: 'harness-self-test',
+        task_id: 'schema-smoke',
+        task_version: '1.0.0',
+        dataset_hash: 'sha256:0b327293fe4cc3ebef6126c1ee7531b310ed50a3397576de46a0170dac2aed7f',
+        split: 'optimization',
+        model_profile: 'harness://verifier-only/no-model',
+        harness_version: '0.1.0',
+        status: 'passed',
+        execution: {
+          mode: 'verifier-only',
+          harness_status: 'passed',
+          verifier_status: 'passed',
+        },
+        usage: {
+          billed_model_id: 'verifier-only',
+          input_tokens: 0,
+          output_tokens: 0,
+          total_tokens: 0,
+          requests: 0,
+          incurred_cost_usd: 0,
+          source: 'stub',
+        },
+        trace: 'harness://verifier-only/no-agent-trace',
+        verifier_result: 'examples/verifier-results/schema-smoke.json',
+        judge_results: [
+          {
+            path: 'examples/judges/results/policy-violations/blocking-low-agreement.json',
+            media_type: 'application/json',
+            description: 'Policy-violating judge result.',
+          },
+        ],
+        artifacts: [],
+      },
+      null,
+      2,
+    ),
+  );
+  const invalid = await run(['report', '--run-result', 'run-result-with-invalid-judge.json'], root);
+  expect(invalid.code).toBe(ExitCode.validationError);
+  expect(invalid.stderr).toContain('Linked judge result');
+  expect(invalid.stderr).toContain('agreement_score 0.6 is below blocking threshold 0.8');
+});
+
+test('report rejects symlinked Stage 7 artifact reads', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  await mkdir(root);
+  await run(['init'], root);
+  await symlink(
+    join(root, 'examples/judges/results/advisory-only.json'),
+    join(root, 'judge-result-link.json'),
+  );
+
+  const result = await run(['report', '--judge-result', 'judge-result-link.json'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Refusing to read through symlink');
+});
+
 test('doctor rejects output paths that escape root', async () => {
   const root = await tempRoot();
   await run(['init'], root);
@@ -439,7 +702,7 @@ test('eval validate proves oracle pass and broken twin fail deterministically', 
     expect(getString(runResult, 'task_id')).toBe('schema-smoke');
     expect(getString(runResult, 'task_version')).toBe('1.0.0');
     expect(getString(runResult, 'dataset_hash')).toBe(
-      'sha256:017a04a2662fd3cfc3bcb47289dd51a7f7f0e1ed3322bfc1d01681f2856b29c8',
+      'sha256:0b327293fe4cc3ebef6126c1ee7531b310ed50a3397576de46a0170dac2aed7f',
     );
     expect(getString(runResult, 'split')).toBe('optimization');
     expect(getString(runResult, 'model_profile')).toBe('harness://verifier-only/no-model');

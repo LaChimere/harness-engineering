@@ -1,6 +1,6 @@
 # Harness schema conventions
 
-Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 6 now consumes the runner, trace, run-result, and scoreboard schemas through deterministic stub CLI commands.
+Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 7 now consumes the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas through deterministic CLI commands and offline report validation.
 
 All schemas use JSON Schema draft 2020-12 and local relative `$ref` links. Validation tools should load every file in `schemas/` into an offline registry keyed by each schema's versioned `$id`; validation must not require network access.
 
@@ -41,11 +41,21 @@ Run results include an `execution` block. `verifier-only` records separate `harn
 
 Scoreboards summarize agent-run ledgers by optimization/holdout split and total counts. Their failure buckets explicitly separate `agent-failure`, `model-failure`, `harness-error`, `verifier-error`, `verification-failure`, `budget-exceeded`, and `credential-missing` so behavioral regressions do not collapse into one opaque failure class. Stage 6's broken-twin fixture intentionally contributes an `agent-failure` bucket while the overall eval run can still pass because that negative control failed as expected.
 
+## Judge policy and inferential review
+
+`judge-policy.schema.json` defines the calibration contract for LLM-mediated review. A policy must include a rubric, labeled sample minimum, agreement metric, numeric blocking threshold, uncertainty notes, stale-calibration window, and below-threshold consequence. The starter policy uses `percent_agreement`; `4 / 5 = 0.8` meets its blocking threshold, while `3 / 5 = 0.6` is below threshold and therefore advisory-only.
+
+`judge-result.schema.json` stores inferential judge output separately from deterministic verifier results. The schema prevents uncalibrated, below-threshold, or stale results from being marked blocking. `harness report` then recomputes the policy relationship from the referenced policy artifact: matching policy/judge ids, policy digest, agreement metric, labeled sample count, threshold, and artifact-timestamp freshness. A result producer marks stale calibration explicitly with `calibration.status: stale`; report validation does not use wall-clock time.
+
+`run-result.schema.json` can link judge results through `judge_results`, but Stage 7 does not fold judge findings into `status`, `execution.verifier_status`, `verifier_result`, or scoreboard failure buckets. Later optional CI/plugin adapters must use the same policy/result artifacts if they choose to display or enforce calibrated judge output.
+
 ## Taxonomies
 
 `failure-taxonomy.schema.json` validates taxonomy structure. The starter taxonomy data lives in `examples/failure-taxonomy.yaml` and is checked by the Stage 2 fixture validator so future taxonomy content can evolve through data and CLI checks rather than by rewriting the structural schema.
 
 `gc-evidence.schema.json` intentionally starts with a closed deterministic category set: `broken-reference`, `duplicate-id`, and `stale-schema-version`. New GC categories should be added through a schema-versioned change with fixtures, algorithms, and false-positive policy.
+
+Stage 15 GC expansion depends on this Stage 7 judge calibration policy before any inferential judge evidence can promote or retire durable rules.
 
 ## Fixture validation
 

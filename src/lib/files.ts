@@ -97,7 +97,11 @@ async function writeFileNoFollowCreatingDirectories(
   }
 }
 
-export async function assertNoSymlinkWithinRoot(root: string, target: string): Promise<void> {
+export async function assertNoSymlinkWithinRoot(
+  root: string,
+  target: string,
+  operation = 'write',
+): Promise<void> {
   const resolvedRoot = resolve(root);
   const resolvedTarget = resolve(target);
   const relativeTarget = relative(resolvedRoot, resolvedTarget);
@@ -113,7 +117,7 @@ export async function assertNoSymlinkWithinRoot(root: string, target: string): P
       const stats = await lstat(current);
       if (stats.isSymbolicLink()) {
         throw new CliError(
-          `Refusing to write through symlink: ${relative(resolvedRoot, current)}`,
+          `Refusing to ${operation} through symlink: ${relative(resolvedRoot, current)}`,
           ExitCode.usageError,
         );
       }

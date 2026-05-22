@@ -1,0 +1,47 @@
+schema_version: "0.1.0"
+policy_id: harness-self-test-judge-policy
+judge_id: harness-self-test-reviewer
+description: Calibrated inferential review policy for the harness self-test examples.
+rubric:
+  - id: correctness
+    description: Judge whether the candidate answer satisfies the task without contradicting deterministic verifier evidence.
+    scale: binary
+    passing_label: acceptable
+  - id: evidence-use
+    description: Judge whether the finding cites concrete harness artifacts instead of unsupported preference.
+    scale: binary
+    passing_label: supported
+calibration:
+  labeled_sample_minimum: 5
+  agreement_metric: percent_agreement
+  blocking_threshold: 0.8
+  stale_after_days: 90
+  below_threshold_consequence: advisory-only
+uncertainty_notes:
+  - Treat ambiguous rubric matches as advisory until deterministic verifier or human labels resolve them.
+  - Do not block on style preference, unsupported taste, or stale calibration evidence.
+calibration_examples:
+  - id: sample-1
+    input_ref: examples/evals/harness-self-test/v1.0.0/oracle.txt
+    human_label: acceptable
+    judge_label: acceptable
+  - id: sample-2
+    input_ref: examples/evals/harness-self-test/v1.0.0/broken-twin.txt
+    human_label: unacceptable
+    judge_label: unacceptable
+  - id: sample-3
+    input_ref: examples/run-results/run-result.json
+    human_label: acceptable
+    judge_label: acceptable
+  - id: sample-4
+    input_ref: examples/run-results/failed-run-result.json
+    human_label: unacceptable
+    judge_label: unacceptable
+  - id: sample-5
+    input_ref: examples/scoreboards/self-test.json
+    human_label: supported
+    judge_label: supported
+evidence:
+  - path: plans/harness-engineering-platform/design.md#stage-7-llm-judge-and-inferential-review-policy
+    media_type: text/markdown
+    description: Approved Stage 7 policy requirements.

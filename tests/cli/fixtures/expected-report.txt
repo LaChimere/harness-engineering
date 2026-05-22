@@ -13,4 +13,5 @@ Harness report
   - examples/traces/native-cli-trace.json
   - examples/traces/external-import.json
   - examples/evals/harness-self-test/v1.0.0/
+  - examples/judges/policy.yaml
   - examples/checks/doc-links.yaml

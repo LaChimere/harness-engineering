@@ -90,6 +90,10 @@
     "verifier_result": {
       "$ref": "common.schema.json#/$defs/artifactRef"
     },
+    "judge_results": {
+      "description": "Distinct inferential judge-result artifact links. Stage 7 report validation checks linked results, matching run ids, and advisory/blocking policy semantics; deterministic verifier status remains in verifier_result and execution.verifier_status.",
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    },
     "usage": {
       "$ref": "common.schema.json#/$defs/usageAccounting"
     },

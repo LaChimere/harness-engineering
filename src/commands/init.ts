@@ -30,6 +30,7 @@ const starterFiles = [
   'examples/policies/sandbox-policy.yaml',
   'examples/model-profiles/stub.yaml',
   'examples/agent-runners/stub.yaml',
+  'examples/judges/policy.yaml',
   'examples/checks/doc-links.yaml',
   'examples/prompts/stub-task.md',
   'examples/traces/native-cli-trace.json',

@@ -230,6 +230,16 @@ export function collectHarnessReferences(harness: JsonObject): readonly HarnessR
     }
   }
 
+  const judges = getObject(harness, 'judges');
+  const judgePolicies = judges === undefined ? undefined : getArray(judges, 'policies');
+  if (judgePolicies !== undefined) {
+    for (const policy of judgePolicies) {
+      if (typeof policy === 'string') {
+        pushReference(references, policy, 'judge policy', 'judge-policy');
+      }
+    }
+  }
+
   const doctor = getObject(harness, 'doctor');
   const checks = doctor === undefined ? undefined : getArray(doctor, 'checks');
   if (checks !== undefined) {

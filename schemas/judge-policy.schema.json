@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/judge-policy.schema.json",
+  "title": "LLM judge policy",
+  "description": "Calibration policy for inferential LLM judge outputs. The schema defines the policy contract; CLI report validation recomputes whether a judge result satisfies it.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy_id",
+    "judge_id",
+    "rubric",
+    "calibration",
+    "uncertainty_notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "policy_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "judge_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "description": {
+      "type": "string"
+    },
+    "rubric": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/rubricCriterion"
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "required": [
+        "labeled_sample_minimum",
+        "agreement_metric",
+        "blocking_threshold",
+        "stale_after_days",
+        "below_threshold_consequence"
+      ],
+      "properties": {
+        "labeled_sample_minimum": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "agreement_metric": {
+          "$ref": "common.schema.json#/$defs/judgeAgreementMetric"
+        },
+        "blocking_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "stale_after_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "below_threshold_consequence": {
+          "type": "string",
+          "enum": ["advisory-only"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "uncertainty_notes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "calibration_examples": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/calibrationExample"
+      }
+    },
+    "evidence": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "$defs": {
+    "rubricCriterion": {
+      "type": "object",
+      "required": ["id", "description", "scale"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "description": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "scale": {
+          "type": "string",
+          "enum": ["binary", "ordinal"]
+        },
+        "passing_label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "calibrationExample": {
+      "type": "object",
+      "required": ["id", "input_ref", "human_label", "judge_label"],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "input_ref": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "human_label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "judge_label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

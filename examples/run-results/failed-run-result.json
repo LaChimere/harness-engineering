@@ -5,7 +5,7 @@
   "suite_id": "harness-self-test",
   "task_id": "schema-smoke",
   "task_version": "1.0.0",
-  "dataset_hash": "sha256:017a04a2662fd3cfc3bcb47289dd51a7f7f0e1ed3322bfc1d01681f2856b29c8",
+  "dataset_hash": "sha256:0b327293fe4cc3ebef6126c1ee7531b310ed50a3397576de46a0170dac2aed7f",
   "split": "optimization",
   "model_profile": "harness://verifier-only/no-model",
   "harness_version": "0.1.0",

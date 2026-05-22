@@ -47,6 +47,11 @@
       "description": "Stable failure code. Membership is checked against the configured failure taxonomy by CLI tooling.",
       "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
     },
+    "judgeAgreementMetric": {
+      "type": "string",
+      "description": "Supported calibration agreement metrics for LLM judge policy and result artifacts.",
+      "enum": ["percent_agreement", "cohen_kappa"]
+    },
     "artifactLink": {
       "type": "object",
       "required": ["path"],

@@ -230,26 +230,39 @@
 
 ## Stage 7: LLM-judge and inferential-review policy
 
-- [ ] Define LLM-judge policy.
-- [ ] Require rubric.
-- [ ] Require labeled sample minimum.
-- [ ] Define agreement metric and numeric blocking threshold.
-- [ ] Define uncertainty notes.
-- [ ] Define below-threshold consequence.
-- [ ] Document example agreement calculation with passing/failing threshold examples.
-- [ ] Store judge outputs distinctly from deterministic verifier results.
-- [ ] Add fixtures for calibrated blocking, advisory-only, and below-threshold judge cases.
-- [ ] Mark uncalibrated judge outputs advisory-only.
-- [ ] Add report validation for judge blocking/advisory semantics.
-- [ ] Run judge-policy fixtures.
-- [ ] Run `git diff --check`.
+- [x] Define LLM-judge policy.
+- [x] Require rubric.
+- [x] Require labeled sample minimum.
+- [x] Define agreement metric and numeric blocking threshold.
+- [x] Define uncertainty notes.
+- [x] Define below-threshold consequence.
+- [x] Document example agreement calculation with passing/failing threshold examples.
+- [x] Store judge outputs distinctly from deterministic verifier results.
+- [x] Add fixtures for calibrated blocking, advisory-only, and below-threshold judge cases.
+- [x] Mark uncalibrated judge outputs advisory-only.
+- [x] Add report validation for judge blocking/advisory semantics.
+- [x] Run judge-policy fixtures.
+- [x] Run `git diff --check`.
 
 ### Stage 7 acceptance criteria
 
-- [ ] No LLM-judge result can be marked blocking unless the calibration policy is satisfied.
-- [ ] The judge policy specifies rubric, labeled sample minimum, agreement metric, numeric blocking threshold, uncertainty notes, and below-threshold consequence.
-- [ ] Fixtures demonstrate calibrated blocking, advisory-only, and below-threshold judge cases.
-- [ ] Docs state how to treat low-agreement or stale judges.
+- [x] No LLM-judge result can be marked blocking unless the calibration policy is satisfied.
+- [x] The judge policy specifies rubric, labeled sample minimum, agreement metric, numeric blocking threshold, uncertainty notes, and below-threshold consequence.
+- [x] Fixtures demonstrate calibrated blocking, advisory-only, and below-threshold judge cases.
+- [x] Docs state how to treat low-agreement or stale judges.
+
+Stage 7 validation evidence:
+
+- `bun run check`
+- `bun run test:unit`
+- `bun run build`
+- `PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py`
+- `node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/calibrated-blocking.json`
+- `node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/advisory-only.json`
+- `node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/below-threshold.json`
+- `node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/stale-advisory.json`
+- policy-violation smoke for `examples/judges/results/policy-violations/blocking-low-agreement.json`
+- `git diff --check`
 
 ## Stage 8: Plugin marketplace/API feasibility and target selection
 

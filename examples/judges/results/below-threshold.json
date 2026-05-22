@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1.0",
+  "result_id": "judge-below-threshold-001",
+  "run_id": "stage7-example-run",
+  "policy_ref": "examples/judges/policy.yaml",
+  "policy_digest": "sha256:16c624712971179282d2178dba74cf1be6946127b25d31677230f67e43d829f1",
+  "policy_id": "harness-self-test-judge-policy",
+  "judge_id": "harness-self-test-reviewer",
+  "produced_at": "2026-05-21T00:00:00Z",
+  "effect": "advisory",
+  "calibration": {
+    "status": "below-threshold",
+    "labeled_sample_count": 5,
+    "agreement_metric": "percent_agreement",
+    "agreement_score": 0.6,
+    "calibrated_at": "2026-05-21T00:00:00Z",
+    "examples": [
+      { "id": "sample-1", "human_label": "acceptable", "judge_label": "acceptable" },
+      { "id": "sample-2", "human_label": "unacceptable", "judge_label": "unacceptable" },
+      { "id": "sample-3", "human_label": "supported", "judge_label": "supported" },
+      { "id": "sample-4", "human_label": "unacceptable", "judge_label": "acceptable" },
+      { "id": "sample-5", "human_label": "acceptable", "judge_label": "unacceptable" }
+    ]
+  },
+  "finding": {
+    "severity": "warning",
+    "summary": "The judge agreement score is below the blocking threshold.",
+    "rationale": "The policy requires 0.8 percent agreement before any judge result may block.",
+    "confidence": 0.52
+  },
+  "uncertainty_notes": [
+    "The low-agreement result can suggest review focus but must not gate execution."
+  ],
+  "evidence": [
+    {
+      "path": "examples/run-results/failed-run-result.json",
+      "media_type": "application/json",
+      "description": "Low-agreement reviewed result."
+    }
+  ]
+}

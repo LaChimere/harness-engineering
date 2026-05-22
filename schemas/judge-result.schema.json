@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/judge-result.schema.json",
+  "title": "LLM judge result",
+  "description": "Inferential LLM judge output stored separately from deterministic verifier results.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "result_id",
+    "run_id",
+    "policy_ref",
+    "policy_digest",
+    "policy_id",
+    "judge_id",
+    "produced_at",
+    "effect",
+    "calibration",
+    "finding",
+    "uncertainty_notes",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "result_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "policy_ref": {
+      "type": "string",
+      "description": "Repo-relative path to the local judge policy artifact used for offline validation.",
+      "minLength": 1,
+      "allOf": [
+        {
+          "not": {
+            "pattern": "\\n"
+          }
+        },
+        {
+          "not": {
+            "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:"
+          }
+        },
+        {
+          "not": {
+            "pattern": "#"
+          }
+        }
+      ]
+    },
+    "policy_digest": {
+      "type": "string",
+      "description": "SHA-256 digest of the policy artifact bytes used when this result was produced.",
+      "pattern": "^sha256:[a-fA-F0-9]{64}$"
+    },
+    "policy_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "judge_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "produced_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "effect": {
+      "type": "string",
+      "enum": ["advisory", "blocking"]
+    },
+    "calibration": {
+      "type": "object",
+      "required": ["status", "labeled_sample_count", "agreement_metric"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["passed", "below-threshold", "uncalibrated", "stale"]
+        },
+        "labeled_sample_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "agreement_metric": {
+          "$ref": "common.schema.json#/$defs/judgeAgreementMetric"
+        },
+        "agreement_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "calibrated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "examples": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/calibrationExample"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": ["passed", "below-threshold", "stale"]
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "required": ["agreement_score", "calibrated_at", "examples"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": ["severity", "summary", "rationale", "confidence"],
+      "properties": {
+        "severity": {
+          "$ref": "common.schema.json#/$defs/severity"
+        },
+        "summary": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "rationale": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "uncertainty_notes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "evidence": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "$defs": {
+    "calibrationExample": {
+      "type": "object",
+      "required": ["id", "human_label", "judge_label"],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "input_ref": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "human_label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "judge_label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "calibration": {
+            "properties": {
+              "status": {
+                "enum": ["below-threshold", "uncalibrated", "stale"]
+              }
+            },
+            "required": ["status"]
+          }
+        },
+        "required": ["calibration"]
+      },
+      "then": {
+        "properties": {
+          "effect": {
+            "const": "advisory"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect": {
+            "const": "blocking"
+          }
+        },
+        "required": ["effect"]
+      },
+      "then": {
+        "properties": {
+          "finding": {
+            "properties": {
+              "severity": {
+                "enum": ["error", "critical"]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

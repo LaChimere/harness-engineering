@@ -1,0 +1,11 @@
+schema_version: "0.1.0"
+policy_id: missing-rubric
+judge_id: harness-self-test-reviewer
+calibration:
+  labeled_sample_minimum: 5
+  agreement_metric: percent_agreement
+  blocking_threshold: 0.8
+  stale_after_days: 90
+  below_threshold_consequence: advisory-only
+uncertainty_notes:
+  - A judge policy without a rubric cannot be used for blocking or advisory review.

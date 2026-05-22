@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1.0",
+  "result_id": "judge-blocking-uncalibrated",
+  "run_id": "stage7-invalid-run",
+  "policy_ref": "examples/judges/policy.yaml",
+  "policy_digest": "sha256:16c624712971179282d2178dba74cf1be6946127b25d31677230f67e43d829f1",
+  "policy_id": "harness-self-test-judge-policy",
+  "judge_id": "harness-self-test-reviewer",
+  "produced_at": "2026-05-21T00:00:00Z",
+  "effect": "blocking",
+  "calibration": {
+    "status": "uncalibrated",
+    "labeled_sample_count": 0,
+    "agreement_metric": "percent_agreement"
+  },
+  "finding": {
+    "severity": "error",
+    "summary": "Uncalibrated judge attempts to block.",
+    "rationale": "This fixture must be schema-invalid because uncalibrated results are advisory-only.",
+    "confidence": 0.4
+  },
+  "uncertainty_notes": ["Uncalibrated results cannot block."],
+  "evidence": []
+}

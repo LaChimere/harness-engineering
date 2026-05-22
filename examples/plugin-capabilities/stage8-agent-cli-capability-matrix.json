@@ -1,0 +1,644 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "matrix_id": "stage8-agent-cli-capability-matrix",
+  "review_date": "2026-05-22",
+  "candidate_boundary": "In-scope candidates are named coding-agent or CLI host surfaces with install or discovery mechanisms, agent-facing extension points, repository workspace access, and a CLI invocation or bootstrap path. IDE-only, CI-only, and hosted review surfaces are future evidence only and cannot be Stage 9 targets in this slug.",
+  "capability_dimensions": [
+    "agent_cli_install_distribution",
+    "cli_bundling_bootstrap",
+    "filesystem_access",
+    "cli_invocation",
+    "cli_report_rendering",
+    "annotation_apis",
+    "background_runs",
+    "repair_action_ui",
+    "trace_deep_links"
+  ],
+  "hosts": [
+    {
+      "schema_version": "0.1.0",
+      "x-stability": "provisional",
+      "capability_id": "github-copilot-cli-stage8",
+      "host": {
+        "id": "github-copilot-cli",
+        "name": "GitHub Copilot CLI",
+        "vendor": "GitHub"
+      },
+      "surface_kind": "agent-cli-marketplace-plugin",
+      "candidate_status": "in-scope-candidate",
+      "tier": "limited-adapter",
+      "distribution_surface": "agent-cli-marketplace",
+      "cli_management_modes": ["repo-pinned", "bootstrap", "user-installed"],
+      "capabilities": {
+        "agent_cli_install_distribution": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["github-copilot-cli-install"],
+          "note": "Copilot CLI has documented install paths and plugin marketplace sources."
+        },
+        "cli_bundling_bootstrap": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["github-copilot-cli-bootstrap"],
+          "note": "Pinned installs, custom homes, plugin directories, and local marketplaces support deterministic bootstrap."
+        },
+        "filesystem_access": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["github-copilot-cli-filesystem"],
+          "note": "Read, write, and shell tool grants can operate in trusted directories with scoped path filters."
+        },
+        "cli_invocation": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["github-copilot-cli-invocation"],
+          "note": "Programmatic prompt mode and tool allow/deny flags support scripted CLI invocation."
+        },
+        "cli_report_rendering": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["github-copilot-cli-report"],
+          "note": "Silent stdout, Markdown transcript export, Gist export, and GitHub Actions summaries can surface CLI reports."
+        },
+        "annotation_apis": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["github-copilot-cli-hooks"],
+          "note": "Hooks can approve, deny, or inject context, but no public REST/event-bus annotation API is documented."
+        },
+        "background_runs": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["github-copilot-cli-autopilot"],
+          "note": "Autopilot, fleet subagents, session ids, and CI examples support background or unattended runs."
+        },
+        "repair_action_ui": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["github-copilot-cli-repair"],
+          "note": "Plan mode, permission prompts, rollback snapshots, and remote approvals support repair preview and approval flows."
+        },
+        "trace_deep_links": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["github-copilot-cli-trace"],
+          "note": "Share Gists and remote session URLs exist, but no structured per-step trace deep-link API is documented."
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "github-copilot-cli-install",
+          "source": "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Install docs list npm, winget, Homebrew, install script, and binary release paths."
+        },
+        {
+          "evidence_id": "github-copilot-cli-bootstrap",
+          "source": "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli",
+          "source_date": "2026-05-18",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Install and release evidence covers pinned versions, COPILOT_HOME, plugin-dir controls, and local marketplace bootstrap."
+        },
+        {
+          "evidence_id": "github-copilot-cli-filesystem",
+          "source": "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-programmatic-reference",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Programmatic reference documents read, write, shell, trusted directories, --add-dir, and path-scoped tool filters."
+        },
+        {
+          "evidence_id": "github-copilot-cli-invocation",
+          "source": "https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/run-cli-programmatically",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Programmatic invocation supports prompts, stdin, no-ask mode, tool filters, model/agent selection, and secret env vars."
+        },
+        {
+          "evidence_id": "github-copilot-cli-report",
+          "source": "https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Automation docs show captured output and Markdown summaries suitable for report rendering."
+        },
+        {
+          "evidence_id": "github-copilot-cli-hooks",
+          "source": "https://docs.github.com/en/copilot/concepts/agents/hooks",
+          "source_date": "2026-05-20",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Hooks provide structured feedback injection, but no dedicated annotation persistence API is documented."
+        },
+        {
+          "evidence_id": "github-copilot-cli-autopilot",
+          "source": "https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Autopilot and fleet capabilities support unattended and parallel work."
+        },
+        {
+          "evidence_id": "github-copilot-cli-repair",
+          "source": "https://docs.github.com/en/copilot/concepts/agents/copilot-cli/cancel-and-roll-back",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Rollback snapshots, plan approval, permission dialogs, and remote approvals support repair workflows."
+        },
+        {
+          "evidence_id": "github-copilot-cli-trace",
+          "source": "https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/run-cli-programmatically",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Share URLs exist for transcripts, but formal item-level trace deep links are not documented."
+        }
+      ],
+      "stage9_consequence": "proceed-limited-adapter",
+      "stage9_scope_summary": "Proceed with a limited GitHub Copilot CLI adapter over plugin commands/hooks/MCP/skills; label annotation and trace deep-link UX as advisory or unavailable until formal APIs exist."
+    },
+    {
+      "schema_version": "0.1.0",
+      "x-stability": "provisional",
+      "capability_id": "openai-codex-cli-stage8",
+      "host": {
+        "id": "openai-codex-cli",
+        "name": "OpenAI Codex CLI",
+        "vendor": "OpenAI"
+      },
+      "surface_kind": "agent-cli-command",
+      "candidate_status": "in-scope-candidate",
+      "tier": "limited-adapter",
+      "distribution_surface": "package-registry",
+      "cli_management_modes": ["repo-pinned", "bootstrap", "user-installed"],
+      "capabilities": {
+        "agent_cli_install_distribution": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["openai-codex-cli-install"],
+          "note": "Codex CLI has npm, Homebrew, static binary, and GitHub Action install paths."
+        },
+        "cli_bundling_bootstrap": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["openai-codex-cli-bootstrap"],
+          "note": "The npm bin, environment auth, CODEX_HOME, and static archives support deterministic bootstrap."
+        },
+        "filesystem_access": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["openai-codex-cli-filesystem"],
+          "note": "Sandbox modes and additional directory controls provide repository filesystem access."
+        },
+        "cli_invocation": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["openai-codex-cli-invocation"],
+          "note": "Noninteractive exec mode supports CI-safe invocation and command policies."
+        },
+        "cli_report_rendering": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["openai-codex-cli-report"],
+          "note": "JSONL streams, final-message output, and output schemas can render or validate reports."
+        },
+        "annotation_apis": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["openai-codex-cli-hooks"],
+          "note": "Hooks can inject context, but there is no documented public annotation endpoint."
+        },
+        "background_runs": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["openai-codex-cli-background"],
+          "note": "Background terminals, exec resume, goal mode, and worker agents support long-running work."
+        },
+        "repair_action_ui": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["openai-codex-cli-repair"],
+          "note": "Approval modes, policies, diff/review commands, and undo support repair preview and approval."
+        },
+        "trace_deep_links": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["openai-codex-cli-trace"],
+          "note": "JSONL thread ids and resume ids exist, but no local item-level deep-link scheme is documented."
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "openai-codex-cli-install",
+          "source": "https://developers.openai.com/codex/cli",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Codex CLI docs list npm, Homebrew cask, static binaries, and GitHub Action distribution."
+        },
+        {
+          "evidence_id": "openai-codex-cli-bootstrap",
+          "source": "https://github.com/openai/codex/blob/main/codex-cli/package.json",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "source-release",
+          "finding": "positive",
+          "note": "Package metadata and release notes expose a single codex bin and bootstrap-friendly environment controls."
+        },
+        {
+          "evidence_id": "openai-codex-cli-filesystem",
+          "source": "https://developers.openai.com/codex/agent-approvals-security",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Approval/security docs cover read-only, workspace-write, danger-full-access, and additional directory controls."
+        },
+        {
+          "evidence_id": "openai-codex-cli-invocation",
+          "source": "https://developers.openai.com/codex/noninteractive",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Noninteractive docs cover codex exec, sandbox flags, approval suppression, stdin, and exec policy checks."
+        },
+        {
+          "evidence_id": "openai-codex-cli-report",
+          "source": "https://developers.openai.com/codex/noninteractive",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "JSONL output and output schema support structured downstream report generation."
+        },
+        {
+          "evidence_id": "openai-codex-cli-hooks",
+          "source": "https://developers.openai.com/codex/hooks",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Lifecycle hooks support JSON context injection but no documented durable annotation endpoint."
+        },
+        {
+          "evidence_id": "openai-codex-cli-background",
+          "source": "https://developers.openai.com/codex/cli/features",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Features docs describe background terminals, resumption, goal mode, and parallel worker agents."
+        },
+        {
+          "evidence_id": "openai-codex-cli-repair",
+          "source": "https://developers.openai.com/codex/agent-approvals-security",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Approval modes, reviewer policies, diff/review commands, and undo snapshots support controlled repairs."
+        },
+        {
+          "evidence_id": "openai-codex-cli-trace",
+          "source": "https://developers.openai.com/codex/noninteractive",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Thread IDs and resume IDs exist, but no item-level local deep link is documented."
+        }
+      ],
+      "stage9_consequence": "proceed-limited-adapter",
+      "stage9_scope_summary": "Proceed with a limited Codex CLI adapter if chosen; keep annotation and trace links advisory and do not claim full plugin UX."
+    },
+    {
+      "schema_version": "0.1.0",
+      "x-stability": "provisional",
+      "capability_id": "claude-code-stage8",
+      "host": {
+        "id": "claude-code",
+        "name": "Claude Code",
+        "vendor": "Anthropic"
+      },
+      "surface_kind": "agent-cli-marketplace-plugin",
+      "candidate_status": "in-scope-candidate",
+      "tier": "limited-adapter",
+      "distribution_surface": "agent-cli-marketplace",
+      "cli_management_modes": ["repo-pinned", "bootstrap", "user-installed"],
+      "capabilities": {
+        "agent_cli_install_distribution": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["claude-code-install"],
+          "note": "Claude Code plugin marketplaces and install commands provide a host-native distribution path."
+        },
+        "cli_bundling_bootstrap": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["claude-code-bootstrap"],
+          "note": "Marketplace npm sources, plugin zip/url installs, and plugin bin PATH support bootstrap."
+        },
+        "filesystem_access": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["claude-code-filesystem"],
+          "note": "Built-in tools and additional directory settings support repository filesystem access."
+        },
+        "cli_invocation": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["claude-code-invocation"],
+          "note": "Headless prompt mode, bare mode, tool allowlists, and SDK query APIs support invocation."
+        },
+        "cli_report_rendering": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["claude-code-report"],
+          "note": "JSON and stream-json outputs expose results, session ids, costs, and structured events."
+        },
+        "annotation_apis": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["claude-code-annotations"],
+          "note": "Session labels and transcript APIs exist, but inline annotation persistence requires host-specific integration."
+        },
+        "background_runs": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["claude-code-background"],
+          "note": "Background sessions and cloud routines support autonomous work."
+        },
+        "repair_action_ui": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["claude-code-repair"],
+          "note": "Plan mode and hooks can gate writes, but interactive diff preview is not documented for CLI/headless surfaces."
+        },
+        "trace_deep_links": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["claude-code-trace"],
+          "note": "Session ids and JSONL transcripts exist, but shareable CLI trace URLs require custom storage."
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "claude-code-install",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/discover-plugins",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Plugin docs describe official and community marketplaces with named plugin installs."
+        },
+        {
+          "evidence_id": "claude-code-bootstrap",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/plugin-marketplaces",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Marketplace sources can point at npm, GitHub, git URLs, local paths, zip files, and plugin bin directories."
+        },
+        {
+          "evidence_id": "claude-code-filesystem",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/agent-sdk/overview",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Agent SDK docs list Read, Write, Edit, Bash, Glob, Grep, and project directory controls."
+        },
+        {
+          "evidence_id": "claude-code-invocation",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/headless",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Headless docs cover prompt mode, bare mode, stdin piping, and tool permission options."
+        },
+        {
+          "evidence_id": "claude-code-report",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/headless",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Headless output modes include json, stream-json, and structured output schemas."
+        },
+        {
+          "evidence_id": "claude-code-annotations",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/agent-sdk/sessions",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Session APIs support tags, names, listing, and messages, but not portable inline code annotations."
+        },
+        {
+          "evidence_id": "claude-code-background",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/agent-view",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Agent view docs describe detached background sessions and JSON session state."
+        },
+        {
+          "evidence_id": "claude-code-repair",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/permissions",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Permissions and hooks gate edits, but full interactive diff preview is not available in CLI-only mode."
+        },
+        {
+          "evidence_id": "claude-code-trace",
+          "source": "https://docs.anthropic.com/en/docs/claude-code/agent-sdk/sessions",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Session UUIDs and JSONL transcripts are available, but no portable shareable CLI trace URL is documented."
+        }
+      ],
+      "stage9_consequence": "proceed-limited-adapter",
+      "stage9_scope_summary": "Proceed with a limited Claude Code adapter if chosen; keep diff-preview repairs and trace links advisory unless host APIs improve."
+    },
+    {
+      "schema_version": "0.1.0",
+      "x-stability": "provisional",
+      "capability_id": "gemini-cli-stage8",
+      "host": {
+        "id": "gemini-cli",
+        "name": "Gemini CLI",
+        "vendor": "Google"
+      },
+      "surface_kind": "agent-cli-marketplace-plugin",
+      "candidate_status": "in-scope-candidate",
+      "tier": "cli-first-fallback",
+      "distribution_surface": "agent-cli-marketplace",
+      "cli_management_modes": ["user-installed"],
+      "capabilities": {
+        "agent_cli_install_distribution": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["gemini-cli-install"],
+          "note": "Gemini CLI has npm and package-manager install paths plus an extension gallery."
+        },
+        "cli_bundling_bootstrap": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["gemini-cli-bootstrap"],
+          "note": "Extensions can vendor scripts, but automatic npm dependency resolution is not documented."
+        },
+        "filesystem_access": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["gemini-cli-filesystem"],
+          "note": "File-system tools cover reads, writes, listing, globbing, grep, and replace with workspace scoping."
+        },
+        "cli_invocation": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["gemini-cli-invocation"],
+          "note": "Shell command execution and headless prompt mode support CLI invocation."
+        },
+        "cli_report_rendering": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["gemini-cli-report"],
+          "note": "Stream JSON and interactive Markdown rendering can surface CLI reports."
+        },
+        "annotation_apis": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["gemini-cli-hooks"],
+          "note": "Hooks expose session/tool event data, but there is no native structured annotation API."
+        },
+        "background_runs": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["gemini-cli-background"],
+          "note": "Background shell processes and headless runs exist, while autonomous background agents remain roadmap work."
+        },
+        "repair_action_ui": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["gemini-cli-repair"],
+          "note": "Write approvals and checkpoint rollback exist, but no harness-style repair-action protocol is native."
+        },
+        "trace_deep_links": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["gemini-cli-trace"],
+          "note": "OpenTelemetry and session ids can correlate traces, but no in-CLI deep-link command is documented."
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "gemini-cli-install",
+          "source": "https://github.com/google-gemini/gemini-cli",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "source-release",
+          "finding": "positive",
+          "note": "The source repository documents npm, Homebrew, MacPorts, npx, and Gemini CLI extension distribution."
+        },
+        {
+          "evidence_id": "gemini-cli-bootstrap",
+          "source": "https://www.geminicli.com/docs/extensions/writing-extensions",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Extension docs support vendored scripts and release assets but not automatic npm dependency resolution."
+        },
+        {
+          "evidence_id": "gemini-cli-filesystem",
+          "source": "https://www.geminicli.com/docs/tools/file-system",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "File-system docs cover read, write, list, glob, grep, and replace tools."
+        },
+        {
+          "evidence_id": "gemini-cli-invocation",
+          "source": "https://www.geminicli.com/docs/tools/shell",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Shell tool docs support foreground and background command execution."
+        },
+        {
+          "evidence_id": "gemini-cli-report",
+          "source": "https://www.geminicli.com/docs/cli/headless",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "positive",
+          "note": "Headless docs describe stream-json output and typed events for downstream renderers."
+        },
+        {
+          "evidence_id": "gemini-cli-hooks",
+          "source": "https://www.geminicli.com/docs/hooks",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Hooks expose JSON event data but not a native durable annotation surface."
+        },
+        {
+          "evidence_id": "gemini-cli-background",
+          "source": "https://github.com/google-gemini/gemini-cli/blob/main/ROADMAP.md",
+          "source_date": "2026-05-21",
+          "accessed_date": "2026-05-22",
+          "source_type": "source-release",
+          "finding": "partial",
+          "note": "Roadmap lists background agents; current shell/headless behavior is enough for CLI redirects but not rich background sessions."
+        },
+        {
+          "evidence_id": "gemini-cli-repair",
+          "source": "https://www.geminicli.com/docs/cli/checkpointing",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Checkpointing and approval exist, but no structured harness repair-action UI is native."
+        },
+        {
+          "evidence_id": "gemini-cli-trace",
+          "source": "https://www.geminicli.com/docs/cli/telemetry",
+          "accessed_date": "2026-05-22",
+          "source_type": "official-docs",
+          "finding": "partial",
+          "note": "Telemetry docs cover OpenTelemetry export and session correlation but not in-CLI deep-link navigation."
+        }
+      ],
+      "stage9_consequence": "defer-stage9-cli-first",
+      "stage9_scope_summary": "Keep Gemini CLI as CLI-first fallback evidence until bootstrap and background-agent capabilities are proven enough for a limited adapter."
+    }
+  ],
+  "schema_revalidation": {
+    "plugin_capability": {
+      "conclusion": "sufficient-for-stage9",
+      "required_changes": ["tier", "surface-kind", "evidence-id", "evidence-link", "fallback"],
+      "note": "Stage 8 revalidated plugin-capability as the per-host row type for the capability matrix with tiers, surface kind, stable evidence ids, evidence entries, and fallback behavior."
+    },
+    "repair_action": {
+      "conclusion": "extend-before-stage9",
+      "required_changes": ["advisory-repair-mode"],
+      "note": "Current repair-action shape supports preview-backed repair proposals, but limited adapters without host preview and approval affordances need an advisory-only repair mode before writes are exposed through Stage 9."
+    },
+    "adapter_scope_metadata": {
+      "conclusion": "extend-before-stage9",
+      "required_changes": ["adapter-scope-metadata"],
+      "note": "Stage 9 must add a schema-backed adapter scope manifest or equivalent revalidated plugin-capability metadata to prove implemented scope is a subset of Stage 8 evidence."
+    }
+  },
+  "decision": {
+    "selected_host_id": "github-copilot-cli",
+    "selected_tier": "limited-adapter",
+    "stage9_consequence": "proceed-limited-adapter",
+    "rationale": "Codex CLI, Claude Code, and GitHub Copilot CLI are in-scope limited-adapter candidates; Gemini CLI remains CLI-first fallback because bootstrap and background-agent support are only partial. GitHub Copilot CLI has the strongest first-target evidence for marketplace/plugin distribution, CLI bootstrap, hooks, MCP/skills, background runs, and repair approval, while annotation and trace deep-link UX must remain advisory or unavailable."
+  }
+}

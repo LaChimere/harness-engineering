@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/plugin-capability-matrix.schema.json",
+  "title": "Plugin capability matrix",
+  "$comment": "provisional Stage 8 matrix; hosts reuse plugin-capability.schema.json as the per-host row type so Stage 9 has one capability source of truth.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "x-stability",
+    "matrix_id",
+    "review_date",
+    "candidate_boundary",
+    "capability_dimensions",
+    "hosts",
+    "schema_revalidation",
+    "decision"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "x-stability": {
+      "const": "provisional"
+    },
+    "matrix_id": {
+      "$ref": "#/$defs/stableId"
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "candidate_boundary": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "capability_dimensions": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/capabilityDimension"
+      },
+      "uniqueItems": true
+    },
+    "hosts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "plugin-capability.schema.json"
+      }
+    },
+    "schema_revalidation": {
+      "type": "object",
+      "required": ["plugin_capability", "repair_action", "adapter_scope_metadata"],
+      "properties": {
+        "plugin_capability": {
+          "$ref": "#/$defs/schemaRevalidation"
+        },
+        "repair_action": {
+          "$ref": "#/$defs/schemaRevalidation"
+        },
+        "adapter_scope_metadata": {
+          "$ref": "#/$defs/schemaRevalidation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "object",
+      "$comment": "JSON Schema constrains null decisions structurally. Non-null selected_host_id consistency with hosts[].host.id, selected tier, candidate status, and Stage 9 consequence is enforced by the required plugin_capability_matrix_invariants custom check.",
+      "required": ["selected_host_id", "selected_tier", "stage9_consequence", "rationale"],
+      "properties": {
+        "selected_host_id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "selected_tier": {
+          "type": "string",
+          "enum": ["full-plugin", "limited-adapter", "cli-first-fallback", "none"]
+        },
+        "stage9_consequence": {
+          "$ref": "plugin-capability.schema.json#/$defs/stage9Consequence"
+        },
+        "rationale": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "selected_host_id": {
+                "const": null
+              }
+            },
+            "required": ["selected_host_id"]
+          },
+          "then": {
+            "properties": {
+              "selected_tier": {
+                "enum": ["cli-first-fallback", "none"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "selected_host_id": {
+                "const": null
+              },
+              "selected_tier": {
+                "const": "cli-first-fallback"
+              }
+            },
+            "required": ["selected_host_id", "selected_tier"]
+          },
+          "then": {
+            "properties": {
+              "stage9_consequence": {
+                "const": "defer-stage9-cli-first"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "selected_host_id": {
+                "const": null
+              },
+              "selected_tier": {
+                "const": "none"
+              }
+            },
+            "required": ["selected_host_id", "selected_tier"]
+          },
+          "then": {
+            "properties": {
+              "stage9_consequence": {
+                "const": "future-evidence-only"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "capabilityDimension": {
+      "type": "string",
+      "enum": [
+        "agent_cli_install_distribution",
+        "cli_bundling_bootstrap",
+        "filesystem_access",
+        "cli_invocation",
+        "cli_report_rendering",
+        "annotation_apis",
+        "background_runs",
+        "repair_action_ui",
+        "trace_deep_links"
+      ]
+    },
+    "schemaRevalidation": {
+      "type": "object",
+      "required": ["conclusion", "required_changes", "note"],
+      "properties": {
+        "conclusion": {
+          "type": "string",
+          "enum": ["sufficient-for-stage9", "extend-before-stage9", "not-applicable"]
+        },
+        "required_changes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "tier",
+              "surface-kind",
+              "evidence-id",
+              "evidence-link",
+              "fallback",
+              "adapter-scope-metadata",
+              "advisory-repair-mode",
+              "none"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "note": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

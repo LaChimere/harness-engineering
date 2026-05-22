@@ -125,6 +125,10 @@
       "schema": "schemas/plugin-capability.schema.json"
     },
     {
+      "path": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "schema": "schemas/plugin-capability-matrix.schema.json"
+    },
+    {
       "path": "examples/repair-actions/proposed-schema-fix.yaml",
       "schema": "schemas/repair-action.schema.json"
     },
@@ -390,6 +394,27 @@
       "reason": "Judge result policy references must be repo-relative paths for offline report validation.",
       "expected_keyword": "not",
       "expected_path": ["policy_ref"]
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-tier-consequence.json",
+      "schema": "schemas/plugin-capability-matrix.schema.json",
+      "reason": "Capability tier must imply a matching Stage 9 consequence.",
+      "expected_keyword": "const",
+      "expected_path": ["hosts", 0, "stage9_consequence"]
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-null-consequence.json",
+      "schema": "schemas/plugin-capability-matrix.schema.json",
+      "reason": "A null matrix decision must not claim plugin or adapter implementation.",
+      "expected_keyword": "const",
+      "expected_path": ["decision", "stage9_consequence"]
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-ide-in-scope.json",
+      "schema": "schemas/plugin-capability-matrix.schema.json",
+      "reason": "IDE-only surfaces must be recorded as future evidence rather than Stage 9 candidates.",
+      "expected_keyword": "const",
+      "expected_path": ["hosts", 0, "candidate_status"]
     }
   ],
   "failure_taxonomy_required_codes": [
@@ -411,12 +436,126 @@
     "sandbox-violation",
     "approval-denied"
   ],
+  "plugin_capability_matrix_invariants": {
+    "capability_dimensions": [
+      "agent_cli_install_distribution",
+      "cli_bundling_bootstrap",
+      "filesystem_access",
+      "cli_invocation",
+      "cli_report_rendering",
+      "annotation_apis",
+      "background_runs",
+      "repair_action_ui",
+      "trace_deep_links"
+    ],
+    "limited_adapter_core_capabilities": [
+      "agent_cli_install_distribution",
+      "cli_bundling_bootstrap",
+      "filesystem_access",
+      "cli_invocation"
+    ],
+    "rich_ux_capabilities": [
+      "cli_report_rendering",
+      "annotation_apis",
+      "background_runs",
+      "repair_action_ui",
+      "trace_deep_links"
+    ],
+    "out_of_scope_surface_kinds": ["ide-extension", "ci-adapter", "hosted-checks"],
+    "out_of_scope_distribution_surfaces": ["ide-extension-store", "ci-platform"],
+    "tier_stage9_consequences": {
+      "full-plugin": "proceed-full-plugin",
+      "limited-adapter": "proceed-limited-adapter",
+      "cli-first-fallback": "defer-stage9-cli-first",
+      "future-adapter-evidence": "future-evidence-only"
+    },
+    "null_decision_stage9_consequences": {
+      "cli-first-fallback": "defer-stage9-cli-first",
+      "none": "future-evidence-only"
+    },
+    "selectable_tiers": ["full-plugin", "limited-adapter"]
+  },
   "custom_invalid": [
     {
       "path": "examples/fixtures/invalid/failure-taxonomy-missing-starter.yaml",
       "check": "failure_taxonomy_required_codes",
       "reason": "Starter failure taxonomy data must include every required starter code.",
       "expected_missing_code": "approval-denied"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-dangling-evidence.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Capability evidence references must point at stable evidence ids recorded on the same host.",
+      "expected_error_code": "PCM_EVIDENCE_DANGLING",
+      "expected_message_contains": "references missing evidence_id"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-selects-cli-fallback.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Stage 8 must not select a CLI-first fallback host as a Stage 9 target.",
+      "expected_error_code": "PCM_DECISION_UNSELECTABLE_TIER",
+      "expected_message_contains": "cannot select fallback-host at tier cli-first-fallback"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-limited-with-all-rich-ux.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Limited-adapter hosts must be missing at least one rich UX capability.",
+      "expected_error_code": "PCM_LIMITED_RICH_UX",
+      "expected_message_contains": "limited-adapter tier must be missing at least one rich UX capability"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-decision-mismatch.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Matrix decision fields must match the selected host row.",
+      "expected_error_code": "PCM_DECISION_TIER_MISMATCH",
+      "expected_message_contains": "selected_tier must match selected host tier"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-null-consequence.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Null matrix decisions must have a consequence consistent with the null selection tier.",
+      "expected_error_code": "PCM_DECISION_NULL_CONSEQUENCE",
+      "expected_message_contains": "without selected_host_id"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-tier-consequence.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Host tier and Stage 9 consequence must stay consistent.",
+      "expected_error_code": "PCM_TIER_CONSEQUENCE",
+      "expected_message_contains": "tier must use proceed-limited-adapter consequence"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-ide-in-scope.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "IDE-only surfaces must stay out-of-scope future evidence in this slug.",
+      "expected_error_code": "PCM_OUT_OF_SCOPE_SURFACE",
+      "expected_message_contains": "surface must be out-of-scope future evidence"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-limited-partial-core.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Limited-adapter tier requires every core capability to be fully supported.",
+      "expected_error_code": "PCM_CORE_CAPABILITY",
+      "expected_message_contains": "limited-adapter tier requires supported core capability"
+    },
+    {
+      "path": "examples/fixtures/invalid/plugin-capability-matrix-cli-fallback-supported-core.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "CLI-first fallback tier must not hide a host whose limited-adapter core capabilities are all supported.",
+      "expected_error_code": "PCM_CLI_FALLBACK_CORE_SUPPORTED",
+      "expected_message_contains": "cli-first-fallback tier must be missing at least one core capability"
+    }
+  ],
+  "custom_valid": [
+    {
+      "path": "examples/failure-taxonomy.yaml",
+      "check": "failure_taxonomy_required_codes",
+      "reason": "Canonical failure taxonomy must include every required starter code."
+    },
+    {
+      "path": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "check": "plugin_capability_matrix_invariants",
+      "reason": "Stage 8 matrix must satisfy custom evidence and tier invariants."
     }
   ]
 }

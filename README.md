@@ -6,20 +6,20 @@ The product goal is a versioned harness substrate that makes agent work reproduc
 
 ## Current status
 
-This repository has completed Stage 7: LLM-judge and inferential-review policy.
+This repository has completed Stage 8: agent/CLI marketplace adapter feasibility and target selection.
 
-The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. No marketplace plugin, CI adapter, native skill adapter, or live model runner is available from this repository today.
+The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. Stage 8 selected GitHub Copilot CLI as the first **limited adapter** target, not a full-plugin target. No adapter, CI adapter, native skill adapter, or live model runner is available from this repository today.
 
 ## Entrypoint matrix
 
 | Entrypoint | Status now | Intended role | First stage that makes it concrete |
 |---|---|---|---|
 | CLI plus `harness.yaml` | Initial Stage 7 CLI exists locally with `init`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, future GC, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization; Stage 7 implements inferential judge policy validation. |
-| Agent/CLI marketplace adapter or plugin | Planned north-star UX only. No plugin install path is promised yet. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Stage 8 verifies feasibility; Stage 9 ships a full plugin or limited adapter only if feasible. |
+| Agent/CLI marketplace adapter or plugin | Stage 8 chose a GitHub Copilot CLI limited-adapter target. No install path is shipped yet. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Stage 8 verified feasibility; Stage 9 may ship only the proven limited adapter scope. |
 | `agent-coding` skills compatibility | External migration-source evidence. Compatibility is not audited yet. | Portable fallback or compatibility path after the substrate exists and each skill is classified. | Stage 13. |
 | CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Stage 11. |
 
-Until a real agent/CLI full-plugin tier is verified and shipped, the public path stays CLI-first. Limited adapters may add host-native commands or tools only after Stage 8 proves them. The Stage 7 local command shape is:
+Until a real agent/CLI full-plugin tier is verified and shipped, the public path stays CLI-first. Stage 8 proved only limited-adapter scope, so any Stage 9 adapter must label unsupported rich UX as unavailable. The current local command shape is:
 
 ```bash
 bun run build
@@ -96,4 +96,4 @@ The approved roadmap lives in:
 - `plans/harness-engineering-platform/plan.md`
 - `plans/harness-engineering-platform/todo.md`
 
-Stages 1 through 7 are implemented in the current roadmap. The next implementation target is Stage 8: agent/CLI marketplace adapter feasibility and tiered target selection.
+Stages 1 through 8 are implemented in the current roadmap. The next implementation target is Stage 9: a conditional limited adapter MVP for the Stage 8-selected target.

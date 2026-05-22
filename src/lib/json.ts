@@ -21,6 +21,10 @@ export function getArray(object: JsonObject, key: string): JsonValue[] | undefin
   return Array.isArray(value) ? value : undefined;
 }
 
+export function getValue(object: JsonObject, key: string): JsonValue | undefined {
+  return object[key];
+}
+
 export function objectEntries(object: JsonObject): Array<[string, JsonValue]> {
   return Object.entries(object);
 }

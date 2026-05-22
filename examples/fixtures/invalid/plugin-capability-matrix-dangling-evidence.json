@@ -1,0 +1,126 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "matrix_id": "dangling-evidence-matrix",
+  "review_date": "2026-05-22",
+  "candidate_boundary": "Fixture for dangling evidence-id validation.",
+  "capability_dimensions": [
+    "agent_cli_install_distribution",
+    "cli_bundling_bootstrap",
+    "filesystem_access",
+    "cli_invocation",
+    "cli_report_rendering",
+    "annotation_apis",
+    "background_runs",
+    "repair_action_ui",
+    "trace_deep_links"
+  ],
+  "hosts": [
+    {
+      "schema_version": "0.1.0",
+      "x-stability": "provisional",
+      "capability_id": "fixture-host",
+      "host": {
+        "id": "fixture-host",
+        "name": "Fixture Host",
+        "vendor": "Fixture"
+      },
+      "surface_kind": "agent-cli-command",
+      "candidate_status": "in-scope-candidate",
+      "tier": "cli-first-fallback",
+      "distribution_surface": "unknown",
+      "cli_management_modes": ["unsupported"],
+      "capabilities": {
+        "agent_cli_install_distribution": {
+          "status": "unknown",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["missing-evidence"],
+          "note": "This deliberately references a missing evidence id."
+        },
+        "cli_bundling_bootstrap": {
+          "status": "unknown",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        },
+        "filesystem_access": {
+          "status": "unknown",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        },
+        "cli_invocation": {
+          "status": "unknown",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        },
+        "cli_report_rendering": {
+          "status": "unknown",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        },
+        "annotation_apis": {
+          "status": "unknown",
+          "fallback": "hide",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        },
+        "background_runs": {
+          "status": "unknown",
+          "fallback": "hide",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        },
+        "repair_action_ui": {
+          "status": "unknown",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        },
+        "trace_deep_links": {
+          "status": "unknown",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["fixture-evidence"],
+          "note": "Fixture."
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "fixture-evidence",
+          "source": "plans/harness-engineering-platform/todo.md",
+          "accessed_date": "2026-05-22",
+          "source_type": "local-reproduction",
+          "finding": "negative",
+          "note": "Fixture evidence."
+        }
+      ],
+      "stage9_consequence": "defer-stage9-cli-first",
+      "stage9_scope_summary": "Fixture."
+    }
+  ],
+  "schema_revalidation": {
+    "plugin_capability": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    },
+    "repair_action": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    },
+    "adapter_scope_metadata": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    }
+  },
+  "decision": {
+    "selected_host_id": null,
+    "selected_tier": "cli-first-fallback",
+    "stage9_consequence": "defer-stage9-cli-first",
+    "rationale": "Fixture."
+  }
+}

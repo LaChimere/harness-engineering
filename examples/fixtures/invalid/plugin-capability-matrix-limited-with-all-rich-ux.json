@@ -1,0 +1,126 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "matrix_id": "invalid-limited-rich-ux-matrix",
+  "review_date": "2026-05-22",
+  "candidate_boundary": "Fixture for limited-adapter threshold validation.",
+  "capability_dimensions": [
+    "agent_cli_install_distribution",
+    "cli_bundling_bootstrap",
+    "filesystem_access",
+    "cli_invocation",
+    "cli_report_rendering",
+    "annotation_apis",
+    "background_runs",
+    "repair_action_ui",
+    "trace_deep_links"
+  ],
+  "hosts": [
+    {
+      "schema_version": "0.1.0",
+      "x-stability": "provisional",
+      "capability_id": "too-rich-limited-host",
+      "host": {
+        "id": "too-rich-limited-host",
+        "name": "Too Rich Limited Host",
+        "vendor": "Fixture"
+      },
+      "surface_kind": "agent-cli-marketplace-plugin",
+      "candidate_status": "in-scope-candidate",
+      "tier": "limited-adapter",
+      "distribution_surface": "agent-cli-marketplace",
+      "cli_management_modes": ["repo-pinned", "bootstrap", "user-installed"],
+      "capabilities": {
+        "agent_cli_install_distribution": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "cli_bundling_bootstrap": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "filesystem_access": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "cli_invocation": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "cli_report_rendering": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "annotation_apis": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "background_runs": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "repair_action_ui": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        },
+        "trace_deep_links": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["too-rich-limited-evidence"],
+          "note": "Fixture."
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "too-rich-limited-evidence",
+          "source": "plans/harness-engineering-platform/todo.md",
+          "accessed_date": "2026-05-22",
+          "source_type": "local-reproduction",
+          "finding": "positive",
+          "note": "Fixture evidence."
+        }
+      ],
+      "stage9_consequence": "proceed-limited-adapter",
+      "stage9_scope_summary": "Fixture."
+    }
+  ],
+  "schema_revalidation": {
+    "plugin_capability": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    },
+    "repair_action": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    },
+    "adapter_scope_metadata": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    }
+  },
+  "decision": {
+    "selected_host_id": "too-rich-limited-host",
+    "selected_tier": "limited-adapter",
+    "stage9_consequence": "proceed-limited-adapter",
+    "rationale": "Fixture deliberately labels a full-rich-UX host as limited."
+  }
+}

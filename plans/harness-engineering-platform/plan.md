@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
 
-Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is Stage 8: agent/CLI marketplace adapter feasibility and tiered target selection.
+Stages 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The next implementation target is Stage 9: the conditional limited adapter MVP selected by the Stage 8 capability matrix.
 
 ## Goals
 
@@ -125,13 +125,14 @@ Stages 1, 2, 3, 4, 5, 6, and 7 are complete. The next implementation target is S
 
 ### Stage 8: Agent/CLI marketplace adapter feasibility and target selection
 
+- **Implementation result:** Stage 8 produced `examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json`, classified Codex CLI, Claude Code, and GitHub Copilot CLI as limited-adapter tier, kept Gemini CLI as CLI-first fallback evidence, and selected GitHub Copilot CLI as the first limited-adapter target. No full-plugin target is proven.
 - The review produces a per-host capability matrix focused on Codex, Claude Code, GitHub Copilot CLI, and named comparable coding-agent/CLI surfaces that satisfy the candidate boundary.
 - IDE-only extension hosts may be recorded as future adapter evidence, but cannot be selected as the first Stage 9 target in this slug.
 - The matrix assigns each host a capability tier: full plugin, limited adapter, CLI-first fallback, or future adapter evidence.
 - The matrix defines in-scope candidates as coding-agent or CLI host surfaces with agent-facing extension points; IDE-only, CI-only, and hosted checks/review surfaces are out of scope for Stage 9 selection.
 - The matrix records stable evidence ids, evidence links with source date, acceptable source type, positive/partial/negative finding, reproduction or inspection note, and `yes`/`partial`/`no`/`unknown` status for each capability.
 - The capability matrix covers agent/CLI marketplace or install distribution, CLI bundling/bootstrap, filesystem access, CLI invocation, report rendering, annotation APIs, background runs, repair-action UI, and trace deep-links.
-- The capability matrix has a durable format that Stage 9 can consume or cite, with fields for host, surface kind, candidate status, tier, capability statuses, stable evidence ids, evidence entries, fallback behavior, and Stage 9 consequence.
+- The capability matrix has a durable format that Stage 9 can consume or cite, with fields for host, surface kind, candidate status, tier, capability statuses, CLI management modes, stable evidence ids, evidence entries, fallback behavior, and Stage 9 consequence.
 - The provisional plugin-capability and repair-action schemas from Stage 2 are revalidated against the host capability matrix, including whether they need tier, surface-kind, evidence-id, evidence-link, fallback, or adapter-scope manifest fields before Stage 9 consumes them.
 - If a target is chosen, it has documented agent/CLI marketplace distribution evidence and API evidence for the tier-specific supported capabilities proven by Stage 8.
 - If a full-plugin target is feasible, proceed to full Stage 9 adapter implementation.

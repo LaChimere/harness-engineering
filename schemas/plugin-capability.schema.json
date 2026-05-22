@@ -2,20 +2,22 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/plugin-capability.schema.json",
   "title": "Plugin capability",
-  "$comment": "provisional; Stage 8 must revalidate this shape against host marketplace and runtime APIs before Stage 9 consumes it.",
+  "$comment": "provisional; Stage 8 revalidated this as the per-host row shape for the agent/CLI capability matrix before Stage 9 consumes it.",
   "type": "object",
   "required": [
     "schema_version",
     "x-stability",
     "capability_id",
     "host",
+    "surface_kind",
+    "candidate_status",
+    "tier",
     "distribution_surface",
-    "cli_management_mode",
-    "supported_actions",
-    "unsupported_action_fallbacks",
-    "annotation_support",
-    "background_run_support",
-    "repair_action_support"
+    "cli_management_modes",
+    "capabilities",
+    "evidence",
+    "stage9_consequence",
+    "stage9_scope_summary"
   ],
   "properties": {
     "schema_version": {
@@ -25,42 +27,363 @@
       "const": "provisional"
     },
     "capability_id": {
-      "$ref": "common.schema.json#/$defs/nonEmptyString"
+      "$ref": "#/$defs/stableId"
     },
     "host": {
-      "$ref": "common.schema.json#/$defs/nonEmptyString"
+      "type": "object",
+      "required": ["id", "name", "vendor"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "name": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "vendor": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "surface_kind": {
+      "$ref": "#/$defs/surfaceKind"
+    },
+    "candidate_status": {
+      "$ref": "#/$defs/candidateStatus"
+    },
+    "tier": {
+      "$ref": "#/$defs/capabilityTier"
     },
     "distribution_surface": {
-      "type": "string",
-      "enum": ["marketplace", "extension-gallery", "manual", "unknown"]
+      "$ref": "#/$defs/distributionSurface"
     },
-    "cli_management_mode": {
-      "type": "string",
-      "enum": ["repo-pinned", "bundled", "bootstrap", "user-installed", "unsupported"]
-    },
-    "supported_actions": {
+    "cli_management_modes": {
       "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "string",
-        "enum": ["init", "report", "doctor", "eval", "trace", "annotate", "repair"]
+        "$ref": "#/$defs/cliManagementMode"
       },
       "uniqueItems": true
     },
-    "unsupported_action_fallbacks": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "common.schema.json#/$defs/nonEmptyString"
+    "capabilities": {
+      "$ref": "#/$defs/capabilitySet"
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidenceEntry"
       }
     },
-    "annotation_support": {
-      "type": "boolean"
+    "stage9_consequence": {
+      "$ref": "#/$defs/stage9Consequence"
     },
-    "background_run_support": {
-      "type": "boolean"
-    },
-    "repair_action_support": {
-      "type": "boolean"
+    "stage9_scope_summary": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
     }
   },
-  "additionalProperties": false
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "candidate_status": {
+            "const": "out-of-scope-future-evidence"
+          }
+        },
+        "required": ["candidate_status"]
+      },
+      "then": {
+        "properties": {
+          "tier": {
+            "const": "future-adapter-evidence"
+          },
+          "stage9_consequence": {
+            "const": "future-evidence-only"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tier": {
+            "const": "future-adapter-evidence"
+          }
+        },
+        "required": ["tier"]
+      },
+      "then": {
+        "properties": {
+          "candidate_status": {
+            "const": "out-of-scope-future-evidence"
+          },
+          "stage9_consequence": {
+            "const": "future-evidence-only"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tier": {
+            "const": "full-plugin"
+          }
+        },
+        "required": ["tier"]
+      },
+      "then": {
+        "properties": {
+          "stage9_consequence": {
+            "const": "proceed-full-plugin"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tier": {
+            "const": "limited-adapter"
+          }
+        },
+        "required": ["tier"]
+      },
+      "then": {
+        "properties": {
+          "stage9_consequence": {
+            "const": "proceed-limited-adapter"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "tier": {
+            "const": "cli-first-fallback"
+          }
+        },
+        "required": ["tier"]
+      },
+      "then": {
+        "properties": {
+          "stage9_consequence": {
+            "const": "defer-stage9-cli-first"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "surface_kind": {
+            "enum": ["ide-extension", "ci-adapter", "hosted-checks"]
+          }
+        },
+        "required": ["surface_kind"]
+      },
+      "then": {
+        "properties": {
+          "candidate_status": {
+            "const": "out-of-scope-future-evidence"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "distribution_surface": {
+            "enum": ["ide-extension-store", "ci-platform"]
+          }
+        },
+        "required": ["distribution_surface"]
+      },
+      "then": {
+        "properties": {
+          "candidate_status": {
+            "const": "out-of-scope-future-evidence"
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "surfaceKind": {
+      "type": "string",
+      "enum": [
+        "agent-cli-marketplace-plugin",
+        "agent-cli-command",
+        "agent-cli-hook",
+        "mcp-server",
+        "skill-pack",
+        "ide-extension",
+        "ci-adapter",
+        "hosted-checks"
+      ]
+    },
+    "candidateStatus": {
+      "type": "string",
+      "enum": ["in-scope-candidate", "out-of-scope-future-evidence"]
+    },
+    "capabilityTier": {
+      "type": "string",
+      "enum": ["full-plugin", "limited-adapter", "cli-first-fallback", "future-adapter-evidence"]
+    },
+    "distributionSurface": {
+      "type": "string",
+      "enum": [
+        "agent-cli-marketplace",
+        "command-hook-discovery",
+        "mcp-registry",
+        "skill-pack",
+        "first-party-cli",
+        "package-registry",
+        "manual",
+        "none",
+        "unknown",
+        "ide-extension-store",
+        "ci-platform"
+      ]
+    },
+    "cliManagementMode": {
+      "type": "string",
+      "enum": ["repo-pinned", "bundled", "bootstrap", "user-installed", "unsupported"]
+    },
+    "capabilityStatus": {
+      "type": "string",
+      "enum": ["yes", "partial", "no", "unknown"]
+    },
+    "fallbackBehavior": {
+      "type": "string",
+      "enum": ["supported", "hide", "disable", "cli-redirect", "advisory-only", "hard-error"]
+    },
+    "capabilityEntry": {
+      "type": "object",
+      "required": ["status", "fallback", "evidence_ids", "note"],
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/capabilityStatus"
+        },
+        "fallback": {
+          "$ref": "#/$defs/fallbackBehavior"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/stableId"
+          },
+          "uniqueItems": true
+        },
+        "note": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilitySet": {
+      "type": "object",
+      "required": [
+        "agent_cli_install_distribution",
+        "cli_bundling_bootstrap",
+        "filesystem_access",
+        "cli_invocation",
+        "cli_report_rendering",
+        "annotation_apis",
+        "background_runs",
+        "repair_action_ui",
+        "trace_deep_links"
+      ],
+      "properties": {
+        "agent_cli_install_distribution": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "cli_bundling_bootstrap": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "filesystem_access": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "cli_invocation": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "cli_report_rendering": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "annotation_apis": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "background_runs": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "repair_action_ui": {
+          "$ref": "#/$defs/capabilityEntry"
+        },
+        "trace_deep_links": {
+          "$ref": "#/$defs/capabilityEntry"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": [
+        "official-docs",
+        "source-release",
+        "marketplace-registry",
+        "maintainer-statement",
+        "local-reproduction"
+      ]
+    },
+    "evidenceFinding": {
+      "type": "string",
+      "enum": ["positive", "partial", "negative"]
+    },
+    "evidenceEntry": {
+      "type": "object",
+      "required": ["evidence_id", "source", "accessed_date", "source_type", "finding", "note"],
+      "properties": {
+        "evidence_id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "source": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "source_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "accessed_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "source_type": {
+          "$ref": "#/$defs/sourceType"
+        },
+        "finding": {
+          "$ref": "#/$defs/evidenceFinding"
+        },
+        "note": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stage9Consequence": {
+      "type": "string",
+      "enum": [
+        "proceed-full-plugin",
+        "proceed-limited-adapter",
+        "defer-stage9-cli-first",
+        "future-evidence-only"
+      ]
+    }
+  }
 }

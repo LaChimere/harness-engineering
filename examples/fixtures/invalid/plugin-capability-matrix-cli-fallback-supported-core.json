@@ -1,0 +1,122 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "matrix_id": "cli-fallback-supported-core-matrix",
+  "review_date": "2026-05-22",
+  "candidate_boundary": "Fixture for CLI-first fallback threshold validation.",
+  "capability_dimensions": [
+    "agent_cli_install_distribution",
+    "cli_bundling_bootstrap",
+    "filesystem_access",
+    "cli_invocation",
+    "cli_report_rendering",
+    "annotation_apis",
+    "background_runs",
+    "repair_action_ui",
+    "trace_deep_links"
+  ],
+  "hosts": [
+    {
+      "schema_version": "0.1.0",
+      "x-stability": "provisional",
+      "capability_id": "underclaimed-host",
+      "host": { "id": "underclaimed-host", "name": "Underclaimed Host", "vendor": "Fixture" },
+      "surface_kind": "agent-cli-marketplace-plugin",
+      "candidate_status": "in-scope-candidate",
+      "tier": "cli-first-fallback",
+      "distribution_surface": "agent-cli-marketplace",
+      "cli_management_modes": ["repo-pinned", "bootstrap", "user-installed"],
+      "capabilities": {
+        "agent_cli_install_distribution": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "cli_bundling_bootstrap": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "filesystem_access": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "cli_invocation": {
+          "status": "yes",
+          "fallback": "supported",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "cli_report_rendering": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "annotation_apis": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "background_runs": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "repair_action_ui": {
+          "status": "partial",
+          "fallback": "advisory-only",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        },
+        "trace_deep_links": {
+          "status": "partial",
+          "fallback": "cli-redirect",
+          "evidence_ids": ["underclaimed-evidence"],
+          "note": "Fixture."
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "underclaimed-evidence",
+          "source": "plans/harness-engineering-platform/todo.md",
+          "accessed_date": "2026-05-22",
+          "source_type": "local-reproduction",
+          "finding": "partial",
+          "note": "Fixture evidence."
+        }
+      ],
+      "stage9_consequence": "defer-stage9-cli-first",
+      "stage9_scope_summary": "Fixture deliberately labels supported core capabilities as CLI-first fallback."
+    }
+  ],
+  "schema_revalidation": {
+    "plugin_capability": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    },
+    "repair_action": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    },
+    "adapter_scope_metadata": {
+      "conclusion": "not-applicable",
+      "required_changes": ["none"],
+      "note": "Fixture."
+    }
+  },
+  "decision": {
+    "selected_host_id": null,
+    "selected_tier": "cli-first-fallback",
+    "stage9_consequence": "defer-stage9-cli-first",
+    "rationale": "Fixture keeps selection null while the host itself underclaims its tier."
+  }
+}

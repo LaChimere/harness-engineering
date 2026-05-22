@@ -88,6 +88,14 @@ SPAR review refined the correction further:
 
 The historical process correction is also recorded in `plans/harness-engineering-platform/lessons.md`; `design.md`, `plan.md`, and `todo.md` remain the execution source of truth.
 
+Stage 8 implementation result:
+
+- The durable matrix lives at `examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json`.
+- Evaluated in-scope hosts are OpenAI Codex CLI, Anthropic Claude Code, GitHub Copilot CLI, and Google Gemini CLI.
+- Codex CLI, Claude Code, and GitHub Copilot CLI reach **limited adapter** tier; Gemini CLI remains **CLI-first fallback** because bootstrap and background-agent support are only partial.
+- GitHub Copilot CLI is selected as the first limited-adapter target because it has the strongest evidence for agent/CLI marketplace plugin distribution, CLI bootstrap, hooks, MCP/skills, background runs, and repair approval while keeping annotation and trace deep-link behavior advisory.
+- Stage 9 must not claim full plugin UX unless a future Stage 8 update proves every rich UX capability for a full-plugin host.
+
 ## Resolved design direction
 
 The design artifact resolves the main unknowns as follows:
@@ -107,7 +115,7 @@ Use a north-star layered model:
 
 - **Tier 0: Harness-as-code substrate** — `harness.yaml`, schemas, examples, artifact conventions, and versioning.
 - **Tier 1: Deterministic CLI tooling** — `init`, `validate`, `migrate`, `run`, `doctor`, `eval run`, `trace validate/import`, `verify`, `gc`, and `report`.
-- **Tier 2: Agent/CLI marketplace plugins** — preferred guided UX where a coding-agent marketplace surface can distribute the plugin and host APIs support repo discovery, report rendering, annotations, and repair actions; limited adapters stay explicitly limited when that full UX is not proven.
+- **Tier 2: Agent/CLI marketplace adapters** — preferred guided UX where a coding-agent marketplace surface can distribute the adapter and host APIs support repo discovery, report rendering, annotations, and repair actions; limited adapters stay explicitly limited when that full UX is not proven.
 - **Tier 3: Portable skills** — fallback agent adapters that consume substrate evidence and delegate work.
 - **Tier 4: Optional CI adapters** — blocking or advisory checks for teams that want enforcement.
 - **Tier 5: Recurring profiles** — entropy auditor, doc gardener, eval curator, trace reviewer, and similar maintenance loops.

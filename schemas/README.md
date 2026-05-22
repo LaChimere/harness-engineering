@@ -1,6 +1,6 @@
 # Harness schema conventions
 
-Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 7 now consumes the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas through deterministic CLI commands and offline report validation.
+Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 7 consumes the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas through deterministic CLI commands and offline report validation. Stage 8 revalidates the provisional plugin-capability and repair-action posture through an agent/CLI capability matrix before any Stage 9 adapter consumes it.
 
 All schemas use JSON Schema draft 2020-12 and local relative `$ref` links. Validation tools should load every file in `schemas/` into an offline registry keyed by each schema's versioned `$id`; validation must not require network access.
 
@@ -16,6 +16,8 @@ engines:
 ```
 
 The schema validates artifact shape; the CLI enforces compatibility ranges and migration rules. Canonical schema IDs include the schema family version, for example `https://lachimere.github.io/harness-engineering/schemas/0.1/harness.schema.json`; future releases may add aliases, but validation must resolve the versioned IDs offline.
+
+Schemas marked `x-stability: provisional` are still allowed to evolve within the unreleased `0.1` family while this platform is being built. Consumers that depend on a provisional schema shape should pin a repository commit as well as a schema range until a stable schema family is published.
 
 ## Composition
 
@@ -49,9 +51,17 @@ Scoreboards summarize agent-run ledgers by optimization/holdout split and total 
 
 `run-result.schema.json` can link judge results through `judge_results`, but Stage 7 does not fold judge findings into `status`, `execution.verifier_status`, `verifier_result`, or scoreboard failure buckets. Later optional CI/plugin adapters must use the same policy/result artifacts if they choose to display or enforce calibrated judge output.
 
+## Agent/CLI adapter feasibility
+
+Stage 8 adds `plugin-capability-matrix.schema.json` as the durable feasibility artifact for agent/CLI marketplace or install surfaces. Matrix rows reuse `plugin-capability.schema.json` so per-host capability evidence has one schema-backed shape. The matrix records stable `evidence_id` values, capability statuses (`yes`, `partial`, `no`, `unknown`), fallback behavior, CLI management modes, capability tier, and Stage 9 consequence for each evaluated host.
+
+`examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json` records the Stage 8 decision: Codex CLI, Claude Code, and GitHub Copilot CLI reach limited-adapter tier; Gemini CLI remains CLI-first fallback because bootstrap and background-agent support are not proven enough for limited-adapter scope. GitHub Copilot CLI is selected as the first limited-adapter target. No full-plugin target is claimed; under current evidence, full-plugin remains aspirational until every rich UX capability is proven.
+
+`repair-action.schema.json` remains provisional. Stage 8 keeps preview-backed repair actions separate from limited-adapter advisory repair behavior; Stage 9 must extend repair or adapter-scope metadata before any host surface executes write-class repairs.
+
 ## Taxonomies
 
-`failure-taxonomy.schema.json` validates taxonomy structure. The starter taxonomy data lives in `examples/failure-taxonomy.yaml` and is checked by the Stage 2 fixture validator so future taxonomy content can evolve through data and CLI checks rather than by rewriting the structural schema.
+`failure-taxonomy.schema.json` validates taxonomy structure. The starter taxonomy data lives in `examples/failure-taxonomy.yaml` and is checked by the fixture validator so future taxonomy content can evolve through data and CLI checks rather than by rewriting the structural schema.
 
 `gc-evidence.schema.json` intentionally starts with a closed deterministic category set: `broken-reference`, `duplicate-id`, and `stale-schema-version`. New GC categories should be added through a schema-versioned change with fixtures, algorithms, and false-positive policy.
 
@@ -59,7 +69,7 @@ Stage 15 GC expansion depends on this Stage 7 judge calibration policy before an
 
 ## Fixture validation
 
-Stage 2 ships canonical valid examples and focused invalid fixtures. Install validator dependencies outside the repository and run:
+Schema stages ship canonical valid examples, focused invalid fixtures, and custom semantic checks for invariants that JSON Schema cannot express. Stage 8 matrix custom checks are mandatory for consumers because they validate selected-host consistency, evidence-id references, tier thresholds, and out-of-scope surface boundaries that plain JSON Schema cannot fully express. Install validator dependencies outside the repository and run:
 
 ```bash
 python3 -m pip install --target /tmp/harness-schema-validation -r examples/fixtures/requirements.txt

@@ -1,6 +1,6 @@
 # Harness schema conventions
 
-Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 7 consumes the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas through deterministic CLI commands and offline report validation. Stage 8 revalidates the provisional plugin-capability and repair-action posture through an agent/CLI capability matrix before any Stage 9 adapter consumes it. Stage 9 adds an adapter-scope manifest and subset validator for the selected limited-adapter target without making the adapter a separate source of truth.
+Stage 2 defines the machine-checkable substrate before any CLI, plugin, CI adapter, or skill consumes it. Stage 7 consumes the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas through deterministic CLI commands and offline report validation. Stage 8 revalidates the provisional plugin-capability and repair-action posture through an agent/CLI capability matrix before any Stage 9 adapter consumes it. Stage 9 adds an adapter-scope manifest and subset validator for the selected limited-adapter target without making the adapter a separate source of truth. Stage 10 consumes the existing continuity-state and self-verification schemas as the native execution-loop evidence contract rather than adding a skill-only artifact shape.
 
 All schemas use JSON Schema draft 2020-12 and local relative `$ref` links. Validation tools should load every file in `schemas/` into an offline registry keyed by each schema's versioned `$id`; validation must not require network access.
 
@@ -61,6 +61,12 @@ Stage 9 adds `adapter-scope.schema.json` and the canonical `examples/adapters/gi
 
 `repair-action.schema.json` remains provisional, but now distinguishes `repair_mode: preview-backed` from `repair_mode: advisory-only`. Preview-backed repair actions still require `preview_diff`; advisory-only repairs omit preview diffs, include an advisory block, and redirect write execution to equivalent CLI commands.
 
+## Execution-loop evidence
+
+Stage 10 does not add a new execution-loop schema. Instead, `harness loop validate` composes existing substrate artifacts: `harness.yaml` references approval and sandbox policy artifacts; continuity state records startup verification, progress, git checkpoint, and handoff links; self-verification evidence records spec rereads, acceptance checks, command evidence, artifacts, and unresolved risks.
+
+The native loop gate requires recorded evidence rather than inferred agent behavior. Startup validation requires a passed startup verification command matching `harness.continuity.startup_smoke_test`, linked self-verification evidence, and a progress log recording startup before later work. Completion validation additionally requires passed self-verification evidence with required acceptance-check IDs for original spec reread, acceptance-criteria comparison, approval policy handling, sandbox policy handling, startup continuity update, and handoff readiness; evidence links to the approval and sandbox policy artifacts; and recorded passed `harness validate` and `harness doctor` checks whose command strings start with recognized harness invocations. External skills such as `agent-coding` `execute-plan-loop` may produce these same artifacts, but they remain adapters over the schemas and CLI rather than separate sources of truth.
+
 ## Taxonomies
 
 `failure-taxonomy.schema.json` validates taxonomy structure. The starter taxonomy data lives in `examples/failure-taxonomy.yaml` and is checked by the fixture validator so future taxonomy content can evolve through data and CLI checks rather than by rewriting the structural schema.
@@ -71,11 +77,11 @@ Stage 15 GC expansion depends on this Stage 7 judge calibration policy before an
 
 ## Fixture validation
 
-Schema stages ship canonical valid examples, focused invalid fixtures, and custom semantic checks for invariants that JSON Schema cannot express. Stage 8 matrix custom checks are mandatory for consumers because they validate selected-host consistency, evidence-id references, tier thresholds, and out-of-scope surface boundaries that plain JSON Schema cannot fully express. Stage 9 adapter-scope custom checks are mandatory because they validate selected-host alignment, capability subset claims, CLI-management-mode subsets, evidence-id references, write-class limits, and non-authoritative adapter state. Install validator dependencies outside the repository and run:
+Schema stages ship canonical valid examples, focused invalid fixtures, and custom semantic checks for invariants that JSON Schema cannot express. Stage 8 matrix custom checks are mandatory for consumers because they validate selected-host consistency, evidence-id references, tier thresholds, and out-of-scope surface boundaries that plain JSON Schema cannot fully express. Stage 9 adapter-scope custom checks are mandatory because they validate selected-host alignment, capability subset claims, CLI-management-mode subsets, evidence-id references, write-class limits, and non-authoritative adapter state. Stage 10 execution-loop semantic negatives under `examples/fixtures/execution-loop/` are registered as schema-valid artifacts in the manifest, then rejected by `harness loop validate` CLI tests. Completion `spec_reread.status` remains recorded self-verification evidence; Stage 10 does not infer the original spec path from `harness.yaml`. Install validator dependencies outside the repository and run:
 
 ```bash
-python3 -m pip install --target /tmp/harness-schema-validation -r examples/fixtures/requirements.txt
-PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py
+python3 -m pip install --target "${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" -r examples/fixtures/requirements.txt
+PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py
 ```
 
 The validator uses `jsonschema` draft 2020-12 with format assertions enabled and an offline registry populated from local schema files.

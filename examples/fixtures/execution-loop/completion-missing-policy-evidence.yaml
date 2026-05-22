@@ -1,0 +1,52 @@
+schema_version: "0.1.0"
+verification_id: stage10-completion-missing-policy-evidence
+spec_ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+spec_reread:
+  ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+  timestamp: "2026-05-21T00:20:00Z"
+  digest: sha256:b9dd75047643888cf9a1a8cef4ed62c1c62c518d98dd086d7a2dd291b8397f08
+  status: matched
+acceptance_checks:
+  - id: original-spec-reread
+    expected: Completion evidence records that the original Stage 10 spec was reread.
+    actual: spec_reread.status is matched for the Stage 10 plan reference.
+    status: passed
+  - id: acceptance-criteria-compared
+    expected: Completion evidence compares the Stage 10 acceptance criteria before completion.
+    actual: Policy evidence is missing, so completion must be refused.
+    status: passed
+  - id: approval-policy-followed-or-escalated
+    expected: Approval policy decisions are read and either followed or explicitly escalated.
+    actual: This fixture omits the policy artifact link even though it claims policy handling.
+    status: passed
+  - id: sandbox-policy-followed-or-escalated
+    expected: Sandbox policy decisions are read and either followed or explicitly escalated.
+    actual: This fixture omits the policy artifact link even though it claims policy handling.
+    status: passed
+  - id: startup-verification-recorded
+    expected: Startup verification runs before work begins and is recorded in continuity state.
+    actual: examples/continuity/stage10-loop-state.yaml records startup verification.
+    status: passed
+  - id: handoff-artifact-ready
+    expected: Long-running work has a handoff artifact before completion is claimed.
+    actual: Continuity state links plans/harness-engineering-platform/todo.md.
+    status: passed
+checks_run:
+  - command:
+      command: harness validate examples/harness.yaml
+      timeout_seconds: 300
+    status: passed
+  - command:
+      command: harness doctor --file examples/harness.yaml
+      timeout_seconds: 300
+    status: passed
+artifacts:
+  - path: src/commands/loop.ts
+    media_type: text/typescript
+    description: Native execution-loop CLI command.
+unresolved_risks:
+  - Approval and sandbox policy evidence is missing.
+evidence_links:
+  - path: examples/continuity/stage10-loop-state.yaml
+    media_type: application/yaml
+    description: Continuity state consumed by the loop validator.

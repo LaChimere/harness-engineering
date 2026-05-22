@@ -6,15 +6,15 @@ The product goal is a versioned harness substrate that makes agent work reproduc
 
 ## Current status
 
-This repository has completed the Stage 9 adapter-scope validation slice for the Stage 8-selected target. It has not shipped an installable adapter package.
+This repository has completed the Stage 10 native execution-loop validation slice. It has not shipped an installable adapter package or live agent runtime.
 
-The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. Stage 8 selected GitHub Copilot CLI as the first **limited adapter** target, not a full-plugin target. Stage 9 now adds an adapter-scope manifest and `harness adapter validate`; no installable host package, CI adapter, native skill adapter, or live model runner is available from this repository today.
+The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. Stage 8 selected GitHub Copilot CLI as the first **limited adapter** target, not a full-plugin target. Stage 9 adds an adapter-scope manifest and `harness adapter validate`; Stage 10 adds `harness loop validate` over continuity and self-verification evidence. No installable host package, CI adapter, native skill adapter, or live model runner is available from this repository today.
 
 ## Entrypoint matrix
 
 | Entrypoint | Status now | Intended role | First stage that makes it concrete |
 |---|---|---|---|
-| CLI plus `harness.yaml` | Initial Stage 9 CLI exists locally with `init`, `adapter validate`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, future GC, adapter-scope checks, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization; Stage 7 implements inferential judge policy validation; Stage 9 validates limited-adapter scope. |
+| CLI plus `harness.yaml` | Initial Stage 10 CLI exists locally with `init`, `adapter validate`, `loop validate`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, execution-loop evidence gates, future GC, adapter-scope checks, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization; Stage 7 implements inferential judge policy validation; Stage 9 validates limited-adapter scope; Stage 10 validates execution-loop evidence gates. |
 | Agent/CLI marketplace adapter or plugin | Stage 9 ships a GitHub Copilot CLI limited-adapter scope manifest and validator. No installable host package is shipped yet, so users cannot enable an adapter runtime from this repository today. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Stage 8 verified feasibility; Stage 9 may ship only the proven limited adapter scope. |
 | `agent-coding` skills compatibility | External migration-source evidence. Compatibility is not audited yet. | Portable fallback or compatibility path after the substrate exists and each skill is classified. | Stage 13. |
 | CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Stage 11. |
@@ -25,6 +25,7 @@ Until a real agent/CLI full-plugin tier is verified and shipped, the public path
 bun run build
 node dist/index.js validate examples/harness.yaml
 node dist/index.js adapter validate
+node dist/index.js loop validate --file examples/harness.yaml --continuity examples/continuity/stage10-loop-state.yaml --verification examples/verification/stage10-completion.yaml
 node dist/index.js doctor --file examples/harness.yaml
 node dist/index.js run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
 node dist/index.js eval validate --file examples/harness.yaml
@@ -44,7 +45,7 @@ The npm package metadata and `harness` binary mapping exist, but the package has
 | Tier | Surface | Responsibility |
 |---|---|---|
 | 0 | Harness-as-code substrate | `harness.yaml`, schemas, examples, artifact conventions, and versioning. |
-| 1 | Deterministic CLI | Current `init`, `adapter validate`, `validate`, `migrate`, `run`, `doctor`, `eval`, `trace`, `verify`, and `report`; future `gc` remains planned for Stage 14. |
+| 1 | Deterministic CLI | Current `init`, `adapter validate`, `loop validate`, `validate`, `migrate`, `run`, `doctor`, `eval`, `trace`, `verify`, and `report`; future `gc` remains planned for Stage 14. |
 | 2 | Agent/CLI marketplace adapters | Rich guided UX only where a supported full-plugin host and runtime APIs exist; otherwise limited commands/hooks/MCP/skills over the CLI when proven feasible. |
 | 3 | Portable skills | Agent-facing adapters that consume substrate artifacts. |
 | 4 | Optional CI adapters | Objective enforcement or advisory checks for teams that opt in. |
@@ -97,4 +98,4 @@ The approved roadmap lives in:
 - `plans/harness-engineering-platform/plan.md`
 - `plans/harness-engineering-platform/todo.md`
 
-Stages 1 through 8 are implemented in the current roadmap. Stage 9 has a schema-backed GitHub Copilot CLI limited-adapter scope manifest and validator; installable host packaging and runtime enablement remain constrained by future evidence about the host distribution format.
+Stages 1 through 10 are implemented in the current roadmap. Stage 9 has a schema-backed GitHub Copilot CLI limited-adapter scope manifest and validator; Stage 10 adds native execution-loop startup/completion gate validation over continuity and self-verification evidence. Installable host packaging, runtime enablement, CI enforcement, and live model execution remain constrained by later stages and future host evidence.

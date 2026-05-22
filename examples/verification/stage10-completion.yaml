@@ -1,0 +1,77 @@
+schema_version: "0.1.0"
+verification_id: stage10-completion
+spec_ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+spec_reread:
+  ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+  timestamp: "2026-05-21T00:20:00Z"
+  digest: sha256:b9dd75047643888cf9a1a8cef4ed62c1c62c518d98dd086d7a2dd291b8397f08
+  status: matched
+acceptance_checks:
+  - id: original-spec-reread
+    expected: Completion evidence records that the original Stage 10 spec was reread.
+    actual: spec_reread.status is matched for the Stage 10 plan reference.
+    status: passed
+  - id: acceptance-criteria-compared
+    expected: Completion evidence compares the Stage 10 acceptance criteria before completion.
+    actual: This evidence includes passed acceptance checks for startup, policy, sandbox, verification, and handoff gates.
+    status: passed
+  - id: approval-policy-followed-or-escalated
+    expected: Approval policy decisions are read and either followed or explicitly escalated.
+    actual: examples/policies/approval-policy.yaml was read and the loop evidence records no pending approval escalation.
+    status: passed
+  - id: sandbox-policy-followed-or-escalated
+    expected: Sandbox policy decisions are read and either followed or explicitly escalated.
+    actual: examples/policies/sandbox-policy.yaml was read and the loop evidence records the declared worktree tier.
+    status: passed
+  - id: startup-verification-recorded
+    expected: Startup verification runs before work begins and is recorded in continuity state.
+    actual: examples/continuity/stage10-loop-state.yaml records the passed startup self-verification as the first progress event.
+    status: passed
+  - id: handoff-artifact-ready
+    expected: Long-running work has a handoff artifact before completion is claimed.
+    actual: Continuity state links plans/harness-engineering-platform/todo.md as the handoff artifact.
+    status: passed
+checks_run:
+  - command:
+      command: harness validate examples/harness.yaml
+      timeout_seconds: 300
+    status: passed
+    evidence:
+      - path: examples/harness.yaml
+        media_type: application/yaml
+        description: Harness file validated for completion.
+  - command:
+      command: harness doctor --file examples/harness.yaml
+      timeout_seconds: 300
+    status: passed
+    evidence:
+      - path: examples/doctor/results/pass.json
+        media_type: application/json
+        description: Passing doctor-result evidence.
+artifacts:
+  - path: src/commands/loop.ts
+    media_type: text/typescript
+    description: Native execution-loop CLI command.
+  - path: src/lib/execution-loop.ts
+    media_type: text/typescript
+    description: Native execution-loop semantic gate implementation.
+  - path: examples/continuity/stage10-loop-state.yaml
+    media_type: application/yaml
+    description: Continuity state consumed by the loop validator.
+unresolved_risks: []
+evidence_links:
+  - path: examples/policies/approval-policy.yaml
+    media_type: application/yaml
+    description: Approval policy read before completion.
+  - path: examples/policies/sandbox-policy.yaml
+    media_type: application/yaml
+    description: Sandbox policy read before completion.
+  - path: examples/verification/stage10-startup.yaml
+    media_type: application/yaml
+    description: Startup self-verification evidence consumed by continuity state.
+  - path: examples/continuity/stage10-loop-state.yaml
+    media_type: application/yaml
+    description: Continuity state with startup and completion progress evidence.
+  - path: plans/harness-engineering-platform/todo.md#stage-10-native-execution-loop-and-continuity-adapter
+    media_type: text/markdown
+    description: Stage 10 execution checklist.

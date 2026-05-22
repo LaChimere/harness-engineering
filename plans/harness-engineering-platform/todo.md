@@ -372,31 +372,33 @@ Verification evidence:
 
 ## Stage 10: Native execution loop and continuity adapter
 
-- [ ] Define native implementation-loop contract or adapter.
-- [ ] Read `harness.yaml`.
-- [ ] Read approval policy.
-- [ ] Read sandbox policy.
-- [ ] Read continuity schema.
-- [ ] Read self-verification evidence schema.
-- [ ] Require original spec reread before completion.
-- [ ] Compare acceptance criteria before completion.
-- [ ] Run relevant CLI and doctor checks.
-- [ ] Capture evidence paths.
-- [ ] Update continuity state.
-- [ ] Define startup verification.
-- [ ] Run startup verification before work begins.
-- [ ] Record startup verification in continuity state.
-- [ ] Define handoff expectations.
-- [ ] Document how external `agent-coding` `execute-plan-loop` can consume the same evidence.
-- [ ] Add tests/fixtures for failed startup verification and failed completion gates.
-- [ ] Run `git diff --check`.
+- [x] Define native implementation-loop contract or adapter.
+- [x] Read `harness.yaml`.
+- [x] Read approval policy.
+- [x] Read sandbox policy.
+- [x] Read continuity schema.
+- [x] Read self-verification evidence schema.
+- [x] Require original spec reread before completion.
+- [x] Compare acceptance criteria before completion.
+- [x] Run relevant CLI and doctor checks.
+- [x] Capture evidence paths.
+- [x] Update continuity state.
+- [x] Define startup verification.
+- [x] Run startup verification before work begins.
+- [x] Record startup verification in continuity state.
+- [x] Define handoff expectations.
+- [x] Document how external `agent-coding` `execute-plan-loop` can consume the same evidence.
+- [x] Add tests/fixtures for failed startup verification and failed completion gates.
+- [x] Run `git diff --check`.
+
+Evidence: `harness loop validate` validates Stage 10 startup and completion gates over `harness.yaml`, approval/sandbox policy references, continuity state, and self-verification evidence without adding a new skill-only artifact shape. Positive examples live at `examples/continuity/stage10-loop-state.yaml`, `examples/verification/stage10-startup.yaml`, and `examples/verification/stage10-completion.yaml`; semantic-negative fixtures under `examples/fixtures/execution-loop/` prove refusal for failed startup, missing startup progress, late startup, startup command/timeout mismatch, failed startup self-verification, missing startup command evidence, failed completion evidence, wrapped command evidence, missing doctor evidence, missing policy/sandbox artifact evidence, missing handoff artifacts, and unlinked completion evidence. Verified with `bun run check`, `bun run test:unit`, `bun run build`, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, `git diff --check`, `node dist/index.js loop validate --file examples/harness.yaml --continuity examples/continuity/stage10-loop-state.yaml --verification examples/verification/stage10-completion.yaml`, `node dist/index.js doctor --file examples/harness.yaml`, and `node dist/index.js adapter validate`.
 
 ### Stage 10 acceptance criteria
 
-- [ ] Execution loop cannot claim completion without substrate-aware verification evidence.
-- [ ] Approval/sandbox policy decisions are read and either followed or explicitly escalated.
-- [ ] Startup verification runs before work begins and records the result in continuity state.
-- [ ] Fixtures demonstrate the execution loop refusing to start or complete when startup verification or completion-gate evidence fails.
+- [x] Execution loop cannot claim completion without substrate-aware verification evidence.
+- [x] Approval/sandbox policy decisions are read and either followed or explicitly escalated.
+- [x] Startup verification runs before work begins and records the result in continuity state.
+- [x] Fixtures demonstrate the execution loop refusing to start or complete when startup verification or completion-gate evidence fails.
 
 ## Stage 11: Optional CI adapters
 

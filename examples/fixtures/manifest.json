@@ -53,11 +53,87 @@
       "schema": "schemas/continuity-state.schema.json"
     },
     {
+      "path": "examples/continuity/stage10-loop-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-failed-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-after-work-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/empty-progress.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-self-verification-failed-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-command-not-run-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-command-mismatch-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-timeout-mismatch-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/completion-unlinked-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/completion-missing-handoff-state.yaml",
+      "schema": "schemas/continuity-state.schema.json"
+    },
+    {
       "path": "examples/verification/self-verification.yaml",
       "schema": "schemas/self-verification.schema.json"
     },
     {
       "path": "examples/verification/stage3-self-verification.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/verification/stage10-startup.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/verification/stage10-completion.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-self-verification-failed.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/startup-command-not-run.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/completion-failed-acceptance.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/completion-failed-check.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/completion-missing-doctor.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/completion-wrapped-command.yaml",
+      "schema": "schemas/self-verification.schema.json"
+    },
+    {
+      "path": "examples/fixtures/execution-loop/completion-missing-policy-evidence.yaml",
       "schema": "schemas/self-verification.schema.json"
     },
     {

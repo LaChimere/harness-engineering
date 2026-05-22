@@ -1,0 +1,35 @@
+schema_version: "0.1.0"
+session_id: harness-stage10-startup-after-work
+feature_list:
+  - id: native-execution-loop
+    title: Define the native execution-loop validation contract.
+    status: in-progress
+progress_log:
+  - timestamp: "2026-05-21T00:00:00Z"
+    event: Implementation work started before startup verification.
+    refs:
+      - path: plans/harness-engineering-platform/todo.md
+        media_type: text/markdown
+        description: Stage 10 work log.
+  - timestamp: "2026-05-21T00:10:00Z"
+    event: Startup verification recorded too late.
+    refs:
+      - path: examples/verification/stage10-startup.yaml
+        media_type: application/yaml
+        description: Startup self-verification evidence.
+startup_verification:
+  status: passed
+  command:
+    command: harness validate
+    timeout_seconds: 300
+  evidence:
+    - path: examples/verification/stage10-startup.yaml
+      media_type: application/yaml
+      description: Startup self-verification evidence.
+  self_verification_ref: examples/verification/stage10-startup.yaml
+git_checkpoint_sha: 085cf51
+handoff_artifacts:
+  - path: plans/harness-engineering-platform/todo.md
+    media_type: text/markdown
+    description: Execution status for future sessions.
+unresolved_risks: []

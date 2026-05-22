@@ -1,0 +1,31 @@
+schema_version: "0.1.0"
+verification_id: stage10-startup
+spec_ref: examples/harness.yaml
+spec_reread:
+  ref: examples/harness.yaml
+  timestamp: "2026-05-21T00:00:00Z"
+  digest: sha256:39f8c39b10469a031b2f2b66747ef5615ef2dbf51a0857c1c550e11510a3c85b
+  status: matched
+acceptance_checks:
+  - id: startup-smoke-test-passed
+    expected: The harness startup smoke test passes before implementation work begins.
+    actual: harness validate passed and continuity state records this startup evidence.
+    status: passed
+checks_run:
+  - command:
+      command: harness validate
+      timeout_seconds: 300
+    status: passed
+    evidence:
+      - path: examples/harness.yaml
+        media_type: application/yaml
+        description: Harness file consumed by the startup smoke test.
+artifacts:
+  - path: examples/harness.yaml
+    media_type: application/yaml
+    description: Harness file validated by the startup smoke test.
+unresolved_risks: []
+evidence_links:
+  - path: examples/harness.yaml
+    media_type: application/yaml
+    description: Startup verification input.

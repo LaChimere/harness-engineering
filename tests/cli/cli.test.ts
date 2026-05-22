@@ -256,6 +256,358 @@ test('adapter validate rejects scope and matrix paths that escape root', async (
   expect(result.stderr).toContain('Adapter scope escapes root');
 });
 
+test('loop validate accepts Stage 10 start and complete gates', async () => {
+  const startResult = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+  ]);
+  expect(startResult.code).toBe(ExitCode.ok);
+  expect(startResult.stdout).toContain('harness loop validate ok');
+  expect(startResult.stdout).toContain('phase: start');
+  expect(startResult.stdout).toContain('gates: startup=passed');
+
+  const completeResult = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+    '--verification',
+    'examples/verification/stage10-completion.yaml',
+  ]);
+  expect(completeResult.code).toBe(ExitCode.ok);
+  expect(completeResult.stdout).toContain('phase: complete');
+  expect(completeResult.stdout).toContain('approval policy: default-approval');
+  expect(completeResult.stdout).toContain('sandbox policy: default-sandbox (worktree)');
+  expect(completeResult.stdout).toContain('gates: startup=passed, completion=passed');
+
+  const absoluteVerificationResult = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+    '--verification',
+    join(process.cwd(), 'examples/verification/stage10-completion.yaml'),
+  ]);
+  expect(absoluteVerificationResult.code).toBe(ExitCode.ok);
+  expect(absoluteVerificationResult.stdout).toContain(
+    'completion verification: examples/verification/stage10-completion.yaml',
+  );
+});
+
+test('loop validate refuses to start when startup verification failed', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/startup-failed-state.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_STARTUP_NOT_PASSED');
+});
+
+test('loop validate refuses startup evidence recorded after work began', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/startup-after-work-state.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_STARTUP_PROGRESS_ORDER');
+});
+
+test('loop validate refuses startup evidence missing from progress log', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/empty-progress.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_STARTUP_PROGRESS_MISSING');
+});
+
+test('loop validate refuses startup when linked self-verification fails', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/startup-self-verification-failed-state.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_ACCEPTANCE_CHECK_NOT_PASSED');
+});
+
+test('loop validate refuses startup when self-verification omits startup command', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/startup-command-not-run-state.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_STARTUP_COMMAND_NOT_RUN');
+});
+
+test('loop validate refuses startup command and timeout mismatches against harness', async () => {
+  const commandMismatch = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/startup-command-mismatch-state.yaml',
+  ]);
+  expect(commandMismatch.code).toBe(ExitCode.validationError);
+  expect(commandMismatch.stdout).toContain('LOOP_STARTUP_COMMAND_MISMATCH');
+
+  const timeoutMismatch = await run([
+    'loop',
+    'validate',
+    '--phase',
+    'start',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/startup-timeout-mismatch-state.yaml',
+  ]);
+  expect(timeoutMismatch.code).toBe(ExitCode.validationError);
+  expect(timeoutMismatch.stdout).toContain('LOOP_STARTUP_TIMEOUT_MISMATCH');
+});
+
+test('loop validate refuses completion when acceptance evidence fails', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+    '--verification',
+    'examples/fixtures/execution-loop/completion-failed-acceptance.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_ACCEPTANCE_CHECK_NOT_PASSED');
+});
+
+test('loop validate refuses completion when required check evidence fails', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+    '--verification',
+    'examples/fixtures/execution-loop/completion-failed-check.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_CHECK_NOT_PASSED');
+});
+
+test('loop validate refuses completion without required doctor evidence', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+    '--verification',
+    'examples/fixtures/execution-loop/completion-missing-doctor.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_REQUIRED_CHECK_MISSING');
+  expect(result.stdout).toContain('harness doctor');
+});
+
+test('loop validate refuses wrapped command strings as required check evidence', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+    '--verification',
+    'examples/fixtures/execution-loop/completion-wrapped-command.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_REQUIRED_CHECK_MISSING');
+  expect(result.stdout).toContain('harness validate');
+  expect(result.stdout).toContain('harness doctor');
+});
+
+test('loop validate refuses completion without policy and sandbox artifact evidence', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+    '--verification',
+    'examples/fixtures/execution-loop/completion-missing-policy-evidence.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_POLICY_EVIDENCE_MISSING');
+  expect(result.stdout).toContain('approval policy artifact');
+  expect(result.stdout).toContain('sandbox policy artifact');
+});
+
+test('loop validate refuses completion without handoff artifacts', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/completion-missing-handoff-state.yaml',
+    '--verification',
+    'examples/verification/stage10-completion.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_HANDOFF_MISSING');
+});
+
+test('loop validate refuses completion when continuity does not link completion evidence', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/fixtures/execution-loop/completion-unlinked-state.yaml',
+    '--verification',
+    'examples/verification/stage10-completion.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stdout).toContain('LOOP_COMPLETION_PROGRESS_MISSING');
+});
+
+test('loop validate requires completion verification evidence for complete phase', async () => {
+  const result = await run([
+    'loop',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--continuity',
+    'examples/continuity/stage10-loop-state.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('requires --verification');
+});
+
+test('loop validate rejects continuity and verification paths that escape root', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  await mkdir(root);
+  await run(['init'], root);
+  await writeFile(
+    join(parent, 'continuity.yaml'),
+    await readFile('examples/continuity/stage10-loop-state.yaml', 'utf8'),
+  );
+
+  const continuityEscape = await run(
+    ['loop', 'validate', '--phase', 'start', '--continuity', '../continuity.yaml'],
+    root,
+  );
+  expect(continuityEscape.code).toBe(ExitCode.usageError);
+  expect(continuityEscape.stderr).toContain('Continuity state escapes root');
+
+  await copyStage10LoopArtifacts(root);
+  await writeFile(
+    join(parent, 'completion.yaml'),
+    await readFile('examples/verification/stage10-completion.yaml', 'utf8'),
+  );
+  const verificationEscape = await run(
+    [
+      'loop',
+      'validate',
+      '--continuity',
+      'examples/continuity/stage10-loop-state.yaml',
+      '--verification',
+      '../completion.yaml',
+    ],
+    root,
+  );
+  expect(verificationEscape.code).toBe(ExitCode.usageError);
+  expect(verificationEscape.stderr).toContain('Completion self-verification escapes root');
+});
+
+test('loop validate rejects symlinked continuity and verification inputs', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  const outside = join(parent, 'outside');
+  await mkdir(root);
+  await mkdir(outside);
+  await run(['init'], root);
+  await copyStage10LoopArtifacts(root);
+  await writeFile(
+    join(outside, 'continuity.yaml'),
+    await readFile('examples/continuity/stage10-loop-state.yaml', 'utf8'),
+  );
+  await writeFile(
+    join(outside, 'completion.yaml'),
+    await readFile('examples/verification/stage10-completion.yaml', 'utf8'),
+  );
+  await symlink(join(outside, 'continuity.yaml'), join(root, 'continuity-link.yaml'));
+  await symlink(join(outside, 'completion.yaml'), join(root, 'completion-link.yaml'));
+
+  const symlinkedContinuity = await run(
+    ['loop', 'validate', '--phase', 'start', '--continuity', 'continuity-link.yaml'],
+    root,
+  );
+  expect(symlinkedContinuity.code).toBe(ExitCode.usageError);
+  expect(symlinkedContinuity.stderr).toContain('Refusing to read through symlink');
+
+  const symlinkedVerification = await run(
+    [
+      'loop',
+      'validate',
+      '--continuity',
+      'examples/continuity/stage10-loop-state.yaml',
+      '--verification',
+      'completion-link.yaml',
+    ],
+    root,
+  );
+  expect(symlinkedVerification.code).toBe(ExitCode.usageError);
+  expect(symlinkedVerification.stderr).toContain('Refusing to read through symlink');
+});
+
 test('verify consumes explicit verification evidence without requiring harness.yaml', async () => {
   const result = await run(['verify', '--spec', 'tests/cli/fixtures/verification-failed.yaml']);
   expect(result.code).toBe(ExitCode.validationError);
@@ -1506,6 +1858,9 @@ test('usage and missing input errors use stable exit codes', async () => {
 
   const help = await run(['help']);
   expect(help.code).toBe(ExitCode.ok);
+  expect(help.stdout).toContain(
+    'loop       Validate native execution-loop startup and completion gates.',
+  );
   expect(help.stdout).toContain('doctor     Run deterministic structural harness checks.');
   expect(help.stdout).toContain('run        Run deterministic stub agent tasks.');
   expect(help.stdout).toContain(
@@ -1519,6 +1874,19 @@ async function tempRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'harness-cli-test-'));
   tempRoots.push(root);
   return root;
+}
+
+async function copyStage10LoopArtifacts(root: string): Promise<void> {
+  await mkdir(join(root, 'examples/continuity'), { recursive: true });
+  await mkdir(join(root, 'examples/verification'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/continuity/stage10-loop-state.yaml'),
+    await readFile('examples/continuity/stage10-loop-state.yaml', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'examples/verification/stage10-startup.yaml'),
+    await readFile('examples/verification/stage10-startup.yaml', 'utf8'),
+  );
 }
 
 async function run(args: readonly string[], cwd = process.cwd()): Promise<RunResult> {

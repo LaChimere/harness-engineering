@@ -1,0 +1,29 @@
+schema_version: "0.1.0"
+session_id: harness-stage10-startup-command-mismatch
+feature_list:
+  - id: native-execution-loop
+    title: Define the native execution-loop validation contract.
+    status: in-progress
+progress_log:
+  - timestamp: "2026-05-21T00:00:00Z"
+    event: Stage 10 startup verification recorded a command that differs from harness.yaml.
+    refs:
+      - path: examples/fixtures/execution-loop/startup-command-not-run.yaml
+        media_type: application/yaml
+        description: Startup self-verification evidence.
+startup_verification:
+  status: passed
+  command:
+    command: harness doctor --file examples/harness.yaml
+    timeout_seconds: 300
+  evidence:
+    - path: examples/fixtures/execution-loop/startup-command-not-run.yaml
+      media_type: application/yaml
+      description: Startup self-verification evidence.
+  self_verification_ref: examples/fixtures/execution-loop/startup-command-not-run.yaml
+git_checkpoint_sha: 085cf51
+handoff_artifacts:
+  - path: plans/harness-engineering-platform/todo.md
+    media_type: text/markdown
+    description: Execution status for future sessions.
+unresolved_risks: []

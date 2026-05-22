@@ -1,0 +1,32 @@
+schema_version: "0.1.0"
+session_id: harness-stage10-completion-missing-handoff
+feature_list:
+  - id: native-execution-loop
+    title: Define the native execution-loop validation contract.
+    status: done
+progress_log:
+  - timestamp: "2026-05-21T00:00:00Z"
+    event: Stage 10 startup verification passed before implementation work began.
+    refs:
+      - path: examples/verification/stage10-startup.yaml
+        media_type: application/yaml
+        description: Startup self-verification evidence.
+  - timestamp: "2026-05-21T00:20:00Z"
+    event: Stage 10 completion verification evidence recorded before completion claim.
+    refs:
+      - path: examples/verification/stage10-completion.yaml
+        media_type: application/yaml
+        description: Completion self-verification evidence.
+startup_verification:
+  status: passed
+  command:
+    command: harness validate
+    timeout_seconds: 300
+  evidence:
+    - path: examples/verification/stage10-startup.yaml
+      media_type: application/yaml
+      description: Startup self-verification evidence.
+  self_verification_ref: examples/verification/stage10-startup.yaml
+git_checkpoint_sha: 085cf51
+handoff_artifacts: []
+unresolved_risks: []

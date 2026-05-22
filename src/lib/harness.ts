@@ -4,7 +4,7 @@ import semver from 'semver';
 
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
-import { loadDocument, pathKind } from './files.ts';
+import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
 import {
   getArray,
   getObject,
@@ -42,6 +42,7 @@ export async function validateHarnessConfiguration(input: {
   readonly schemas: SchemaRegistry;
 }): Promise<HarnessValidationResult> {
   const harnessPath = resolveInsideRoot(input.root, input.harnessPath, 'Harness file');
+  await assertNoSymlinkWithinRoot(input.root, harnessPath, 'read');
   if ((await pathKind(harnessPath)) !== 'file') {
     throw new CliError(`Harness file not found: ${input.harnessPath}`, ExitCode.notFound);
   }
@@ -141,6 +142,7 @@ async function checkHarnessReferences(
     let absolutePath: string;
     try {
       absolutePath = resolveInsideRoot(root, localPath, reference.description);
+      await assertNoSymlinkWithinRoot(root, absolutePath, 'read');
     } catch (error) {
       if (error instanceof CliError) {
         issues.push(error.message);
@@ -164,6 +166,7 @@ async function checkHarnessReferences(
         continue;
       }
       for (const target of validationTargets) {
+        await assertNoSymlinkWithinRoot(root, target, 'read');
         const relativeTarget = target.startsWith(root)
           ? relativePathFromRoot(root, target, reference.description)
           : target;

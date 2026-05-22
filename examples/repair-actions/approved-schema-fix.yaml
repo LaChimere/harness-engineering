@@ -1,6 +1,6 @@
 schema_version: "0.1.0"
 x-stability: provisional
-action_id: fix-schema-example
+action_id: approved-schema-fix
 target_files:
   - examples/fixtures/invalid/harness-with-plugin-key.yaml
 risk_class: low
@@ -18,9 +18,22 @@ preview_diff: |
   -  copilot:
   -    enabled: true
 equivalent_cli_command:
-  command: harness migrate --dry-run --output .harness/repairs/fix-schema-example.yaml
+  command: |
+    mkdir -p .harness/repairs && cat > .harness/repairs/approved-schema-fix.patch <<'PATCH'
+    diff --git a/examples/fixtures/invalid/harness-with-plugin-key.yaml b/examples/fixtures/invalid/harness-with-plugin-key.yaml
+    --- a/examples/fixtures/invalid/harness-with-plugin-key.yaml
+    +++ b/examples/fixtures/invalid/harness-with-plugin-key.yaml
+    @@ -55,6 +55,3 @@
+     continuity:
+       state_dir: .harness/continuity
+     gc:
+       evidence_dir: .harness/gc
+    -plugins:
+    -  copilot:
+    -    enabled: true
+    PATCH
   timeout_seconds: 300
-approval_state: proposed
+approval_state: approved
 sandbox_requirement: worktree
 trust_requirements:
   trust_level: sandboxed
@@ -31,9 +44,12 @@ trust_requirements:
   allowed_inputs:
     - examples/fixtures/invalid/harness-with-plugin-key.yaml
   allowed_outputs:
-    - .harness/repairs/fix-schema-example.json
-rollback_notes: Restore the previewed diff if the repair is rejected or fails validation.
+    - .harness/repairs/approved-schema-fix.patch
+rollback_notes: Delete the generated patch if the repair is rejected, or reverse-apply it if the preview is applied and later fails validation.
 evidence_links:
   - path: examples/fixtures/invalid/harness-with-plugin-key.yaml
     media_type: application/yaml
     description: Target invalid harness fixture.
+  - path: .harness/repairs/approved-schema-fix.patch
+    media_type: text/x-diff
+    description: Reproducible preview patch produced by the equivalent command.

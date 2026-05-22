@@ -1,0 +1,595 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/assessment.schema.json",
+  "title": "Harness assessment",
+  "$comment": "provisional Stage 12 native agent-facing assessment output.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "x-stability",
+    "assessment_id",
+    "adapter_path",
+    "source",
+    "status",
+    "maturity",
+    "scorecard",
+    "missing_primitives",
+    "rollout_stage_plan",
+    "recommendations",
+    "implementation_routing",
+    "artifacts_read"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "x-stability": {
+      "const": "provisional"
+    },
+    "assessment_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "adapter_path": {
+      "type": "object",
+      "required": ["kind", "command", "rationale"],
+      "properties": {
+        "kind": {
+          "const": "cli-command"
+        },
+        "command": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "rationale": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "rejected_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["root", "harness", "cli_version"],
+      "properties": {
+        "root": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "harness": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "cli_version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ready", "needs-work", "missing-harness"]
+    },
+    "maturity": {
+      "type": "object",
+      "required": ["level", "label", "score", "max_score"],
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "label": {
+          "$ref": "common.schema.json#/$defs/nonEmptyString"
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_score": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "scorecard": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "status", "summary", "evidence"],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "label": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["present", "partial", "missing", "advisory"]
+          },
+          "summary": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "evidence": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "missing_primitives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "severity", "recommendation"],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "label": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "severity": {
+            "$ref": "common.schema.json#/$defs/severity"
+          },
+          "recommendation": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rollout_stage_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["stage", "title", "status", "actions"],
+        "properties": {
+          "stage": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "title": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["done", "next", "later"]
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "common.schema.json#/$defs/nonEmptyString"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "severity", "message", "evidence"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["policy", "eval", "trace", "continuity", "routing"]
+          },
+          "severity": {
+            "$ref": "common.schema.json#/$defs/severity"
+          },
+          "message": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "evidence": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "implementation_routing": {
+      "type": "object",
+      "required": ["selected_route", "routes"],
+      "properties": {
+        "selected_route": {
+          "type": "string",
+          "enum": ["repair-action", "execution-loop", "external-skill", "cli-fallback"]
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "status", "summary", "evidence"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)?$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": ["repair-action", "execution-loop", "external-skill", "cli-fallback"]
+              },
+              "status": {
+                "type": "string",
+                "enum": ["available", "needs-approval", "unavailable", "fallback"]
+              },
+              "summary": {
+                "$ref": "common.schema.json#/$defs/nonEmptyString"
+              },
+              "approval_state": {
+                "type": "string",
+                "enum": ["proposed", "approved", "rejected", "applied"]
+              },
+              "approval_trust": {
+                "type": "string",
+                "enum": ["trusted", "untrusted"]
+              },
+              "risk_class": {
+                "$ref": "common.schema.json#/$defs/riskClass"
+              },
+              "repair_mode": {
+                "type": "string",
+                "enum": ["preview-backed", "advisory-only"]
+              },
+              "sandbox_requirement": {
+                "$ref": "common.schema.json#/$defs/sandboxTier"
+              },
+              "trust_requirements": {
+                "$ref": "common.schema.json#/$defs/trustRequirements"
+              },
+              "target_files": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "common.schema.json#/$defs/artifactRef"
+                }
+              },
+              "applicability": {
+                "type": "string",
+                "enum": ["applicable", "not-applicable"]
+              },
+              "command": {
+                "$ref": "common.schema.json#/$defs/command"
+              },
+              "evidence": {
+                "$ref": "common.schema.json#/$defs/evidenceLinks"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "repair-action"
+                    }
+                  },
+                  "required": ["kind"]
+                },
+                "then": {
+                  "required": [
+                    "approval_state",
+                    "approval_trust",
+                    "risk_class",
+                    "repair_mode",
+                    "sandbox_requirement",
+                    "trust_requirements",
+                    "target_files",
+                    "applicability"
+                  ],
+                  "not": {
+                    "required": ["command"]
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "applicability": {
+                            "const": "not-applicable"
+                          }
+                        },
+                        "required": ["applicability"]
+                      },
+                      "then": {
+                        "properties": {
+                          "status": {
+                            "const": "unavailable"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "applicability": {
+                            "const": "applicable"
+                          },
+                          "approval_state": {
+                            "const": "approved"
+                          },
+                          "approval_trust": {
+                            "const": "trusted"
+                          }
+                        },
+                        "required": ["applicability", "approval_state", "approval_trust"]
+                      },
+                      "then": {
+                        "properties": {
+                          "status": {
+                            "const": "available"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "applicability": {
+                            "const": "applicable"
+                          },
+                          "approval_state": {
+                            "const": "approved"
+                          },
+                          "approval_trust": {
+                            "const": "untrusted"
+                          }
+                        },
+                        "required": ["applicability", "approval_state", "approval_trust"]
+                      },
+                      "then": {
+                        "properties": {
+                          "status": {
+                            "const": "needs-approval"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "applicability": {
+                            "const": "applicable"
+                          },
+                          "approval_state": {
+                            "const": "proposed"
+                          }
+                        },
+                        "required": ["applicability", "approval_state"]
+                      },
+                      "then": {
+                        "properties": {
+                          "status": {
+                            "const": "needs-approval"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "applicability": {
+                            "const": "applicable"
+                          },
+                          "approval_state": {
+                            "enum": ["rejected", "applied"]
+                          }
+                        },
+                        "required": ["applicability", "approval_state"]
+                      },
+                      "then": {
+                        "properties": {
+                          "status": {
+                            "const": "unavailable"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "execution-loop"
+                    }
+                  },
+                  "required": ["kind"]
+                },
+                "then": {
+                  "not": {
+                    "required": ["command"]
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "external-skill"
+                    }
+                  },
+                  "required": ["kind"]
+                },
+                "then": {
+                  "not": {
+                    "required": ["command"]
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "cli-fallback"
+                    }
+                  },
+                  "required": ["kind"]
+                },
+                "then": {
+                  "properties": {
+                    "status": {
+                      "const": "fallback"
+                    }
+                  },
+                  "not": {
+                    "required": ["command"]
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "const": "needs-approval"
+                    }
+                  },
+                  "required": ["status"]
+                },
+                "then": {
+                  "properties": {
+                    "kind": {
+                      "const": "repair-action"
+                    }
+                  }
+                }
+              }
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "selected_route": {
+                "const": "repair-action"
+              }
+            },
+            "required": ["selected_route"]
+          },
+          "then": {
+            "properties": {
+              "routes": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "repair-action"
+                    },
+                    "status": {
+                      "const": "available"
+                    },
+                    "applicability": {
+                      "const": "applicable"
+                    },
+                    "approval_trust": {
+                      "const": "trusted"
+                    }
+                  },
+                  "required": ["kind", "status", "applicability", "approval_trust"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "selected_route": {
+                "const": "execution-loop"
+              }
+            },
+            "required": ["selected_route"]
+          },
+          "then": {
+            "properties": {
+              "routes": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "execution-loop"
+                    },
+                    "status": {
+                      "const": "available"
+                    }
+                  },
+                  "required": ["kind", "status"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "selected_route": {
+                "const": "external-skill"
+              }
+            },
+            "required": ["selected_route"]
+          },
+          "then": {
+            "properties": {
+              "routes": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "external-skill"
+                    },
+                    "status": {
+                      "const": "available"
+                    }
+                  },
+                  "required": ["kind", "status"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "selected_route": {
+                "const": "cli-fallback"
+              }
+            },
+            "required": ["selected_route"]
+          },
+          "then": {
+            "properties": {
+              "routes": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "cli-fallback"
+                    },
+                    "status": {
+                      "const": "fallback"
+                    }
+                  },
+                  "required": ["kind", "status"]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "artifacts_read": {
+      "$ref": "common.schema.json#/$defs/evidenceLinks"
+    }
+  },
+  "additionalProperties": false
+}

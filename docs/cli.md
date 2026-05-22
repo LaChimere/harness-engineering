@@ -1,12 +1,13 @@
 # Harness CLI
 
-Stage 10 includes the deterministic `harness` CLI, Harness doctor MVP, verifier-only eval validation, deterministic stub agent runs, behavioral eval runs, trace validation/import, offline LLM-judge policy/result validation, limited-adapter scope validation, and native execution-loop evidence validation. It consumes the Stage 2 schemas and examples, but it still does not ship an installable host plugin package, CI adapter, skill adapter, live model execution behavior, or formal GC behavior.
+Stage 12 includes the deterministic `harness` CLI, Harness doctor MVP, verifier-only eval validation, deterministic stub agent runs, behavioral eval runs, trace validation/import, offline LLM-judge policy/result validation, limited-adapter scope validation, native execution-loop evidence validation, and a read-only native agent-facing assessment command. It consumes the Stage 2 schemas and examples, but it still does not ship an installable host plugin package, CI adapter, skill adapter, live model execution behavior, or formal GC behavior.
 
 ## Commands
 
 ```bash
 harness init
 harness adapter validate
+harness assess --file examples/harness.yaml --format json
 harness loop validate --file examples/harness.yaml --continuity examples/continuity/stage10-loop-state.yaml --verification examples/verification/stage10-completion.yaml
 harness validate
 harness migrate
@@ -32,6 +33,10 @@ harness report --file examples/harness.yaml --judge-result examples/judges/resul
 It does not run doctor checks, eval verifiers, agents, or migrations.
 
 `harness adapter validate` validates the Stage 9 adapter-scope manifest against `schemas/adapter-scope.schema.json`, validates the Stage 8 capability matrix against `schemas/plugin-capability-matrix.schema.json`, then runs semantic subset checks. By default it validates `examples/adapters/github-copilot-cli/adapter-scope.json` against `examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json`; pass `--scope`, `--matrix`, or `--root` to inspect different artifacts inside a selected root. The command proves schema validity and Stage 8 matrix subset conformance only: the selected limited-adapter scope does not overclaim Stage 8 matrix evidence, unsupported CLI management modes, authoritative local state, or preview-backed writes without proven repair UI support. It does not prove that the selected host can install, bootstrap, distribute, or execute this adapter. It does not install a host plugin, run a host marketplace package, reimplement doctor/eval logic, or execute write actions.
+
+`harness assess` is the Stage 12 native agent-facing adapter path. It emits a provisional schema-backed assessment as Markdown by default or JSON with `--format json`, using `schemas/assessment.schema.json`. The JSON form is the Stage 12 machine-readable surface for agents, plugins, skills, and CI adapters; `skills/harness-engineering/` remains intentionally deferred so the repository does not introduce a skill-only source of truth before the Stage 13 `agent-coding` compatibility inventory.
+
+Assessment is read-only. It reads `harness.yaml` when present, optional doctor output, run-result JSON objects or arrays, JSONL ledgers, trace artifacts, scoreboards, `harness report` text, and repair-action candidates. Run-result evidence is treated as present only when every supplied record passed; mixed pass/fail/error/skipped ledgers remain partial evidence. It emits an adapter-path rationale, maturity scorecard, missing primitives, rollout stage plan, policy/eval/trace/continuity recommendations, implementation routing, and the artifacts it read. By default it discovers repair actions from `examples/repair-actions/` for the repository examples; downstream projects should pass a harness-owned repair-action directory explicitly until a production default is standardized. Routing selects repair actions only when their `target_files` overlap current missing or partial assessment evidence, their artifact declares `approval_state: approved`, the action id is unique across discovered repair actions, and the caller provides external approval with `--trusted-repair-action <action-id>`. Repo-controlled repair-action approval fields are not treated as trusted authorization by themselves. Proposed, untrusted, duplicate-id, and non-applicable repair actions are reported as `needs-approval`, `unavailable`, or invalid evidence; selectable repair-action routes include applicability/approval-trust/approval/risk/sandbox metadata. Repair-action routes cite the artifact for review but do not copy its `equivalent_cli_command` into assessment output as an executable route command. The external `agent-coding` skill route is reported as unavailable unless future Stage 13 evidence documents a compatibility path, and Stage 12 implementation never selects it. `harness assess` never executes repair actions, implementation loops, shell commands, evals, agents, or migrations.
 
 `harness loop validate` validates native execution-loop evidence over existing substrate artifacts. It reads `harness.yaml`, the referenced approval and sandbox policies, an explicit continuity-state artifact, the startup self-verification artifact referenced by continuity state, and completion self-verification evidence when `--phase complete` is used. The command validates artifact schemas first, then enforces semantic gates:
 
@@ -89,7 +94,7 @@ The starter policy uses `percent_agreement` with `labeled_sample_minimum: 5` and
 
 `harness init` can create or overwrite starter-managed files, so its `--root` value must stay inside the current working directory. Run `init` from the target repository root, or pass a child directory with `--root`.
 
-The read/report commands (`adapter validate`, `loop validate`, `validate`, `doctor`, `trace validate`, `verify`, `report`) and the no-op `migrate` command may point `--root` at another checkout for inspection. Unlike those read/report commands, `harness eval validate`, `harness run`, and `harness eval run` may execute declaration-gated verifier commands in the selected root, including when `--root` points at another checkout. User-provided scope, matrix, file, continuity, verification, task, spec, artifact, doctor-output, eval-output, trace-output, scoreboard-output, and migration-output paths are still constrained to the selected root. Doctor output, eval output, verifier-result output, trace output, scoreboard output, migration output, and init writes also reject symlinked write targets.
+The read/report commands (`adapter validate`, `assess`, `loop validate`, `validate`, `doctor`, `trace validate`, `verify`, `report`) and the no-op `migrate` command may point `--root` at another checkout for inspection. Unlike those read/report commands, `harness eval validate`, `harness run`, and `harness eval run` may execute declaration-gated verifier commands in the selected root, including when `--root` points at another checkout. User-provided scope, matrix, file, continuity, verification, task, spec, artifact, doctor-output, eval-output, trace-output, scoreboard-output, assessment input, repair-action, repair-actions-dir, and migration-output paths are still constrained to the selected root; `--trusted-repair-action` accepts only a safe repair-action id. Doctor output, eval output, verifier-result output, trace output, scoreboard output, migration output, and init writes also reject symlinked write targets.
 
 ## Exit semantics
 
@@ -113,6 +118,8 @@ For `harness run` and `harness eval run`, process exit status is computed from t
 For `harness report`, invalid judge policy/result schemas or judge results that attempt to block without satisfying their referenced policy exit `1`.
 
 For `harness adapter validate`, adapter-scope schema errors, capability-matrix schema errors, and Stage 8 subset violations exit `1`.
+
+For `harness assess`, missing or incomplete substrate evidence is reported inside the assessment with `status: missing-harness` or `status: needs-work` while the command exits `0`. Usage errors, root escapes, symlinked inputs, and internal output-schema violations still use the standard non-zero exit codes.
 
 For `harness loop validate`, continuity/self-verification schema errors and Stage 10 startup/completion gate violations exit `1`. Missing required command options such as `--continuity` or complete-phase `--verification` exit `2`.
 

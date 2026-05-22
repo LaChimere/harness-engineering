@@ -209,12 +209,16 @@
       "schema": "schemas/adapter-scope.schema.json"
     },
     {
-      "path": "examples/repair-actions/proposed-schema-fix.yaml",
+      "path": "examples/repair-actions/approved-schema-fix.yaml",
       "schema": "schemas/repair-action.schema.json"
     },
     {
       "path": "examples/repair-actions/advisory-cli-redirect.yaml",
       "schema": "schemas/repair-action.schema.json"
+    },
+    {
+      "path": "examples/assessments/repair-action-routing.json",
+      "schema": "schemas/assessment.schema.json"
     },
     {
       "path": "examples/gc/evidence.json",

@@ -599,12 +599,12 @@ Skills should be classified after the substrate and execution loop are defined. 
   - Add read-only assessment/design workflow for downstream repositories.
   - Read `harness.yaml`, doctor output, eval plans, traces, run results, and reports when available.
   - Output maturity scorecard, missing primitives, rollout stage plan, policy/eval/trace/continuity recommendations.
-  - Route implementation to configured native repair actions, native execution-loop adapters, or documented external skills when available.
+  - Route implementation to trusted applicable native repair actions, native execution-loop adapters, or documented external skills when available.
 - **Prohibited changes:** Do not make the skill a separate contract or broad execution loop.
 - **Acceptance criteria:**
   - The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
   - The adapter does not assume `agent-coding` skills are installed or vendored in this repo.
-  - The adapter demonstrates routing implementation requests to available repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
+  - The adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
 
 ### Stage 13: `agent-coding` compatibility inventory, migration, and alignment
 

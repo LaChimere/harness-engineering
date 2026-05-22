@@ -131,6 +131,12 @@ test(
       expect(getString(await readJsonObject(join(root, scoreboardPath)), 'status')).toBe('passed');
 
       const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+      const firstRunLedgerEntry = runResults.find(
+        (runResult) => getString(runResult, 'run_id') === firstRunId,
+      );
+      if (firstRunLedgerEntry === undefined) {
+        throw new Error(`Expected run-result ledger entry for ${firstRunId}.`);
+      }
       expect(
         runResults.filter((runResult) => getString(runResult, 'run_id') === firstRunId).length,
       ).toBe(1);
@@ -158,6 +164,79 @@ test(
       expectSuccess(report, ['report']);
       expect(report.stdout).toContain('- scoreboard: .harness/scoreboards/e2e-eval-run.json');
       expect(report.stdout).toContain('- doctor result: .harness/doctor/e2e-doctor.json');
+      await mkdir(join(root, '.harness/reports'), { recursive: true });
+      await writeFile(join(root, '.harness/reports/e2e-report.md'), report.stdout);
+      await mkdir(join(root, 'examples/repair-actions'), { recursive: true });
+      await writeFile(
+        join(root, 'examples/repair-actions/approved-schema-fix.yaml'),
+        await readFile(join(repoRoot, 'examples/repair-actions/approved-schema-fix.yaml'), 'utf8'),
+      );
+
+      const mixedLedgerAssessment = await runAndParseJson(root, [
+        'assess',
+        '--format',
+        'json',
+        '--doctor-result',
+        doctorPath,
+        '--run-results',
+        '.harness/run-results.jsonl',
+        '--trace',
+        firstRunTrace,
+        '--scoreboard',
+        scoreboardPath,
+        '--report',
+        '.harness/reports/e2e-report.md',
+      ]);
+      expect(getString(mixedLedgerAssessment, 'status')).toBe('needs-work');
+      expect(
+        getString(
+          objectWithString(
+            jsonObjects(getArray(mixedLedgerAssessment, 'scorecard')),
+            'id',
+            'run-results',
+          ) ?? {},
+          'status',
+        ),
+      ).toBe('partial');
+
+      const assessmentRunResultPath = '.harness/e2e-assessment-run-result.json';
+      await writeFile(
+        join(root, assessmentRunResultPath),
+        JSON.stringify(firstRunLedgerEntry, null, 2),
+      );
+      const assessment = await runAndParseJson(root, [
+        'assess',
+        '--format',
+        'json',
+        '--doctor-result',
+        doctorPath,
+        '--run-results',
+        assessmentRunResultPath,
+        '--trace',
+        firstRunTrace,
+        '--scoreboard',
+        scoreboardPath,
+        '--report',
+        '.harness/reports/e2e-report.md',
+      ]);
+      expect(getString(assessment, 'status')).toBe('ready');
+      expect(
+        getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route'),
+      ).toBe('execution-loop');
+      const assessmentRoutes = jsonObjects(
+        getArray(getObject(assessment, 'implementation_routing') ?? {}, 'routes'),
+      );
+      const unrelatedRepairRoute = objectWithString(
+        assessmentRoutes,
+        'id',
+        'repair-action:approved-schema-fix',
+      );
+      expect(getString(unrelatedRepairRoute ?? {}, 'status')).toBe('unavailable');
+      expect(getString(unrelatedRepairRoute ?? {}, 'applicability')).toBe('not-applicable');
+      expect(getString(unrelatedRepairRoute ?? {}, 'approval_trust')).toBe('untrusted');
+      expect(getString(getObject(assessment, 'adapter_path') ?? {}, 'command')).toBe(
+        'harness assess --format json',
+      );
 
       await installLoopEvidence(root);
       const loopStart = await runHarness(root, [
@@ -765,6 +844,23 @@ function getString(object: JsonObject, key: string): string | undefined {
 function getObject(object: JsonObject, key: string): JsonObject | undefined {
   const value = object[key];
   return isJsonObject(value) ? value : undefined;
+}
+
+function getArray(object: JsonObject, key: string): readonly unknown[] {
+  const value = object[key];
+  return Array.isArray(value) ? value : [];
+}
+
+function jsonObjects(values: readonly unknown[]): readonly JsonObject[] {
+  return values.filter(isJsonObject);
+}
+
+function objectWithString(
+  objects: readonly JsonObject[],
+  key: string,
+  value: string,
+): JsonObject | undefined {
+  return objects.find((object) => getString(object, key) === value);
 }
 
 function isErrorWithCode(error: unknown, code: string): boolean {

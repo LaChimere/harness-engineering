@@ -19,3 +19,10 @@ This file records historical process corrections for the slug. `design.md`, `pla
 - Stage 8 must reconcile its capability result with the user journey. A limited adapter must not be shipped under the full-plugin north-star story; either rewrite the journey to the proven limited workflow or label the full-plugin journey aspirational.
 - Any change from agent/CLI marketplace-first to IDE-first is a design change across Gate 1/2 boundaries. Stop, update the slug, explain the tradeoff, and get explicit user approval before implementation.
 - When a user has already asked "how will users use this?", preserve that answer as a constraint: CLI-first is the current substrate; agent/CLI marketplace plugin-first is the north star; skills and CI are adapters. Do not re-rank those entrypoints without approval.
+
+## Stage 12 repair-action trust
+
+- Do not treat repo-controlled `approval_state: approved` as trusted authorization. Agent-facing routing may surface that metadata, but selection requires external approval provenance such as an explicit trusted id.
+- Bind trusted repair-action approval to a unique action id and reject duplicate ids before routing. Otherwise a second artifact can inherit trust intended for another repair action.
+- Repair-action applicability must be based on current assessment gaps, not global candidate presence. Non-applicable repair actions should remain visible as evidence but unavailable for implementation routing.
+- Assessment routes must not emit or execute repair commands. Repair artifacts can cite `equivalent_cli_command` for review, but CLI/schema artifacts remain the source of truth and write execution belongs to a later approved flow.

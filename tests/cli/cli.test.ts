@@ -256,6 +256,674 @@ test('adapter validate rejects scope and matrix paths that escape root', async (
   expect(result.stderr).toContain('Adapter scope escapes root');
 });
 
+test('assess emits schema-valid JSON and leaves unrelated repair actions unselected', async () => {
+  const result = await run([
+    'assess',
+    '--format',
+    'json',
+    '--file',
+    'examples/harness.yaml',
+    '--doctor-result',
+    'examples/doctor/results/pass.json',
+    '--run-results',
+    'examples/run-results/run-result.json',
+    '--trace',
+    'examples/traces/native-cli-trace.json',
+    '--scoreboard',
+    'examples/scoreboards/self-test.json',
+    '--report',
+    'examples/reports/harness-report.md',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(assessment, 'status')).toBe('ready');
+  expect(getString(getObject(assessment, 'adapter_path') ?? {}, 'kind')).toBe('cli-command');
+  expect(getString(getObject(assessment, 'source') ?? {}, 'harness')).toBe('examples/harness.yaml');
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'execution-loop',
+  );
+  expect(
+    getString(
+      objectWithString(
+        jsonObjects(getArray(getObject(assessment, 'implementation_routing') ?? {}, 'routes')),
+        'id',
+        'external-agent-coding-skill',
+      ) ?? {},
+      'status',
+    ),
+  ).toBe('unavailable');
+  expect(
+    getString(
+      objectWithString(jsonObjects(getArray(assessment, 'scorecard')), 'id', 'run-results') ?? {},
+      'status',
+    ),
+  ).toBe('present');
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('assessment', assessment)).toEqual([]);
+  const routing = getObject(assessment, 'implementation_routing') ?? {};
+  const routes = jsonObjects(getArray(routing, 'routes'));
+  const repairRoute = objectWithString(routes, 'kind', 'repair-action') ?? {};
+  expect(getString(repairRoute, 'id')).toBe('repair-action:approved-schema-fix');
+  expect(getString(repairRoute, 'status')).toBe('unavailable');
+  expect(getString(repairRoute, 'applicability')).toBe('not-applicable');
+  expect(getString(repairRoute, 'approval_state')).toBe('approved');
+  expect(getString(repairRoute, 'approval_trust')).toBe('untrusted');
+  expect(getString(repairRoute, 'risk_class')).toBe('low');
+  expect(getString(repairRoute, 'repair_mode')).toBe('preview-backed');
+  expect(getString(repairRoute, 'sandbox_requirement')).toBe('worktree');
+  expect(getArray(repairRoute, 'target_files')).toEqual([
+    'examples/fixtures/invalid/harness-with-plugin-key.yaml',
+  ]);
+  expect('command' in repairRoute).toBe(false);
+  expect(
+    schemas.validate('assessment', {
+      ...assessment,
+      implementation_routing: {
+        ...routing,
+        routes: routes.map((route) =>
+          getString(route, 'kind') === 'repair-action'
+            ? { ...route, command: { command: 'harness migrate --dry-run' } }
+            : route,
+        ),
+      },
+    }).length,
+  ).toBeGreaterThan(0);
+  expect(
+    schemas.validate('assessment', {
+      ...assessment,
+      implementation_routing: {
+        ...routing,
+        selected_route: 'repair-action',
+      },
+    }).length,
+  ).toBeGreaterThan(0);
+  expect(
+    schemas.validate('assessment', {
+      ...assessment,
+      implementation_routing: {
+        ...routing,
+        routes: routes.map((route) =>
+          getString(route, 'kind') === 'execution-loop'
+            ? { ...route, command: { command: 'harness loop validate --phase start' } }
+            : route,
+        ),
+      },
+    }).length,
+  ).toBeGreaterThan(0);
+  expect(
+    schemas.validate('assessment', {
+      ...assessment,
+      implementation_routing: {
+        ...routing,
+        routes: routes.map((route) =>
+          getString(route, 'kind') === 'repair-action'
+            ? { ...route, approval_state: 'proposed', status: 'available' }
+            : route,
+        ),
+      },
+    }).length,
+  ).toBeGreaterThan(0);
+  expect(
+    schemas.validate('assessment', futureExternalSkillAssessment(assessment, routing)),
+  ).toEqual([]);
+  expect(
+    getString(objectWithString(routes, 'id', 'external-agent-coding-skill') ?? {}, 'status'),
+  ).toBe('unavailable');
+});
+
+test('assess does not trust repo-declared repair approvals by default', async () => {
+  const result = await run([
+    'assess',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/invalid/harness-with-plugin-key.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(assessment, 'status')).toBe('needs-work');
+  const routing = getObject(assessment, 'implementation_routing') ?? {};
+  const routes = jsonObjects(getArray(routing, 'routes'));
+  expect(getString(routing, 'selected_route')).toBe('execution-loop');
+  const repairRoute = objectWithString(routes, 'id', 'repair-action:approved-schema-fix') ?? {};
+  expect(getString(repairRoute, 'status')).toBe('needs-approval');
+  expect(getString(repairRoute, 'applicability')).toBe('applicable');
+  expect(getString(repairRoute, 'approval_trust')).toBe('untrusted');
+  const repairScore = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'repair-routing',
+  );
+  expect(getString(repairScore ?? {}, 'status')).toBe('partial');
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('assessment', assessment)).toEqual([]);
+});
+
+test('assess selects repair actions only with trusted approval and matching gaps', async () => {
+  const result = await run([
+    'assess',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/invalid/harness-with-plugin-key.yaml',
+    '--trusted-repair-action',
+    'approved-schema-fix',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  const routing = getObject(assessment, 'implementation_routing') ?? {};
+  const routes = jsonObjects(getArray(routing, 'routes'));
+  expect(getString(routing, 'selected_route')).toBe('repair-action');
+  const repairRoute = objectWithString(routes, 'id', 'repair-action:approved-schema-fix') ?? {};
+  expect(getString(repairRoute, 'status')).toBe('available');
+  expect(getString(repairRoute, 'applicability')).toBe('applicable');
+  expect(getString(repairRoute, 'approval_trust')).toBe('trusted');
+  const repairScore = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'repair-routing',
+  );
+  expect(getString(repairScore ?? {}, 'status')).toBe('present');
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('assessment', assessment)).toEqual([]);
+});
+
+test('assess emits markdown assessment with execution-loop routing when no repair action exists', async () => {
+  const result = await run([
+    'assess',
+    '--file',
+    'examples/harness.yaml',
+    '--repair-actions-dir',
+    'examples/fixtures/missing-repair-actions',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  expect(result.stdout).toContain('# Harness assessment');
+  expect(result.stdout).toContain('Read-only assessment');
+  expect(result.stdout).toContain('## Maturity scorecard');
+  expect(result.stdout).toContain('- selected route: **execution-loop**');
+  expect(result.stdout).toContain('external-agent-coding-skill (unavailable)');
+  expect(result.stdout).toContain('cli-fallback (fallback)');
+});
+
+test('assess markdown exposes repair route safety metadata', async () => {
+  const result = await run([
+    'assess',
+    '--file',
+    'examples/harness.yaml',
+    '--doctor-result',
+    'examples/doctor/results/pass.json',
+    '--run-results',
+    'examples/run-results/run-result.json',
+    '--trace',
+    'examples/traces/native-cli-trace.json',
+    '--scoreboard',
+    'examples/scoreboards/self-test.json',
+    '--report',
+    'examples/reports/harness-report.md',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  expect(result.stdout).toContain(
+    'repair-action:approved-schema-fix (unavailable) [applicability=not-applicable, approval-trust=untrusted, approval=approved, mode=preview-backed, risk=low, sandbox=worktree',
+  );
+});
+
+test('assess reports missing harness and keeps fallback routing machine-readable', async () => {
+  const root = await tempRoot();
+
+  const result = await run(['assess', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(assessment, 'status')).toBe('missing-harness');
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'cli-fallback',
+  );
+  expect(
+    getString(
+      objectWithString(jsonObjects(getArray(assessment, 'scorecard')), 'id', 'harness-source') ??
+        {},
+      'status',
+    ),
+  ).toBe('missing');
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('assessment', assessment)).toEqual([]);
+});
+
+test('assess records malformed optional artifacts without executing fallback work', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(join(root, 'doctor.json'), '{not valid json');
+
+  const result = await run(['assess', '--format', 'json', '--doctor-result', 'doctor.json'], root);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(
+    getString(
+      objectWithString(jsonObjects(getArray(assessment, 'scorecard')), 'id', 'doctor-evidence') ??
+        {},
+      'status',
+    ),
+  ).toBe('partial');
+  expect(result.stdout).toContain('Could not parse');
+});
+
+test('assess reports missing scoreboard artifacts explicitly', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(join(root, 'report.md'), '# Report\n');
+
+  const result = await run(
+    [
+      'assess',
+      '--format',
+      'json',
+      '--scoreboard',
+      'missing-scoreboard.json',
+      '--report',
+      'report.md',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  const scoreboardReport = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'scoreboard-report',
+  );
+  expect(getString(scoreboardReport ?? {}, 'status')).toBe('partial');
+  expect(getString(scoreboardReport ?? {}, 'summary')).toContain(
+    'scoreboard not found: missing-scoreboard.json',
+  );
+});
+
+test('assess requires harness-generated report text for scoreboard/report maturity', async () => {
+  const result = await run([
+    'assess',
+    '--format',
+    'json',
+    '--file',
+    'examples/harness.yaml',
+    '--doctor-result',
+    'examples/doctor/results/pass.json',
+    '--run-results',
+    'examples/run-results/run-result.json',
+    '--trace',
+    'examples/traces/native-cli-trace.json',
+    '--scoreboard',
+    'examples/scoreboards/self-test.json',
+    '--report',
+    'docs/cli.md',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(assessment, 'status')).toBe('needs-work');
+  const scoreboardReport = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'scoreboard-report',
+  );
+  expect(getString(scoreboardReport ?? {}, 'status')).toBe('partial');
+  expect(getString(scoreboardReport ?? {}, 'summary')).toContain(
+    'report must be generated by harness report',
+  );
+});
+
+test('assess downgrades failing doctor, run-result, and scoreboard evidence', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(
+    join(root, 'doctor-fail.json'),
+    await readFile('examples/doctor/results/fail.json', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'run-failed.json'),
+    await readFile('examples/run-results/failed-run-result.json', 'utf8'),
+  );
+  const scoreboard = await loadDocument('examples/scoreboards/self-test.json');
+  if (!isObject(scoreboard)) {
+    throw new Error('scoreboard fixture must be an object');
+  }
+  await writeFile(
+    join(root, 'scoreboard-failed.json'),
+    JSON.stringify({ ...scoreboard, status: 'failed' }, null, 2),
+  );
+  await writeFile(
+    join(root, 'report.md'),
+    'Harness report\n- harness: harness.yaml\n- cited paths:\n  - harness.yaml\n',
+  );
+
+  const result = await run(
+    [
+      'assess',
+      '--format',
+      'json',
+      '--doctor-result',
+      'doctor-fail.json',
+      '--run-results',
+      'run-failed.json',
+      '--scoreboard',
+      'scoreboard-failed.json',
+      '--report',
+      'report.md',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(assessment, 'status')).toBe('needs-work');
+  const scorecard = jsonObjects(getArray(assessment, 'scorecard'));
+  expect(getString(objectWithString(scorecard, 'id', 'doctor-evidence') ?? {}, 'status')).toBe(
+    'partial',
+  );
+  expect(getString(objectWithString(scorecard, 'id', 'run-results') ?? {}, 'status')).toBe(
+    'partial',
+  );
+  expect(getString(objectWithString(scorecard, 'id', 'scoreboard-report') ?? {}, 'status')).toBe(
+    'partial',
+  );
+  expect(
+    getString(objectWithString(scorecard, 'id', 'doctor-evidence') ?? {}, 'summary'),
+  ).toContain('not passing');
+  expect(getString(objectWithString(scorecard, 'id', 'run-results') ?? {}, 'summary')).toContain(
+    '0 passed',
+  );
+  expect(
+    getString(objectWithString(scorecard, 'id', 'scoreboard-report') ?? {}, 'summary'),
+  ).toContain('Scoreboard status is failed');
+});
+
+test('assess accepts JSON run-result arrays and summarizes each entry', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const passedRun = await loadDocument('examples/run-results/run-result.json');
+  const failedRun = await loadDocument('examples/run-results/failed-run-result.json');
+  await writeFile(join(root, 'run-results.json'), JSON.stringify([passedRun, failedRun], null, 2));
+
+  const result = await run(
+    ['assess', '--format', 'json', '--run-results', 'run-results.json'],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  const runResults = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'run-results',
+  );
+  expect(getString(runResults ?? {}, 'status')).toBe('partial');
+  expect(getString(runResults ?? {}, 'summary')).toContain('2 run-result record(s)');
+  expect(getString(runResults ?? {}, 'summary')).toContain('1 passed, 1 failed');
+  expect(getString(runResults ?? {}, 'summary')).toContain('All supplied run-result records');
+});
+
+test('assess falls back to direct CLI guidance when no native route is configured', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const harnessPath = join(root, 'harness.yaml');
+  const harness = await readFile(harnessPath, 'utf8');
+  const withoutContinuity = harness.replace(/^continuity:\n(?: {2}.+\n)+/m, '');
+  expect(withoutContinuity).not.toContain('continuity:');
+  await writeFile(harnessPath, withoutContinuity);
+
+  const result = await run(
+    [
+      'assess',
+      '--format',
+      'json',
+      '--repair-actions-dir',
+      'examples/fixtures/missing-repair-actions',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'cli-fallback',
+  );
+  const routes = jsonObjects(
+    getArray(getObject(assessment, 'implementation_routing') ?? {}, 'routes'),
+  );
+  const fallbackRoute = objectWithString(routes, 'id', 'cli-fallback') ?? {};
+  expect('command' in fallbackRoute).toBe(false);
+  expect(
+    getString(
+      objectWithString(jsonObjects(getArray(assessment, 'scorecard')), 'id', 'continuity-loop') ??
+        {},
+      'status',
+    ),
+  ).toBe('missing');
+});
+
+test('assess reports invalid repair actions without selecting them', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await mkdir(join(root, 'examples/repair-actions'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/repair-actions/invalid.yaml'),
+    'schema_version: "0.1.0"\naction_id: invalid-repair\n',
+  );
+
+  const result = await run(['assess', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'execution-loop',
+  );
+  const routing = getObject(assessment, 'implementation_routing') ?? {};
+  const routes = jsonObjects(getArray(routing, 'routes'));
+  expect(routes.some((route) => getString(route, 'kind') === 'repair-action')).toBe(false);
+  const repairScore = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'repair-routing',
+  );
+  expect(getString(repairScore ?? {}, 'status')).toBe('partial');
+  expect(getString(repairScore ?? {}, 'summary')).toContain('none are schema-valid');
+});
+
+test('assess reports proposed repair actions without selecting them', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const harnessPath = join(root, 'harness.yaml');
+  await writeFile(
+    harnessPath,
+    `${await readFile(harnessPath, 'utf8')}\nplugins:\n  copilot:\n    enabled: true\n`,
+  );
+  await mkdir(join(root, 'examples/repair-actions'), { recursive: true });
+  const proposedRepairAction = (
+    await readFile('examples/repair-actions/advisory-cli-redirect.yaml', 'utf8')
+  ).replaceAll('examples/harness.yaml', 'harness.yaml');
+  await writeFile(join(root, 'examples/repair-actions/proposed.yaml'), proposedRepairAction);
+
+  const result = await run(['assess', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'execution-loop',
+  );
+  const routing = getObject(assessment, 'implementation_routing') ?? {};
+  const repairRoute = objectWithString(
+    jsonObjects(getArray(routing, 'routes')),
+    'id',
+    'repair-action:advisory-cli-redirect',
+  );
+  expect(getString(repairRoute ?? {}, 'status')).toBe('needs-approval');
+  expect(getString(repairRoute ?? {}, 'applicability')).toBe('applicable');
+  expect(getString(repairRoute ?? {}, 'approval_trust')).toBe('untrusted');
+  expect(getString(repairRoute ?? {}, 'approval_state')).toBe('proposed');
+  const repairScore = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'repair-routing',
+  );
+  expect(getString(repairScore ?? {}, 'status')).toBe('partial');
+  expect(getString(repairScore ?? {}, 'summary')).toContain(
+    'none have trusted approval for routing',
+  );
+});
+
+test('assess rejects unsafe repair action identifiers before routing output', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await mkdir(join(root, 'examples/repair-actions'), { recursive: true });
+  const unsafeRepairAction = (
+    await readFile('examples/repair-actions/approved-schema-fix.yaml', 'utf8')
+  ).replace('action_id: approved-schema-fix', 'action_id: "unsafe route"');
+  await writeFile(join(root, 'examples/repair-actions/unsafe.yaml'), unsafeRepairAction);
+
+  const result = await run(['assess', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'execution-loop',
+  );
+  const routes = jsonObjects(
+    getArray(getObject(assessment, 'implementation_routing') ?? {}, 'routes'),
+  );
+  expect(routes.some((route) => getString(route, 'kind') === 'repair-action')).toBe(false);
+  const repairScore = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'repair-routing',
+  );
+  expect(getString(repairScore ?? {}, 'status')).toBe('partial');
+  expect(getString(repairScore ?? {}, 'summary')).toContain('pattern');
+});
+
+test('assess rejects unsafe trusted repair action ids', async () => {
+  const result = await run([
+    'assess',
+    '--format',
+    'json',
+    '--trusted-repair-action',
+    '../approved-schema-fix',
+  ]);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('--trusted-repair-action');
+});
+
+test('assess rejects duplicate repair action ids before trusting approvals', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await mkdir(join(root, 'examples/fixtures/invalid'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/fixtures/invalid/harness-with-plugin-key.yaml'),
+    await readFile('examples/fixtures/invalid/harness-with-plugin-key.yaml', 'utf8'),
+  );
+  await mkdir(join(root, 'examples/repair-actions'), { recursive: true });
+  const approvedRepairAction = await readFile(
+    'examples/repair-actions/approved-schema-fix.yaml',
+    'utf8',
+  );
+  await writeFile(join(root, 'examples/repair-actions/first.yaml'), approvedRepairAction);
+  await writeFile(join(root, 'examples/repair-actions/second.yaml'), approvedRepairAction);
+
+  const result = await run(
+    [
+      'assess',
+      '--format',
+      'json',
+      '--file',
+      'examples/fixtures/invalid/harness-with-plugin-key.yaml',
+      '--trusted-repair-action',
+      'approved-schema-fix',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'execution-loop',
+  );
+  const routes = jsonObjects(
+    getArray(getObject(assessment, 'implementation_routing') ?? {}, 'routes'),
+  );
+  expect(routes.some((route) => getString(route, 'kind') === 'repair-action')).toBe(false);
+  const repairScore = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'repair-routing',
+  );
+  expect(getString(repairScore ?? {}, 'status')).toBe('partial');
+  expect(getString(repairScore ?? {}, 'summary')).toContain('duplicate action_id');
+});
+
+test('assess reports mixed approved and invalid repair action candidates', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await mkdir(join(root, 'examples/fixtures/invalid'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/fixtures/invalid/harness-with-plugin-key.yaml'),
+    await readFile('examples/fixtures/invalid/harness-with-plugin-key.yaml', 'utf8'),
+  );
+  await mkdir(join(root, 'examples/repair-actions'), { recursive: true });
+  await writeFile(
+    join(root, 'examples/repair-actions/valid.yaml'),
+    await readFile('examples/repair-actions/approved-schema-fix.yaml', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'examples/repair-actions/invalid.yaml'),
+    'schema_version: "0.1.0"\naction_id: invalid-repair\n',
+  );
+
+  const result = await run(
+    [
+      'assess',
+      '--format',
+      'json',
+      '--file',
+      'examples/fixtures/invalid/harness-with-plugin-key.yaml',
+      '--trusted-repair-action',
+      'approved-schema-fix',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const assessment = JSON.parse(result.stdout);
+  expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
+    'repair-action',
+  );
+  const repairScore = objectWithString(
+    jsonObjects(getArray(assessment, 'scorecard')),
+    'id',
+    'repair-routing',
+  );
+  expect(getString(repairScore ?? {}, 'status')).toBe('partial');
+  expect(getString(repairScore ?? {}, 'summary')).toContain(
+    '1 trusted applicable approved repair action candidate(s) discovered, but 1 candidate(s) are invalid',
+  );
+});
+
+test('assess rejects artifact paths that escape root', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  await mkdir(root);
+  await run(['init'], root);
+  await writeFile(join(parent, 'doctor.json'), '{}');
+
+  const result = await run(['assess', '--doctor-result', '../doctor.json'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('doctor result escapes root');
+});
+
+test('assess rejects symlinked artifact inputs', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  const outside = join(parent, 'outside');
+  await mkdir(root);
+  await mkdir(outside);
+  await run(['init'], root);
+  await writeFile(
+    join(outside, 'trace.json'),
+    await readFile('examples/traces/native-cli-trace.json', 'utf8'),
+  );
+  await symlink(join(outside, 'trace.json'), join(root, 'trace-link.json'));
+
+  const result = await run(['assess', '--trace', 'trace-link.json'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Refusing to read through symlink');
+});
+
 test('loop validate accepts Stage 10 start and complete gates', async () => {
   const startResult = await run([
     'loop',
@@ -1861,6 +2529,9 @@ test('usage and missing input errors use stable exit codes', async () => {
   expect(help.stdout).toContain(
     'loop       Validate native execution-loop startup and completion gates.',
   );
+  expect(help.stdout).toContain(
+    'assess     Read existing artifacts and emit agent-facing maturity/routing guidance.',
+  );
   expect(help.stdout).toContain('doctor     Run deterministic structural harness checks.');
   expect(help.stdout).toContain('run        Run deterministic stub agent tasks.');
   expect(help.stdout).toContain(
@@ -1938,6 +2609,28 @@ function objectWithString(
   value: string,
 ): JsonObject | undefined {
   return objects.find((object) => getString(object, key) === value);
+}
+
+function futureExternalSkillAssessment(assessment: JsonObject, routing: JsonObject): JsonObject {
+  return {
+    ...assessment,
+    implementation_routing: {
+      ...routing,
+      selected_route: 'external-skill',
+      routes: [
+        ...jsonObjects(getArray(routing, 'routes')).filter(
+          (route) => getString(route, 'kind') !== 'external-skill',
+        ),
+        {
+          id: 'external-agent-coding-skill',
+          kind: 'external-skill',
+          status: 'available',
+          summary: 'Future Stage 13 compatibility route.',
+          evidence: [],
+        },
+      ],
+    },
+  };
 }
 
 function getBoolean(object: JsonObject, key: string): boolean | undefined {

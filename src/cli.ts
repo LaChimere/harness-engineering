@@ -1,4 +1,5 @@
 import { runAdapterCommand } from './commands/adapter.ts';
+import { runAssessCommand } from './commands/assess.ts';
 import { runDoctorCommand } from './commands/doctor.ts';
 import { runEvalCommand } from './commands/eval.ts';
 import { runInit } from './commands/init.ts';
@@ -48,6 +49,8 @@ export async function runCli(args: readonly string[], context: RunContext): Prom
         return await runLoopCommand(commandArgs, commandContext);
       case 'adapter':
         return await runAdapterCommand(commandArgs, commandContext);
+      case 'assess':
+        return await runAssessCommand(commandArgs, commandContext);
       case 'validate':
         return await runValidate(commandArgs, commandContext);
       case 'migrate':
@@ -85,6 +88,7 @@ Commands:
   init       Create a schema-valid starter harness baseline.
   loop       Validate native execution-loop startup and completion gates.
   adapter    Validate limited-adapter scope against the capability matrix.
+  assess     Read existing artifacts and emit agent-facing maturity/routing guidance.
   validate   Validate harness.yaml shape, engines, and composed references.
   migrate    Emit dry-run/no-op migration evidence.
   doctor     Run deterministic structural harness checks.

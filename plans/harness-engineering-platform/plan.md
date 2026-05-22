@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
 
-Stages 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The next implementation target is Stage 9: the conditional limited adapter MVP selected by the Stage 8 capability matrix.
+Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 13: `agent-coding` compatibility inventory and migration.
 
 ## Goals
 
@@ -170,7 +170,7 @@ Stages 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The next implementation target i
 
 - The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
 - The adapter does not assume `agent-coding` skills are installed or vendored in this repo.
-- The adapter demonstrates routing implementation requests to available repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
+- The adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
 
 ### Stage 13: `agent-coding` compatibility inventory and migration
 
@@ -178,6 +178,8 @@ Stages 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The next implementation target i
 - For every deprecated, moved, extracted, or unsupported skill path, docs include replacement path, breaking-change notice, migration timeline, and before/after workflow example.
 - Existing `agent-coding` skill users have a documented adoption path if compatibility remains supported.
 - README and skill docs do not imply optional utilities are core harness primitives.
+- Stage 13 starts by dogfooding `harness assess` on the repository and a more realistic downstream fixture so compatibility decisions cite actual assessment gaps, repair-action applicability, and trusted approval requirements rather than assumed adapter needs.
+- Remaining Stage 12 assessment polish that does not block completion is resolved or explicitly deferred during Stage 13: selected-route Markdown readability, explicit empty/ephemeral repair-action fixture handling, and the production repair-action discovery/default-directory policy.
 
 ### Stage 14: GC framework and first deterministic categories
 
@@ -185,6 +187,7 @@ Stages 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The next implementation target i
 - GC evidence output is append-only and preserves historical audit runs.
 - Cleanup slices include evidence refs, confidence, blast radius, and atomicity notes; they do not mix unrelated concerns.
 - No GC category ships unless its inputs, algorithm, false-positive policy, and passing/failing fixtures are documented.
+- Repair-action routing polish from Stage 12 is revisited when GC/repair evidence exists, especially trusted approval provenance, duplicate action ids, risk/sandbox presentation, and review metadata, without turning assessment routes into executable commands.
 
 ### Stage 15: Evidence-driven GC expansion
 
@@ -204,6 +207,7 @@ Stages 1, 2, 3, 4, 5, 6, 7, and 8 are complete. The next implementation target i
 - The initial shipped profile set includes entropy-auditor, doc-gardener, eval-curator, and trace-reviewer profiles.
 - Each profile has a measurable stop condition and handoff artifact.
 - Fixtures or examples demonstrate each profile stopping when its condition is met.
+- Human-facing assessment/report polish, including richer Markdown or dashboard summaries, is deferred until recurring profile and adapter consumption patterns are concrete.
 
 ## Milestones
 

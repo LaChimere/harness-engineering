@@ -402,6 +402,8 @@ Evidence: `harness loop validate` validates Stage 10 startup and completion gate
 
 ## Stage 11: Optional CI adapters
 
+Deferred: the user explicitly chose to skip optional CI adapter implementation before Stage 12. Keep this stage unchecked until CI examples/adapters are intentionally resumed.
+
 - [ ] Add generic CLI exit semantics for CI.
 - [ ] Add CI examples for schema validation.
 - [ ] Add CI examples for doctor checks.
@@ -423,35 +425,38 @@ Evidence: `harness loop validate` validates Stage 10 startup and completion gate
 
 ## Stage 12: Native agent-facing harness-engineering adapter
 
-- [ ] Choose adapter path, such as `skills/harness-engineering/`, or document a different native adapter path.
-- [ ] Add read-only assessment/design workflow.
-- [ ] Read `harness.yaml` when present.
-- [ ] Read doctor output.
-- [ ] Read eval plans.
-- [ ] Read traces.
-- [ ] Read run results.
-- [ ] Read reports.
-- [ ] Output maturity scorecard.
-- [ ] Output missing primitives.
-- [ ] Output rollout stage plan.
-- [ ] Output policy/eval/trace/continuity recommendations.
-- [ ] Document repair-action discovery/routing mechanism.
-- [ ] Route implementation to configured native repair actions, native execution-loop adapters, or documented external skills when available.
-- [ ] Add example showing adapter routing to at least one repair action or gracefully deferring to an external skill/fallback.
-- [ ] Ensure adapter does not assume `agent-coding` skills are installed or vendored.
-- [ ] Add trigger/behavior evals if using a skill format.
-- [ ] Run adapter tests/evals.
-- [ ] Run `git diff --check`.
+- [x] Choose adapter path, such as `skills/harness-engineering/`, or document a different native adapter path.
+- [x] Add read-only assessment/design workflow.
+- [x] Read `harness.yaml` when present.
+- [x] Read doctor output.
+- [x] Read eval plans.
+- [x] Read traces.
+- [x] Read run results.
+- [x] Read reports.
+- [x] Output maturity scorecard.
+- [x] Output missing primitives.
+- [x] Output rollout stage plan.
+- [x] Output policy/eval/trace/continuity recommendations.
+- [x] Document repair-action discovery/routing mechanism.
+- [x] Route implementation to trusted applicable native repair actions, native execution-loop adapters, or documented external skills when available.
+- [x] Add example showing adapter routing to at least one repair action or gracefully deferring to an external skill/fallback.
+- [x] Ensure adapter does not assume `agent-coding` skills are installed or vendored.
+- [x] Add trigger/behavior evals if using a skill format.
+- [x] Run adapter tests/evals.
+- [x] Run `git diff --check`.
+
+Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter path instead of a skill-first adapter. The command is read-only, validates its output with `schemas/assessment.schema.json`, reads harness/doctor/eval-plan/run-result/trace/scoreboard/report/repair-action artifacts, emits maturity and missing-primitive guidance, and routes implementation requests to applicable repair actions only when a trusted approval id is supplied, native execution-loop guidance, or a CLI fallback while marking external `agent-coding` skills unavailable until Stage 13. Review refinements ensure schema-invalid, duplicate-id, untrusted, unapproved, and non-applicable repair actions are surfaced but not selected, repair-action `equivalent_cli_command` values are not emitted as executable assessment route commands, Stage 12 implementation does not select external-skill routes, and `artifacts_read` includes composed harness references validated from `harness.yaml`. The CLI path and non-skill trigger/eval decision are documented in `docs/cli.md`; routing is illustrated by a generated `harness assess` output at `examples/assessments/repair-action-routing.json`. Verified with `bun run check`, `bun run test:unit`, `bun run test:e2e`, and `git diff --check`.
 
 ### Stage 12 acceptance criteria
 
-- [ ] The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
-- [ ] Adapter does not assume `agent-coding` skills are installed or vendored in this repo.
-- [ ] Adapter demonstrates routing implementation requests to available repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
+- [x] The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
+- [x] Adapter does not assume `agent-coding` skills are installed or vendored in this repo.
+- [x] Adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
 
 ## Stage 13: `agent-coding` compatibility inventory and migration
 
 - [ ] Start inventory research after Stage 1.
+- [ ] Dogfood `harness assess --format json` on this repository and at least one more realistic downstream fixture before classifying skill compatibility gaps, recording assessment gaps, repair-action applicability, and any trusted approval requirements.
 - [ ] Review `workflow-orchestrator`.
 - [ ] Review `execute-plan-loop`.
 - [ ] Review `decompose-feature`.
@@ -472,6 +477,8 @@ Evidence: `harness loop validate` validates Stage 10 startup and completion gate
 - [ ] Provide replacement path and migration timeline for unsupported paths.
 - [ ] Include before/after workflow examples.
 - [ ] Ensure optional utilities are not described as core harness primitives.
+- [ ] Resolve or explicitly defer remaining Stage 12 light polish: Markdown selected-route emphasis, explicit empty/ephemeral repair-action fixture handling, and the production repair-action discovery/default-directory policy.
+- [ ] Revisit assessment taxonomy after skill classification and record whether scorecard primitives, maturity thresholds, or rollout stages need adjustment.
 - [ ] Run `git diff --check`.
 
 ### Stage 13 acceptance criteria
@@ -498,6 +505,7 @@ Evidence: `harness loop validate` validates Stage 10 startup and completion gate
 - [ ] Include evidence refs and confidence.
 - [ ] Include blast radius and atomicity notes.
 - [ ] Prohibit fully automated cleanup.
+- [ ] Revisit Stage 12 repair-action routing presentation once GC repair evidence exists, including trusted approval provenance, duplicate action ids, risk, sandbox, and review metadata without emitting executable assessment-route commands.
 - [ ] Run GC tests.
 - [ ] Run `git diff --check`.
 

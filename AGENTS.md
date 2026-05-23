@@ -26,7 +26,7 @@ This repository is the canonical harness-as-code platform for AI coding agents. 
 - Stage 2 defines schemas before commands consume them.
 - Stage 3 implements the initial CLI.
 - Stage 8 must verify agent/CLI marketplace or install-surface feasibility before any plugin/adapter install path or specific host target is promised as available. IDE-only extension hosts are future evidence, not corrected Stage 8/9 targets.
-- Stage 13 must audit `agent-coding` compatibility before importing, rewriting, or deprecating external skills.
+- Stage 13 mines external workflow skills as source material for harness-native capability decisions; it must not create an `agent-coding` product namespace, compatibility package, or default quickstart.
 
 ## Toolchain decisions
 
@@ -46,8 +46,8 @@ When implementation begins:
 - Local checks, eval verifiers, and repair actions must declare trust and sandbox requirements.
 - Schema and harness upgrades must go through previewable, reproducible `harness migrate` flows with evidence.
 
-## `agent-coding` relationship
+## External workflow skill relationship
 
-Treat `LaChimere/agent-coding` as external migration-source evidence. It may remain separate, become a compatibility package, be selectively folded in, be extracted into extension points, or be deprecated only after replacement paths exist.
+Treat external workflow skills, including `LaChimere/agent-coding`, as learning material for harness-native capabilities. Do not copy, vendor, rewrite, merge, deprecate, install, or namespace those skills during Stage 13.
 
-Do not make `npx skills add https://github.com/LaChimere/agent-coding` the default quickstart for this repository; Stage 13 may document it only as a compatibility or migration fallback.
+Stage 13 output belongs in `plans/harness-engineering-platform/capability-ledger.yaml`. Future native capability adoption requires a separately approved substrate contract with evidence, fixtures or evals, trust/sandbox requirements, and false-positive policy where relevant.

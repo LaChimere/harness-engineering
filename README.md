@@ -16,7 +16,7 @@ The roadmap is approved in `plans/harness-engineering-platform/`. The initial sc
 |---|---|---|---|
 | CLI plus `harness.yaml` | Initial Stage 12 CLI exists locally with `init`, `adapter validate`, `assess`, `loop validate`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, execution-loop evidence gates, future GC, adapter-scope checks, native assessment, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization; Stage 7 implements inferential judge policy validation; Stage 9 validates limited-adapter scope; Stage 10 validates execution-loop evidence gates; Stage 12 adds the native agent-facing assessment command. |
 | Agent/CLI marketplace adapter or plugin | Stage 9 ships a GitHub Copilot CLI limited-adapter scope manifest and validator. No installable host package is shipped yet, so users cannot enable an adapter runtime from this repository today. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Stage 8 verified feasibility; Stage 9 may ship only the proven limited adapter scope. |
-| `agent-coding` skills compatibility | External migration-source evidence. Compatibility is not audited yet. | Portable fallback or compatibility path after the substrate exists and each skill is classified. | Stage 13. |
+| External workflow skill source material | External skills are learning material only; they are not a product surface, dependency, or default quickstart. | Mine useful practices into harness-native capability decisions without creating an `agent-coding` namespace or compatibility package. | Stage 13. |
 | CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Stage 11. |
 
 Until a real agent/CLI full-plugin tier is verified and shipped, the public path stays CLI-first. Stage 8 proved only limited-adapter scope, so any Stage 9 adapter must label unsupported rich UX as unavailable. The current local command shape is:
@@ -76,19 +76,14 @@ Every machine-readable artifact must include `schema_version`. Each schema uses 
 
 Migrations must be previewable, reproducible without a plugin, and backed by machine-readable evidence. A plugin may surface a migration, but it must not silently rewrite `harness.yaml`, upgrade schema versions, or create plugin-only source-of-truth state.
 
-## Relationship to `agent-coding`
+## Learning from external workflow skills
 
-`LaChimere/agent-coding` remains external migration-source evidence. Its current skills may later become compatibility helpers, native adapter inputs, extracted extension points, or deprecated paths after replacements exist.
+External workflow skills, including those in `LaChimere/agent-coding`, are source material for harness-native capability design. This repository does not expose `agent-coding` as a product namespace, dependency, compatibility package, or default quickstart.
 
-Stage 13 will classify each relevant `agent-coding` skill before this repository copies, vendors, rewrites, merges, extracts, or deprecates it. Until then, `agent-coding` is not the default quickstart and is not assumed to be present in this repository.
+Stage 13 will mine workflow-oriented external skills into `plans/harness-engineering-platform/capability-ledger.yaml`. Each ledger record describes a harness capability candidate, the observed practice and failure mode, the possible substrate surface, required evidence, and what remains outside harness core. Domain-specific utility skills such as vulnerability scanning are ignored for Stage 13.
 
-Disposition options for each audited skill:
+Stage 13 does **not** copy, vendor, rewrite, merge, deprecate, or install external skills. Future native capability adoption must go through approved schema/CLI/profile/eval/GC contracts with fixtures, trust/sandbox requirements, and false-positive policy where relevant.
 
-- Keep as a separate skills distribution.
-- Create a compatibility package.
-- Fold selected behavior into this repository.
-- Extract selected behavior into separate extension points.
-- Deprecate only after documented replacement paths exist.
 
 ## Roadmap
 

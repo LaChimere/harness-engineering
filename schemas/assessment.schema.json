@@ -199,7 +199,7 @@
       "properties": {
         "selected_route": {
           "type": "string",
-          "enum": ["repair-action", "execution-loop", "external-skill", "cli-fallback"]
+          "enum": ["repair-action", "execution-loop", "external-source-material", "cli-fallback"]
         },
         "routes": {
           "type": "array",
@@ -214,7 +214,12 @@
               },
               "kind": {
                 "type": "string",
-                "enum": ["repair-action", "execution-loop", "external-skill", "cli-fallback"]
+                "enum": [
+                  "repair-action",
+                  "execution-loop",
+                  "external-source-material",
+                  "cli-fallback"
+                ]
               },
               "status": {
                 "type": "string",
@@ -412,7 +417,7 @@
                 "if": {
                   "properties": {
                     "kind": {
-                      "const": "external-skill"
+                      "const": "external-source-material"
                     }
                   },
                   "required": ["kind"]
@@ -532,7 +537,7 @@
           "if": {
             "properties": {
               "selected_route": {
-                "const": "external-skill"
+                "const": "external-source-material"
               }
             },
             "required": ["selected_route"]
@@ -544,7 +549,7 @@
                   "type": "object",
                   "properties": {
                     "kind": {
-                      "const": "external-skill"
+                      "const": "external-source-material"
                     },
                     "status": {
                       "const": "available"

@@ -287,7 +287,7 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
       objectWithString(
         jsonObjects(getArray(getObject(assessment, 'implementation_routing') ?? {}, 'routes')),
         'id',
-        'external-agent-coding-skill',
+        'external-workflow-skill',
       ) ?? {},
       'status',
     ),
@@ -364,11 +364,11 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
     }).length,
   ).toBeGreaterThan(0);
   expect(
-    schemas.validate('assessment', futureExternalSkillAssessment(assessment, routing)),
+    schemas.validate('assessment', futureExternalSourceMaterialAssessment(assessment, routing)),
   ).toEqual([]);
-  expect(
-    getString(objectWithString(routes, 'id', 'external-agent-coding-skill') ?? {}, 'status'),
-  ).toBe('unavailable');
+  expect(getString(objectWithString(routes, 'id', 'external-workflow-skill') ?? {}, 'status')).toBe(
+    'unavailable',
+  );
 });
 
 test('assess does not trust repo-declared repair approvals by default', async () => {
@@ -441,7 +441,7 @@ test('assess emits markdown assessment with execution-loop routing when no repai
   expect(result.stdout).toContain('Read-only assessment');
   expect(result.stdout).toContain('## Maturity scorecard');
   expect(result.stdout).toContain('- selected route: **execution-loop**');
-  expect(result.stdout).toContain('external-agent-coding-skill (unavailable)');
+  expect(result.stdout).toContain('external-workflow-skill (unavailable)');
   expect(result.stdout).toContain('cli-fallback (fallback)');
 });
 
@@ -2613,21 +2613,24 @@ function objectWithString(
   return objects.find((object) => getString(object, key) === value);
 }
 
-function futureExternalSkillAssessment(assessment: JsonObject, routing: JsonObject): JsonObject {
+function futureExternalSourceMaterialAssessment(
+  assessment: JsonObject,
+  routing: JsonObject,
+): JsonObject {
   return {
     ...assessment,
     implementation_routing: {
       ...routing,
-      selected_route: 'external-skill',
+      selected_route: 'external-source-material',
       routes: [
         ...jsonObjects(getArray(routing, 'routes')).filter(
-          (route) => getString(route, 'kind') !== 'external-skill',
+          (route) => getString(route, 'kind') !== 'external-source-material',
         ),
         {
-          id: 'external-agent-coding-skill',
-          kind: 'external-skill',
+          id: 'external-workflow-skill',
+          kind: 'external-source-material',
           status: 'available',
-          summary: 'Future Stage 13 compatibility route.',
+          summary: 'Future source-material route.',
           evidence: [],
         },
       ],

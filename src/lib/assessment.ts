@@ -156,7 +156,7 @@ export async function buildAssessment(request: AssessmentRequest): Promise<JsonO
       rationale:
         'Stage 12 ships the native agent-facing adapter as a deterministic CLI command so agents, plugins, skills, and CI can consume one schema-backed substrate output.',
       rejected_paths: [
-        'skills/harness-engineering is intentionally deferred so this repository does not introduce a skill-only source of truth before Stage 13 compatibility inventory.',
+        'skills/harness-engineering is intentionally deferred so this repository does not introduce a skill-only source of truth before Stage 13 mines external workflow practices into harness-native capability candidates.',
       ],
     },
     source: {
@@ -940,11 +940,11 @@ function implementationRoutingFor(
     });
   }
   routes.push({
-    id: 'external-agent-coding-skill',
-    kind: 'external-skill',
+    id: 'external-workflow-skill',
+    kind: 'external-source-material',
     status: 'unavailable',
     summary:
-      'No external agent-coding skill is assumed installed or vendored; Stage 13 will inventory compatibility before documenting any external skill route.',
+      'External workflow skills are not implementation routes for this repository; Stage 13 mines useful practices into harness-native capability candidates instead.',
     evidence: [],
   });
   routes.push({

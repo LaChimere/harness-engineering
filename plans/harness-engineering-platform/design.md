@@ -13,7 +13,7 @@ The core deliverable is not a new skill. The core deliverable is a versioned har
 - Optional CI adapters that turn harness drift into objective change feedback for teams that want enforcement.
 - Skills as portable agent-facing adapters over the same artifacts.
 
-Portable skills remain supported as a migration and fallback path because they are low-friction and useful today, but they must not be the product center. This repository is clean-slate: it does not currently contain the `agent-coding` skills. Those existing skills are a source of proven workflow patterns and may later become adapters, examples, compatibility shims, or a separate compatibility package. They are not constraints on this repository's target architecture. If a better harness design requires moving, rewriting, merging, extracting, or deleting those skills, the design should do that with a clear migration path and an explicit cross-repo disposition decision.
+Portable skills remain useful source material because they encode real agent workflow practice, but they must not be the product center. This repository is clean-slate: it does not need an `agent-coding` product namespace, adapter path, or compatibility package. Existing skills can inform harness-native capabilities, examples, or substrate-backed replacements, but they are not constraints on this repository's target architecture.
 
 ## North-star design posture
 
@@ -25,7 +25,7 @@ This means:
 - Prefer machine-checkable artifacts over prompt-only instructions.
 - Prefer host-agnostic substrate over any single app, plugin, or skill installer.
 - Prefer the best user entrypoint for each job: full plugin for rich interactive UX, limited adapter for host-native command/tool entrypoints, CLI/spec for guarantees, skills for portable agent orchestration, CI for optional enforcement.
-- Treat compatibility as a migration concern, not a veto. Existing users should get a transition path, but preserving the current skill graph is not a design goal.
+- Treat compatibility as a migration concern, not a veto. Existing users should get a transition path only for paths this repo explicitly supports, but preserving any external skill graph is not a design goal.
 - Allow breaking changes when they produce a materially stronger harness, as long as they are staged, documented, and backed by replacement paths.
 
 ## Design decision: best user entrypoint
@@ -69,7 +69,7 @@ Plugin selection should be explicit:
 Full agent/CLI marketplace plugin feasible -> use marketplace plugin-first guided setup.
 Only limited agent/CLI adapter feasible -> use limited adapter for commands/hooks/MCP/skills over CLI; do not claim rich plugin UX.
 No supported agent/CLI marketplace adapter -> use CLI-first setup.
-No plugin but agent assistance wanted -> use CLI substrate plus a vetted native adapter or documented `agent-coding` compatibility path.
+No plugin but agent assistance wanted -> use CLI substrate plus a vetted native adapter or explicit CLI/schema-backed fallback guidance; do not assume external skills are installed.
 Team wants blocking checks -> add optional CI adapter.
 ```
 
@@ -194,9 +194,6 @@ plugins/
 skills/
   harness-engineering/        # optional native portable adapter after substrate exists
 
-adapters/
-  agent-coding/               # migration/compatibility docs or shims, not assumed present
-
 optional-adapters/
   github-actions/
   other-ci/
@@ -296,9 +293,9 @@ The key point is composition: the spec points to policies, eval suites, trace lo
    - The CLI can produce run-result and report artifacts without an agent by executing deterministic verifiers and configured local commands once Stages 4-6 provide those capabilities.
 
 3. **Agent-assisted rollout**
-   - User asks for harness engineering through a plugin chat surface when supported, through a native portable adapter when available, or through a documented `agent-coding` compatibility path after the compatibility audit.
+   - User asks for harness engineering through a plugin chat surface when supported, through a native portable adapter when available, or through a future adapter path backed by a separately approved substrate contract.
    - The `harness-engineering` adapter reads `harness.yaml`, doctor output, eval plans, traces, and reports.
-   - It produces a rollout plan and delegates implementation to configured repair actions, native agent adapters, or vetted external skills rather than assuming `agent-coding` skills are present in this repo.
+   - It produces a rollout plan and delegates implementation to configured repair actions, native agent adapters, or explicit CLI/schema-backed fallback guidance rather than assuming external skills are present in this repo.
 
 4. **Optional CI-enforced harness**
    - CI validates schemas and runs selected doctor/eval/trace checks.
@@ -362,43 +359,44 @@ Stage 2 should define the minimum viable shapes, not only file names.
 | CI adapters | Run CLI checks in stages and publish objective results |
 | Agent/CLI marketplace plugins | Provide the best interactive UX by visualizing and acting on substrate artifacts when the full-plugin tier is proven; first target must be validated against agent/CLI marketplace distribution and host APIs |
 | Native agent adapters | Optional portable agent UX over substrate evidence; added only after CLI/schema contracts exist |
-| `agent-coding` compatibility path | External migration/adaptation path for existing skills; not assumed present in this repo |
+| Harness-native practice mining | Distills external agent-workflow source material into harness-native capability decisions; source projects are not product namespaces or source-of-truth state |
 | Behavioral eval suite | Task-level outcomes, holdouts, deterministic verifiers, LLM-judge calibration policy |
 | GC loop | Evidence-backed entropy detection, cleanup slicing, rule/eval promotion and retirement |
 | Recurring profiles | Scheduled or long-running maintenance roles over run logs, traces, evals, and doctor output |
 
-## Mapping `agent-coding` skills as migration-source evidence
+## Mining external skills into harness-native capabilities
 
-The following skills are not present in this clean-slate repository. They should be audited as external migration-source behavior before this repo copies, vendors, rewrites, or replaces them.
+The following external skills are source material only. Stage 13 should learn from their workflow practices, not represent the source project as a compatibility namespace in this repository. The output should identify which capabilities are worth bringing into harness-engineering, which substrate surface could eventually own them, and what proof is required before native adoption. The vulnerability-scanning utility is deliberately out of scope for Stage 13.
 
-| `agent-coding` skill | Harness role | Likely action |
-|---|---|---|
-| `workflow-orchestrator` | Agent control-plane router | Audit; possibly replace with native adapter or keep in external compatibility package |
-| `execute-plan-loop` | Build/verify/fix loop | Audit; extract its useful self-verification and continuity behavior into substrate/native adapter |
-| `decompose-feature` | Rollout/stage decomposition | Audit; use as reference for rollout planning adapter |
-| `plan-parallel-work` | Multi-agent/worktree topology | Audit; use as reference for path ownership and parallel work planning |
-| `ensure-atomic-pr` | Cleanup and atomicity recovery | Audit; reuse concept in GC cleanup slicing |
-| `refresh-related-docs` | Doc-gardening workflow | Audit; preserve explicit approval semantics if ported |
-| `achieve-goal` | Long-running objective lifecycle | Audit; align with continuity and recurring profile semantics |
-| `scan-image-vulnerabilities` | Domain utility | Defer classification unless a security-harness extension point is defined |
+This table is illustrative; the canonical Stage 13 artifact is `plans/harness-engineering-platform/capability-ledger.yaml`.
 
-Skills should be classified after the substrate and execution loop are defined. Keep them external, copy, rewrite, merge, extract, or deprecate them based on whether they still improve the target harness architecture.
+| Source material | Practice to mine | Possible harness-native surface | Boundary |
+|---|---|---|---|
+| `workflow-orchestrator` | Workflow phases, gates, escalation, and role routing | Future workflow/profile guidance over plan, evidence, and approval artifacts | Do not import skill graph, triggers, templates, or `plans/{slug}` as source-of-truth state |
+| `execute-plan-loop` | Atomic execution slices, status refresh, verification cadence, periodic review, completion gates | Stronger continuity/self-verification/run evidence protocol; possible future execution-loop command or profile | Keep prompt loop external until CLI/schema artifacts can validate the behavior |
+| `decompose-feature` | Reviewable PR sequencing, dependencies, allowed/prohibited scope, acceptance criteria | Decomposition artifact or planning profile after substrate ownership is designed | Do not make narrative PR plans a harness contract without fixtures and validation |
+| `plan-parallel-work` | Worktree/branch ownership, forbidden paths, merge order, convergence owner | Parallel-work topology artifact or adapter guidance after runner/worktree support exists | Do not enforce path ownership without deterministic conflict evidence |
+| `ensure-atomic-pr` | Mixed-concern detection, split proposals, atomicity exceptions | Advisory GC/assessment evidence category with false-positive policy | Do not ship subjective atomicity scoring as a blocking check |
+| `refresh-related-docs` | Doc freshness triggers, approval-before-editing, high-impact doc handling | Doc-gardener recurring profile or doc-freshness evidence after Stage 17 profile design | Do not add automatic doc rewrites or tone/style checks as doctor categories |
+| `achieve-goal` | Goal lifecycle, pause/resume/blocker/budget states, completion audit | Goal/recurring-profile lifecycle schema or continuity extension after profile semantics exist | Do not make Markdown goal state a substrate primitive |
+
+Stage 13 should not copy, vendor, rewrite, merge, or deprecate any skill. It should produce a durable harness capability ledger, not a skill backlog. Each row should start from an observed failure mode or substrate gap, then record the capability, source observations, candidate surface, deterministic/advisory/non-core disposition, owner stage or `deferred` rationale, required schema/CLI/profile/eval/GC proof, fixtures or evals required, trust/sandbox and false-positive requirements, and what remains outside harness core.
 
 ## Stage sequence
 
 ### Stage 1: Product identity, entrypoints, and distribution decisions
 
-- **Goal:** Declare this repo as the canonical harness-as-code platform, with `agent-coding` treated as an adapter/migration source rather than the product center, without claiming unavailable commands or plugins already work.
+- **Goal:** Declare this repo as the canonical harness-as-code platform, with external skills treated as source material for harness-native capabilities rather than product surfaces, without claiming unavailable commands or plugins already work.
 - **Likely files:** `README.md`, `AGENTS.md`, this design.
 - **Allowed changes:**
-  - Define marketplace plugin as the north-star guided UX, CLI/spec as the current canonical substrate and launch path, skills as audited fallback adapters, and CI as optional enforcement.
-  - Explain that `npx skills add https://github.com/LaChimere/agent-coding` remains a migration-source path but is not the primary mechanical foundation or an endorsed default until Stage 13 audits compatibility.
+  - Define marketplace plugin as the north-star guided UX, CLI/spec as the current canonical substrate and launch path, external skills as source material for capability mining, and CI as optional enforcement.
+  - Explain that external skill installation is not the primary mechanical foundation or an endorsed default.
   - Choose canonical locations: proposed `schemas/`, `tools/harness/`, `examples/`, `plugins/`, and `skills/`.
   - Pin the initial CLI package name (`@lachimere/harness-engineering`), binary name (`harness`), schema publication mechanism, schema compatibility policy, and `harness migrate` posture.
   - Define marketplace plugin-support language: "agent/CLI marketplace plugin-first after a full-plugin tier is proven; limited adapter if only limited capability is proven; CLI-first until then."
-  - Add a Gate 1 disposition for `agent-coding`: whether it stays a separate skills distribution, becomes a compatibility package, is gradually folded in, or is deprecated after replacement paths exist.
+  - Add a Gate 1 disposition for external skill source material: mine it for practices, keep source skills external by default, create adapter guidance only for supported paths, extract selected practices only after substrate contracts exist, or deprecate external guidance after replacement paths exist.
 - **Acceptance criteria:**
-  - README includes a host/path quickstart matrix: current documented CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
+  - README includes a host/path quickstart matrix: current documented CLI-first path, planned marketplace plugin paths, external agent-practice mining status, and optional CI.
   - The docs state which paths exist now versus which are planned.
   - The package/schema distribution choice is explicit enough for Stage 2 and Stage 3 to implement.
 
@@ -569,7 +567,7 @@ Skills should be classified after the substrate and execution loop are defined. 
   - Define a native execution-loop contract or adapter that reads `harness.yaml`, approval policy, sandbox policy, continuity schema, and self-verification evidence schema.
   - Re-read original spec, compare acceptance criteria, run relevant CLI and doctor checks, capture evidence, and update continuity state before completion.
   - Define startup verification and handoff expectations for long-running work.
-  - Document how an external `agent-coding` `execute-plan-loop` user could consume the same evidence, without requiring that skill to live in this repo.
+  - Document that any external producer of continuity and self-verification artifacts must conform to the same schema and CLI validation gates.
 - **Acceptance criteria:**
   - The execution loop cannot claim completion without substrate-aware verification evidence.
   - Approval/sandbox policy decisions are read and either followed or explicitly escalated.
@@ -599,36 +597,74 @@ Skills should be classified after the substrate and execution loop are defined. 
   - Add read-only assessment/design workflow for downstream repositories.
   - Read `harness.yaml`, doctor output, eval plans, traces, run results, and reports when available.
   - Output maturity scorecard, missing primitives, rollout stage plan, policy/eval/trace/continuity recommendations.
-  - Route implementation to trusted applicable native repair actions, native execution-loop adapters, or documented external skills when available.
+  - Route implementation to trusted applicable native repair actions, native execution-loop adapters, or clear CLI/schema-backed fallback guidance.
 - **Prohibited changes:** Do not make the skill a separate contract or broad execution loop.
 - **Acceptance criteria:**
   - The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
   - The adapter does not assume `agent-coding` skills are installed or vendored in this repo.
-  - The adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
+  - The adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, or a clear fallback when no implementation route is configured.
 
-### Stage 13: `agent-coding` compatibility inventory, migration, and alignment
+### Stage 13: Agent-practice mining for harness-native capabilities
 
-- **Goal:** Decide how external `agent-coding` skills fit the new platform without treating the old skill graph as a constraint.
-- **Dependencies:** Stage 1 to start research; Stage 10 and Stage 12 before binding migration decisions land.
+- **Goal:** Learn from external agent-workflow skills and convert useful practices into harness-native capability decisions, without making the source project part of this repository's product surface.
+- **Dependencies:** Stage 1 to start research; Stage 10 and Stage 12 before binding internalization or disposition decisions land.
 - **Allowed changes:**
-  - Classify external `agent-coding` skills as native-adapter candidate, external compatibility helper, optional utility, deprecation candidate, or extraction candidate.
-  - Decide whether each skill is copied into this repo, left in `agent-coding`, replaced by substrate functionality, or supported through documentation only.
-  - Add narrow references to substrate artifacts where useful, either in this repo's compatibility docs or through follow-up changes to `agent-coding`.
-  - Provide migration notes or compatibility shims for existing users when a skill changes, moves, or disappears.
+  - Start from `harness assess` dogfood gaps and explicit failure modes, then audit external workflow skills for practices, ideas, and countermeasures that may be worth preserving.
+  - Write the durable ledger to `plans/harness-engineering-platform/capability-ledger.yaml`, with stable `capability_id` values so later stages can cite individual records.
+  - Record each capability's possible harness-native surface: schema artifact, CLI command, recurring profile, GC/eval/verification rule, adapter guidance, or explicit non-core decision.
+  - Classify each capability as deterministic candidate, advisory candidate, non-core, or reject/defer with rationale.
+  - Record evidence required before internalization: artifact contract, CLI owner, trust/sandbox requirements, fixtures or evals, false-positive policy, and migration or adoption examples only when user behavior would change.
+  - Add narrow references to substrate artifacts where useful inside this slug's capability ledger or existing design/plan docs.
+  - Ignore the vulnerability-scanning skill for Stage 13; it is domain-specific security tooling, not core harness capability evidence for this slice.
+  - Preserve `harness assess` dogfood evidence so internalization decisions cite actual substrate gaps and repair-action applicability.
+- **Prohibited changes:**
+  - Do not copy, vendor, rewrite, merge, or deprecate skills during Stage 13.
+  - Do not add an `agent-coding` adapter path, compatibility package, default quickstart, or product namespace.
+  - Do not add native commands, schemas, GC categories, or recurring profiles solely because a skill exists.
+  - Do not define a security-tooling extension point or vulnerability-scanning capability in Stage 13.
 - **Acceptance criteria:**
-  - Each audited skill is classified as a native-adapter candidate, external compatibility helper, optional utility, deprecation candidate, or extraction candidate.
-  - For every deprecated, moved, extracted, or unsupported skill path, docs include replacement path, breaking-change notice, migration timeline, and before/after workflow example.
-  - Existing `agent-coding` skill users have a documented adoption path if compatibility remains supported.
-  - README and skill docs do not imply optional utilities are core harness primitives.
+  - `plans/harness-engineering-platform/capability-ledger.yaml` exists with stable `capability_id` values.
+  - Each mined capability record follows the canonical ledger fields below.
+  - Every internalization candidate names the future stage, or explicitly uses `deferred` with rationale, plus the concrete evidence required before it can become harness-native.
+  - Every rejected/deferred or non-core capability includes a rationale; migration timing and before/after workflow examples are required only when Stage 13 records that user behavior would later change.
+  - Stage 13 docs do not imply this repository supports, depends on, or exposes `agent-coding` as a product surface.
+
+Capability ledger records use this shape:
+
+```yaml
+- capability_id: execute-plan-loop.atomic-slices
+  status: active # active | deferred | rejected | retired
+  source_observations:
+    - source: execute-plan-loop
+      evidence: path-or-url
+  practice: Atomic execution slices with per-slice verification.
+  failure_mode_or_gap: Large unreviewable changes lose acceptance evidence.
+  candidate_surface: continuity-state | self-verification | gc-evidence | recurring-profile | cli-command | non-core
+  disposition: deterministic-candidate | advisory-candidate | non-core | rejected | deferred
+  owner_stage: Stage 14 # or deferred
+  required_evidence:
+    schema_contract: required
+    cli_owner: required
+    fixtures_or_evals: required
+    trust_sandbox: required
+    false_positive_policy: required
+  user_behavior_change: none # none | future-adoption | supersede-existing-guidance
+  boundary: What remains outside harness core.
+  rationale: Why this disposition is appropriate.
+```
+
+`capability_id` values are stable kebab-case ids and are not reused after commit. Retired entries remain in the ledger with `status: retired`. User-behavior change means a future adopted capability changes how users accomplish a documented task, supersedes existing guidance, or removes a previously supported path; Stage 13 records the expected category but does not create migration requirements unless a later stage actually changes user behavior.
 
 ### Stage 14: GC framework and first deterministic categories
 
 - **Goal:** Make entropy management operational without creating an unreviewable all-category GC stage.
-- **Dependencies:** Stage 4 and Stage 6.
+- **Dependencies:** Stage 4 and Stage 6. Stage 13 may supply candidate ideas, but Stage 14 only promotes those with deterministic inputs and false-positive policy.
 - **Allowed changes:**
   - Implement `harness gc audit` and `harness gc validate`.
   - Add GC evidence append-only output.
   - Implement 2-3 low-risk deterministic categories, such as broken references, duplicate IDs, stale schema versions, or other mechanically defined forms of context/routing/doc entropy, with explicit algorithms and fixtures.
+  - Optionally draw from Stage 13 capability candidates, such as atomicity or doc freshness, only when they can be expressed as deterministic evidence rather than subjective process scoring.
+  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
   - Produce ranked atomic cleanup slices with evidence refs and confidence.
 - **Prohibited changes:** No fully automated cleanup without human review; no ad hoc taxonomy mutation without versioning and decision logs.
 - **Acceptance criteria:**
@@ -643,6 +679,8 @@ Skills should be classified after the substrate and execution loop are defined. 
 - **Dependencies:** Stage 7 and Stage 14.
 - **Allowed changes:**
   - Add tool/policy, verification, execution, eval, and trace entropy categories where evidence is available.
+  - Revisit Stage 13 advisory capability candidates only after Stage 14 proves the relevant evidence shape and false-positive policy.
+  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
   - Promote repeated feedback into durable rules/checks/templates/evals only with evidence thresholds and holdout evidence where behavioral evals are involved.
   - Retire stale rules, templates, or evals when evidence shows they no longer add value.
 - **Acceptance criteria:**
@@ -651,16 +689,17 @@ Skills should be classified after the substrate and execution loop are defined. 
   - LLM-judge evidence follows Stage 7 calibration policy.
   - Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
 
-### Stage 16: Skill-adapter GC categories and migration cleanup
+### Stage 16: Capability adoption cleanup and migration
 
-- **Goal:** Add skill-adapter entropy checks only after the compatibility inventory defines replacement paths.
-- **Dependencies:** Stage 13 and Stage 15.
+- **Goal:** Add cleanup only after a Stage 13 capability candidate is explicitly adopted or superseded with a substrate-backed replacement.
+- **Dependencies:** Stage 13, Stage 15, and whichever later stage produced an actual substrate-backed replacement. If no adopted capability or replacement exists, Stage 16 remains dormant.
 - **Allowed changes:**
-  - Add skill trigger/routing drift, duplicated adapter guidance, obsolete skill references, and migration cleanup categories only for skill adapters this repo chooses to support.
-  - Connect deprecated/extracted skill evidence to GC cleanup slices.
+  - Add cleanup categories for obsolete guidance, duplicated process rules, or stale references only for capabilities this repo has actually adopted or superseded.
+  - Connect superseded capability evidence to GC cleanup slices.
+  - Remove or rewrite external-source references only after a documented substrate replacement exists.
 - **Acceptance criteria:**
-  - Skill-specific GC findings cite Stage 13 classification or migration docs.
-  - No skill cleanup slice deletes user-facing behavior without a documented replacement path.
+  - Capability-specific GC findings cite Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
+  - No cleanup slice deletes user-facing behavior without a documented replacement path.
 
 ### Stage 17: Recurring profiles and scheduled maintenance
 
@@ -668,6 +707,8 @@ Skills should be classified after the substrate and execution loop are defined. 
 - **Dependencies:** Stage 12 and Stage 16. Stage 9 is needed for plugin-driven profiles; Stage 11 is only needed for CI-scheduled profiles.
 - **Allowed changes:**
   - Add profiles such as entropy-auditor, doc-gardener, eval-curator, and trace-reviewer.
+  - Promote Stage 13 capability candidates owned by Stage 17 only when the recurring-profile contract can express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
+  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
   - Document trigger, inputs, state artifacts, allowed actions, stop condition, and handoff.
   - Add plugin- or scheduler-driven examples if useful.
 - **Acceptance criteria:**
@@ -686,11 +727,10 @@ Skills should be classified after the substrate and execution loop are defined. 
 - **Conditional after Stage 8:** Stage 9 adapter MVP starts only if Stage 8 verifies a feasible full-plugin or limited-adapter target; otherwise skip Stage 9 and keep CLI-first fallback until an agent/CLI marketplace target exists.
 - **Can start after Stage 4, Stage 5, and Stage 6:** Stage 10 native execution-loop adapter can proceed once schemas, CLI, doctor, eval, and trace artifacts are available.
 - **Should wait for Stage 4, Stage 5, Stage 6, and Stage 7:** Stage 11 optional CI adapters need concrete checks and artifacts plus judge-blocking policy; they should not block plugin feasibility or CLI-first UX.
-- **Should wait for Stage 10:** Stage 12 skill adapter needs the substrate-aware execution loop but should not depend on plugin availability.
-- **Can start after Stage 4 and Stage 6:** Stage 14 substrate GC can begin with deterministic categories independent of skill inventory.
-- **Can start after Stage 1 as research:** Stage 13's external `agent-coding` inventory can begin early, but binding migration decisions should wait until Stage 10 and Stage 12 define native execution-loop and adapter boundaries.
+- **Stage 13 gate:** Practice-mining research can start after Stage 1, but binding `plans/harness-engineering-platform/capability-ledger.yaml` records should wait until Stage 10 and Stage 12 provide enough substrate and assessment evidence to distinguish useful capabilities from prompt-only workflow habits.
+- **Can start after Stage 4 and Stage 6:** Stage 14 substrate GC can begin with deterministic categories independent of Stage 13 capability mining.
 - **Should wait for Stage 7 and Stage 14:** Stage 15 GC expansion can add non-skill evidence-driven categories after judge policy and first GC framework exist.
-- **Should wait for Stage 13 and Stage 15:** Stage 16 skill-specific GC categories need both inventory and general evidence-driven GC.
+- **Should wait for Stage 13, Stage 15, and a real replacement path:** Stage 16 capability adoption cleanup needs capability-ledger records plus general evidence-driven GC and an actual adopted capability or substrate-backed replacement to clean up.
 - **Final optional work:** Stage 17 recurring profiles should wait until GC and plugin/skill adapter paths prove useful.
 
 Use `plan-parallel-work` after Gate 1 if multiple agents will implement the stages.
@@ -721,16 +761,16 @@ Stage 8 correction note: later review supersedes any generic "host marketplace" 
 
 1. Primary identity: "harness-as-code platform for AI coding agents".
 2. Canonical source of truth: `harness.yaml` plus versioned schemas.
-3. Best user entry strategy: agent/CLI marketplace plugin-first guided UX after a supported full-plugin tier is verified; limited adapters are labeled as limited; CLI-first is the current universal path until then; skills are audited portable fallback adapters; CI is optional enforcement.
+3. Best user entry strategy: agent/CLI marketplace plugin-first guided UX after a supported full-plugin tier is verified; limited adapters are labeled as limited; CLI-first is the current universal path until then; external skills are practice evidence or explicitly supported fallback adapters; CI is optional enforcement.
 4. CLI distribution and toolchain: first implementation via TypeScript 6, Bun for repository package management, Biome/Lefthook with user-provided configuration, and a Node-compatible npm CLI with package `@lachimere/harness-engineering`, binary `harness`, explicit schema publication mechanism, compatibility policy, and `harness migrate` strategy.
 5. First plugin target: defer selection to Stage 8; no plugin install path or specific host target is promised as available at Gate 1 until agent/CLI marketplace distribution, host APIs, and capability tier are verified.
-6. `agent-coding` disposition: keep it as separate skills distribution, create a compatibility package, fold selected behavior into this repo, or deprecate only after replacement paths exist.
-7. Canonical locations: `schemas/`, `tools/harness/`, `examples/`, selected-host paths under `plugins/` after Stage 8, native adapter paths such as `skills/`, and compatibility docs under `adapters/`; optional enforcement examples live under adapter docs, not as a required `.github/workflows/` path.
+6. External skill source material: mine it for harness-native capability ideas, but do not create a product namespace, default quickstart, or compatibility package from the source project.
+7. Canonical locations: `schemas/`, `tools/harness/`, `examples/`, selected-host paths under `plugins/` after Stage 8, native adapter paths such as `skills/`, and capability-mining records under the planning slug until a substrate-backed capability exists; optional enforcement examples live under adapter docs, not as a required `.github/workflows/` path.
 8. Shared primitives: harness spec, schemas, context map, environment, approval/sandbox policy, agent runner, trace, eval task, run-result log, doctor result, plugin capability, repair action, continuity, self-verification evidence, model profile, failure taxonomy, and GC evidence.
 9. Doctor/eval separation: deterministic doctor checks and behavioral eval suites have different contracts.
 10. First behavioral proof: the roadmap must reach an end-to-end `harness run` / `harness eval run` milestone before GC expansion or recurring profiles.
-11. Roadmap order: substrate -> CLI -> doctor/verifier -> agent-runner/eval/trace -> agent/CLI adapter feasibility and execution loop -> conditional adapter MVP -> optional CI -> native adapter -> compatibility inventory -> GC -> recurring profiles.
+11. Roadmap order: substrate -> CLI -> doctor/verifier -> agent-runner/eval/trace -> agent/CLI adapter feasibility and execution loop -> conditional adapter MVP -> optional CI -> native adapter -> external practice mining -> GC -> recurring profiles.
 12. Current repo state is not a design constraint: this clean-slate repo can choose native structure first and only import/adapt old skills deliberately.
-13. Existing `agent-coding` skills are still evidence: do not copy, delete, or merge them until the substrate or adapter replacement demonstrates it preserves or supersedes their behavior.
-14. `scan-image-vulnerabilities` classification is deferred to the `agent-coding` compatibility inventory unless this repo defines a security-tooling harness extension point.
-15. Keep `npx skills add https://github.com/LaChimere/agent-coding` as a migration/fallback path only after compatibility is documented; do not make it the primary mechanical foundation or default quickstart.
+13. External workflow skills are learning material only: do not copy, delete, merge, or expose them as product paths during Stage 13.
+14. Domain-specific utility skills, including vulnerability scanning, are ignored for Stage 13 unless a future approved security-tooling harness contract exists.
+15. Do not make external skill installation the primary mechanical foundation or default quickstart.

@@ -20,7 +20,7 @@
 - [x] Add quickstart matrix:
   - [x] CLI-first path documented as the current default; implementation planned for Stage 3.
   - [x] Marketplace plugin paths planned pending Stage 8.
-  - [x] `agent-coding` skill compatibility pending Stage 13.
+  - [x] External `agent-coding` practice mining pending Stage 13.
   - [x] Optional CI after Stage 11.
 - [x] Add or update AGENTS/contribution guidance for this clean-slate repo.
 - [x] Pin package/bin naming: `@lachimere/harness-engineering` and `harness`, unless Stage 1 changes the decision.
@@ -33,7 +33,7 @@
 
 ### Stage 1 acceptance criteria
 
-- [x] README includes a host/path quickstart matrix covering the current documented CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
+- [x] README includes a host/path quickstart matrix covering the current documented CLI-first path, planned marketplace plugin paths, external agent-practice mining status, and optional CI.
 - [x] Docs state which paths exist now versus which are planned.
 - [x] Package, binary, Bun package-manager choice, TypeScript 6 requirement, Biome/Lefthook requirement with user-provided configuration, Node-compatible runtime target, schema distribution, compatibility policy, and `harness migrate` posture are explicit enough for Stage 2 and Stage 3 to implement.
 
@@ -387,7 +387,7 @@ Verification evidence:
 - [x] Run startup verification before work begins.
 - [x] Record startup verification in continuity state.
 - [x] Define handoff expectations.
-- [x] Document how external `agent-coding` `execute-plan-loop` can consume the same evidence.
+- [x] Document that any external producer of continuity and self-verification artifacts must conform to the same schema and CLI validation gates.
 - [x] Add tests/fixtures for failed startup verification and failed completion gates.
 - [x] Run `git diff --check`.
 
@@ -438,7 +438,7 @@ Deferred: the user explicitly chose to skip optional CI adapter implementation b
 - [x] Output rollout stage plan.
 - [x] Output policy/eval/trace/continuity recommendations.
 - [x] Document repair-action discovery/routing mechanism.
-- [x] Route implementation to trusted applicable native repair actions, native execution-loop adapters, or documented external skills when available.
+- [x] Route implementation to trusted applicable native repair actions, native execution-loop adapters, or clear CLI/schema-backed fallback guidance.
 - [x] Add example showing adapter routing to at least one repair action or gracefully deferring to an external skill/fallback.
 - [x] Ensure adapter does not assume `agent-coding` skills are installed or vendored.
 - [x] Add trigger/behavior evals if using a skill format.
@@ -450,13 +450,14 @@ Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter pat
 ### Stage 12 acceptance criteria
 
 - [x] The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
-- [x] Adapter does not assume `agent-coding` skills are installed or vendored in this repo.
-- [x] Adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
+- [x] Adapter does not assume external workflow skills are installed or vendored in this repo.
+- [x] Adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, or a clear fallback when no implementation route is configured.
 
-## Stage 13: `agent-coding` compatibility inventory and migration
+## Stage 13: Agent-practice mining for harness-native capabilities
 
-- [ ] Start inventory research after Stage 1.
-- [ ] Dogfood `harness assess --format json` on this repository and at least one more realistic downstream fixture before classifying skill compatibility gaps, recording assessment gaps, repair-action applicability, and any trusted approval requirements.
+- [ ] Start external practice-mining research after Stage 1.
+- [ ] Dogfood `harness assess --format json` on this repository and at least one more realistic downstream fixture before recording capability candidates, assessment gaps, repair-action applicability, and any trusted approval requirements.
+- [ ] Create `plans/harness-engineering-platform/capability-ledger.yaml` with stable kebab-case `capability_id` values for later Stage 14/16 citations.
 - [ ] Review `workflow-orchestrator`.
 - [ ] Review `execute-plan-loop`.
 - [ ] Review `decompose-feature`.
@@ -464,29 +465,38 @@ Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter pat
 - [ ] Review `ensure-atomic-pr`.
 - [ ] Review `refresh-related-docs`.
 - [ ] Review `achieve-goal`.
-- [ ] Review `scan-image-vulnerabilities`.
-- [ ] For `scan-image-vulnerabilities`, explicitly decide whether this slug defines a security-tooling extension point; otherwise classify it as an optional external utility rather than a core harness primitive.
-- [ ] Classify each as:
-  - [ ] native-adapter candidate,
-  - [ ] external compatibility helper,
-  - [ ] optional utility,
-  - [ ] deprecation candidate,
-  - [ ] extraction candidate.
-- [ ] Decide whether each skill is copied, left external, replaced, extracted, or documentation-only.
-- [ ] Provide migration notes or compatibility shims for supported paths.
-- [ ] Provide replacement path and migration timeline for unsupported paths.
-- [ ] Include before/after workflow examples.
-- [ ] Ensure optional utilities are not described as core harness primitives.
+- [ ] Explicitly exclude the vulnerability-scanning skill from Stage 13 because domain-specific security tooling is out of scope for this slice.
+- [ ] For each mined capability candidate, record:
+  - [ ] stable `capability_id`,
+  - [ ] `status` (`active`, `deferred`, `rejected`, or `retired`),
+  - [ ] source observations,
+  - [ ] practice worth preserving,
+  - [ ] failure mode or substrate gap,
+  - [ ] possible harness-native surface,
+  - [ ] deterministic/advisory/non-core disposition,
+  - [ ] future owner stage or `deferred` rationale,
+  - [ ] evidence, fixtures, or evals required before internalization,
+  - [ ] trust/sandbox or false-positive policy requirements,
+  - [ ] user-behavior-change category (`none`, `future-adoption`, or `supersede-existing-guidance`),
+  - [ ] rationale,
+  - [ ] what stays outside harness core.
+- [ ] Decide whether each capability is a schema/CLI/profile/eval/GC candidate, adapter guidance, non-core, or rejected/deferred idea.
+- [ ] Explicitly state that no external skill is copied, vendored, rewritten, merged, deprecated, namespaced as a product surface, or made default quickstart in Stage 13.
+- [ ] Provide replacement path, migration timeline, and before/after workflow examples only for capability paths where Stage 13 records that user behavior would later change.
+- [ ] Provide non-core rationale for rejected/deferred and non-core capability ideas.
+- [ ] Ensure ignored or non-core source material is not described as a harness primitive.
 - [ ] Resolve or explicitly defer remaining Stage 12 light polish: Markdown selected-route emphasis, explicit empty/ephemeral repair-action fixture handling, and the production repair-action discovery/default-directory policy.
-- [ ] Revisit assessment taxonomy after skill classification and record whether scorecard primitives, maturity thresholds, or rollout stages need adjustment.
+- [ ] Revisit assessment taxonomy after capability mining and record whether scorecard primitives, maturity thresholds, rollout stages, or future capability-candidate fields need adjustment.
+- [ ] Document `capability_id` stability: committed ids are not reused, and retired records remain in the ledger as `status: retired`.
 - [ ] Run `git diff --check`.
 
 ### Stage 13 acceptance criteria
 
-- [ ] Each audited skill is classified with the Stage 13 taxonomy: native-adapter candidate, external compatibility helper, optional utility, deprecation candidate, or extraction candidate.
-- [ ] For every deprecated, moved, extracted, or unsupported skill path, docs include replacement path, breaking-change notice, migration timeline, and before/after workflow example.
-- [ ] Existing `agent-coding` skill users have a documented adoption path if compatibility remains supported.
-- [ ] README and skill docs do not imply optional utilities are core harness primitives.
+- [ ] `plans/harness-engineering-platform/capability-ledger.yaml` exists with stable kebab-case `capability_id` values.
+- [ ] Each mined capability record follows the canonical ledger fields defined in `design.md`, including `status`, source observations, user-behavior-change category, required evidence, rationale, and boundary.
+- [ ] Every internalization candidate names the proof required before it can become harness-native: schema contract, CLI owner, fixtures or evals, trust/sandbox requirements, false-positive policy, and migration/adoption examples only when user behavior would change.
+- [ ] Every rejected/deferred or non-core capability includes a rationale; migration timing and before/after workflow examples are required only when Stage 13 records that user behavior would later change.
+- [ ] Stage 13 docs do not imply this repository supports, depends on, or exposes `agent-coding` as a product surface.
 
 ## Stage 14: GC framework and first deterministic categories
 
@@ -501,6 +511,8 @@ Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter pat
 - [ ] Add category for stale schema versions.
 - [ ] Add passing/failing fixtures for each category.
 - [ ] Document false-positive policy for each category.
+- [ ] Promote Stage 13 capability candidates only when they can be expressed as deterministic GC evidence rather than subjective process scoring.
+- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
 - [ ] Produce ranked atomic cleanup slices.
 - [ ] Include evidence refs and confidence.
 - [ ] Include blast radius and atomicity notes.
@@ -528,6 +540,7 @@ Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter pat
 - [ ] Require behavioral promotion to cite holdout results, not only optimization-suite improvement.
 - [ ] Define retirement rules for stale rules/templates/evals.
 - [ ] Ensure promotion/retirement cites evidence artifacts.
+- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
 - [ ] Ensure a single preference cannot become a durable rule.
 - [ ] Ensure LLM-judge evidence follows Stage 7 calibration policy.
 - [ ] Run GC expansion tests.
@@ -540,22 +553,24 @@ Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter pat
 - [ ] LLM-judge evidence follows Stage 7 calibration policy.
 - [ ] Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
 
-## Stage 16: Skill-adapter GC and migration cleanup
+## Stage 16: Capability adoption cleanup and migration
 
-- [ ] Add checks only for skill adapters this repo chooses to support.
-- [ ] Add skill trigger/routing drift checks.
+- [ ] Add checks only for capabilities this repo has actually adopted or superseded.
+- [ ] Confirm Stage 16 is active only after Stage 13 records a capability and a later stage produces a real adopted capability or substrate-backed replacement.
+- [ ] Add stale capability guidance checks.
 - [ ] Add duplicated adapter guidance checks.
 - [ ] Add obsolete skill reference checks.
 - [ ] Add migration cleanup categories.
-- [ ] Connect findings to Stage 13 classification or migration docs.
+- [ ] Connect findings to Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
 - [ ] Ensure no cleanup slice deletes behavior without documented replacement.
-- [ ] Run skill-adapter GC tests.
+- [ ] Run capability adoption cleanup tests.
 - [ ] Run `git diff --check`.
 
 ### Stage 16 acceptance criteria
 
-- [ ] Skill-specific GC findings cite Stage 13 classification or migration docs.
-- [ ] No skill cleanup slice deletes user-facing behavior without a documented replacement path.
+- [ ] Capability-specific GC findings cite Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
+- [ ] Stage 16 produces no cleanup work when no adopted capability or substrate-backed replacement exists.
+- [ ] No cleanup slice deletes user-facing behavior without a documented replacement path.
 
 ## Stage 17: Recurring profiles and scheduled maintenance
 
@@ -572,12 +587,15 @@ Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter pat
 - [ ] Add plugin- or scheduler-driven examples if useful.
 - [ ] Ensure profiles consume substrate artifacts and add value beyond one-shot summaries.
 - [ ] Add fixtures or examples demonstrating profile stopping when condition is met.
+- [ ] Promote Stage 13 capability candidates owned by Stage 17 only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
+- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
 - [ ] Run profile tests/evals where available.
 - [ ] Run `git diff --check`.
 
 ### Stage 17 acceptance criteria
 
 - [ ] Profiles consume substrate artifacts and add behavior beyond one-shot summaries.
+- [ ] Stage 13 capability candidates owned by Stage 17 are promoted only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions.
 - [ ] The initial shipped profile set includes entropy-auditor, doc-gardener, eval-curator, and trace-reviewer profiles.
 - [ ] Each profile has a measurable stop condition and handoff artifact.
 - [ ] Fixtures or examples demonstrate each profile stopping when its condition is met.

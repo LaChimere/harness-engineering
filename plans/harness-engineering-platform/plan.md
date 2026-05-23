@@ -4,9 +4,9 @@
 
 Approved by the user on 2026-05-20. This plan translates the Gate 1 research and design into the approved implementation sequence for `LaChimere/harness-engineering`.
 
-The product target is a clean-slate **harness-as-code platform for AI coding agents**. `agent-coding` is migration-source evidence and a possible compatibility path, not the product center and not assumed to be present in this repo.
+The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 13: `agent-coding` compatibility inventory and migration.
+Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 13: agent-practice mining for harness-native capabilities.
 
 ## Goals
 
@@ -14,13 +14,13 @@ Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are
 - Ship a deterministic `harness` CLI before relying on plugins or skills.
 - Prove the platform can run a model through a harness via `harness run` and an end-to-end behavioral eval.
 - Keep agent/CLI marketplace plugins as the north-star UX, but do not promise a plugin path until agent/CLI marketplace or install-surface feasibility and capability tier are proven.
-- Treat `agent-coding` skills as external behavior to audit, adapt, extract, or replace after the substrate exists.
+- Learn from external agent-workflow skills in Stage 13, then record harness-native capability candidates; later adoption requires a separately approved substrate contract.
 - Make GC, recurring profiles, and adapters evidence-driven rather than prompt-only.
 
 ## Non-goals
 
-- Do not import or vendor `agent-coding` skills before the compatibility inventory decides their disposition.
-- Do not make `npx skills add https://github.com/LaChimere/agent-coding` the default quickstart.
+- Do not import, vendor, or namespace external skills during practice mining; future native behavior must be justified by substrate-shaped evidence, not skill availability.
+- Do not make external skill installation a default quickstart.
 - Do not ship a plugin-first install path before Stage 8 proves a real agent/CLI marketplace path and capability tier.
 - Do not implement subjective "AI slop" scoring as a doctor or GC category.
 - Do not let plugins, CI adapters, or skills create a second source of truth outside the CLI/schema substrate.
@@ -55,17 +55,17 @@ Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are
 | 10 | Native execution loop and continuity adapter | Stage 2, Stage 3, Stage 4, Stage 5, Stage 6 | Native implementation loop consumes substrate evidence and enforces completion/startup gates |
 | 11 | Optional CI adapters | Stage 3, Stage 4, Stage 5, Stage 6, Stage 7 | Teams can opt into portable CI enforcement; uncalibrated judges remain advisory |
 | 12 | Native agent-facing harness-engineering adapter | Stage 10 | Portable agent UX reads substrate evidence and produces assessment/rollout plans |
-| 13 | `agent-coding` compatibility inventory and migration | Stage 1 to start research; Stage 10/12 before binding decisions | External skills are classified as native-adapter candidates, external compatibility helpers, optional utilities, deprecation candidates, or extraction candidates |
+| 13 | Agent-practice mining for harness-native capabilities | Stage 1 to start research; Stage 10/12 before binding decisions | External workflow skills are mined into `plans/harness-engineering-platform/capability-ledger.yaml` records with candidate substrate surfaces, evidence requirements, future owner stages, and non-core boundaries |
 | 14 | GC framework and first deterministic categories | Stage 4, Stage 6 | `harness gc audit/validate` produces append-only evidence and reviewable cleanup slices for mechanical categories |
 | 15 | Evidence-driven GC expansion | Stage 5, Stage 7, Stage 14 | GC can promote/retire rules, checks, templates, and evals using evidence and holdout results |
-| 16 | Skill-adapter GC and migration cleanup | Stage 13, Stage 15 | Skill-adapter entropy checks operate only on supported adapter paths with replacement evidence |
+| 16 | Capability adoption cleanup and migration | Stage 13, Stage 15, and a real adopted capability or substrate-backed replacement; otherwise dormant | Cleanup operates only on adopted capabilities or replacement paths with evidence |
 | 17 | Recurring profiles and scheduled maintenance | Stage 12, Stage 16 | Entropy auditor, doc gardener, eval curator, and trace reviewer consume substrate artifacts with measurable stop conditions |
 
 ## Stage acceptance criteria
 
 ### Stage 1: Product identity, entrypoints, and distribution decisions
 
-- README includes a host/path quickstart matrix: current documented CLI-first path, planned marketplace plugin paths, audited skill compatibility status, and optional CI.
+- README includes a host/path quickstart matrix: current documented CLI-first path, planned marketplace plugin paths, external agent-practice mining status, and optional CI.
 - Docs state which paths exist now versus which are planned.
 - Package, binary, Bun package-manager choice, TypeScript 6 requirement, Biome/Lefthook requirement with user-provided configuration, Node-compatible runtime target, schema distribution, compatibility policy, and `harness migrate` posture are explicit enough for Stage 2 and Stage 3 to implement.
 
@@ -169,16 +169,17 @@ Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are
 ### Stage 12: Native agent-facing harness-engineering adapter
 
 - The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
-- The adapter does not assume `agent-coding` skills are installed or vendored in this repo.
-- The adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, documented external skills, or a clear fallback when no implementation route is configured.
+- The adapter does not assume external workflow skills are installed or vendored in this repo.
+- The adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, or a clear fallback when no implementation route is configured.
 
-### Stage 13: `agent-coding` compatibility inventory and migration
+### Stage 13: Agent-practice mining for harness-native capabilities
 
-- Each audited skill is classified with the Stage 13 taxonomy: native-adapter candidate, external compatibility helper, optional utility, deprecation candidate, or extraction candidate.
-- For every deprecated, moved, extracted, or unsupported skill path, docs include replacement path, breaking-change notice, migration timeline, and before/after workflow example.
-- Existing `agent-coding` skill users have a documented adoption path if compatibility remains supported.
-- README and skill docs do not imply optional utilities are core harness primitives.
-- Stage 13 starts by dogfooding `harness assess` on the repository and a more realistic downstream fixture so compatibility decisions cite actual assessment gaps, repair-action applicability, and trusted approval requirements rather than assumed adapter needs.
+- External workflow skills are treated as learning material, not as a compatibility package to preserve by default.
+- Stage 13 produces a durable capability ledger at `plans/harness-engineering-platform/capability-ledger.yaml`: each row follows the canonical field shape in `design.md`, has a stable kebab-case `capability_id`, and records source observations, practice, failure mode or substrate gap, candidate substrate surface, disposition, future owner stage or `deferred` rationale, required evidence, user-behavior-change category, rationale, and what stays outside harness core. Once committed, `capability_id` values are not reused; retired records remain as `status: retired`.
+- No skill is copied, vendored, rewritten, merged, deprecated, or made the default quickstart during Stage 13.
+- Every internalization candidate names the concrete proof required before it can become native: schema contract, CLI owner, fixtures or evals, trust/sandbox requirements, false-positive policy, and migration/adoption examples only when user behavior would change.
+- The vulnerability-scanning skill is ignored for Stage 13 because domain-specific security tooling is not core harness capability evidence for this slice.
+- Stage 13 starts by dogfooding `harness assess` on the repository and a more realistic downstream fixture so capability decisions cite actual assessment gaps, repair-action applicability, and trusted approval requirements rather than assumed adapter needs.
 - Remaining Stage 12 assessment polish that does not block completion is resolved or explicitly deferred during Stage 13: selected-route Markdown readability, explicit empty/ephemeral repair-action fixture handling, and the production repair-action discovery/default-directory policy.
 
 ### Stage 14: GC framework and first deterministic categories
@@ -187,6 +188,8 @@ Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are
 - GC evidence output is append-only and preserves historical audit runs.
 - Cleanup slices include evidence refs, confidence, blast radius, and atomicity notes; they do not mix unrelated concerns.
 - No GC category ships unless its inputs, algorithm, false-positive policy, and passing/failing fixtures are documented.
+- Stage 13 capability candidates are promoted only when they fit deterministic GC evidence; subjective agent-process scoring remains advisory or deferred.
+- Any Stage 14 adoption of a Stage 13 capability records the adopted `capability_id` and whether Stage 16 cleanup is triggered.
 - Repair-action routing polish from Stage 12 is revisited when GC/repair evidence exists, especially trusted approval provenance, duplicate action ids, risk/sandbox presentation, and review metadata, without turning assessment routes into executable commands.
 
 ### Stage 15: Evidence-driven GC expansion
@@ -195,15 +198,19 @@ Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are
 - A single preference cannot become a durable rule.
 - LLM-judge evidence follows Stage 7 calibration policy.
 - Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
+- Any Stage 15 adoption of a Stage 13 capability records the adopted `capability_id` and whether Stage 16 cleanup is triggered.
 
-### Stage 16: Skill-adapter GC and migration cleanup
+### Stage 16: Capability adoption cleanup and migration
 
-- Skill-specific GC findings cite Stage 13 classification or migration docs.
-- No skill cleanup slice deletes user-facing behavior without a documented replacement path.
+- Capability-specific GC findings cite Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
+- Stage 16 produces no cleanup work when no adopted capability or substrate-backed replacement exists.
+- No cleanup slice deletes user-facing behavior without a documented replacement path.
 
 ### Stage 17: Recurring profiles and scheduled maintenance
 
 - Profiles consume substrate artifacts and add behavior beyond one-shot summaries.
+- Stage 13 capability candidates owned by Stage 17 are promoted only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
+- Any Stage 17 adoption of a Stage 13 capability records the adopted `capability_id` and whether Stage 16 cleanup is triggered.
 - The initial shipped profile set includes entropy-auditor, doc-gardener, eval-curator, and trace-reviewer profiles.
 - Each profile has a measurable stop condition and handoff artifact.
 - Fixtures or examples demonstrate each profile stopping when its condition is met.
@@ -253,7 +260,7 @@ This adds calibrated inferential review, verifies whether agent/CLI marketplace 
 
 Includes Stage 12 and Stage 13.
 
-This adds a native agent-facing adapter and decides how external `agent-coding` skills relate to this platform: remain separate, become a compatibility package, get folded in selectively, get extracted, or deprecate after replacement paths exist.
+This adds a native agent-facing adapter and mines external workflow skills as learning material for harness-native capabilities, without making the source project a product namespace or dependency.
 
 ### Milestone E: Continuous improvement loop
 
@@ -272,7 +279,7 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 - Agent-runner stages must include deterministic stub/recorded execution for CI and reviewers without API keys.
 - Plugin/adapter stages must prove the selected host surface is an adapter over CLI/schema artifacts and cannot create a second source of truth.
 - Stage 8 must define and run automated matrix validation for completeness, enum validity, and evidence presence. Stage 9 must validate its adapter scope manifest or equivalent revalidated plugin-capability metadata against the Stage 8 matrix so implemented scope is a subset of proven capabilities.
-- Migration stages must document before/after workflows for any supported, moved, extracted, deprecated, or unsupported `agent-coding` skill path.
+- Practice-mining and migration stages must document before/after workflows only when an adopted, moved, extracted, deprecated, superseded, or unsupported capability path changes user behavior.
 
 ## Stage 1 decisions to document
 
@@ -280,16 +287,16 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 - Schema publication mechanism and compatibility policy.
 - Confirm `@lachimere/harness-engineering` and `harness` as final npm package/bin names.
 - Confirm repository package management with Bun, TypeScript 6 for implementation, Biome/Lefthook using user-provided configuration, explicit `tsc --noEmit` type checking, and Node-compatible public CLI output.
-- `agent-coding` disposition options to document at Gate 1:
-  - keep as separate skills distribution,
-  - create compatibility package,
-  - fold selected behavior into this repo,
-  - extract selected behavior into separate extension points,
-  - deprecate only after replacement paths exist.
+- External skill practice-mining disposition options to document at Gate 1:
+  - ignore source material that is not core harness evidence,
+  - record capability as advisory evidence,
+  - extract selected capability into future schema/CLI/profile/eval/GC substrate,
+  - create adapter guidance only after a supported path exists,
+  - deprecate external guidance only after replacement paths exist.
 - Host/path quickstart matrix wording:
   - CLI-first documented as the current default path, with implementation planned for Stage 3,
   - agent/CLI marketplace plugins or limited adapters planned pending Stage 8,
-  - skills compatibility pending Stage 13,
+  - external agent-practice mining pending Stage 13,
   - CI optional after Stage 11.
 
 ## Definition of done for this slug
@@ -299,5 +306,5 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 - Traces, run-results, verifier results, and reports are schema-backed and reproducible.
 - Agent/CLI marketplace feasibility is either proven at a full-plugin or limited-adapter tier and followed by a matching MVP, or explicitly deferred with CLI-first docs.
 - Optional CI enforcement is portable and does not assume GitHub as the only host.
-- Native agent adapters and `agent-coding` compatibility are clearly separated.
+- Native agent adapters and external agent-practice mining are clearly separated.
 - GC and recurring profiles operate over real evidence artifacts, not subjective prose.

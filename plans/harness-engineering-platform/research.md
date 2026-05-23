@@ -19,15 +19,16 @@ The user later confirmed the intended direction: the product should actively do 
 - That blank starting point was an advantage: the target architecture could be designed around the harness substrate instead of migrating a skills-first repository in place.
 - Stages 1-7 have since added the product identity docs, package metadata, versioned schemas, examples, and the initial deterministic CLI. This section is historical evidence for why the platform could be designed cleanly, not a current file inventory.
 
-## `agent-coding` migration-source evidence
+## External skill source material for harness capability mining
 
 - `agent-coding` presents itself as "a repository of reusable workflow skills for disciplined AI coding" and says it turns common AI coding-agent failure modes into reusable skills and a portable orchestration layer.
 - Its current model has three layers: repo-local `AGENTS.md`, portable `workflow-orchestrator`, and specialized worker skills.
 - Its public workflow is `Research -> Design -> Gate 1 -> Plan + Todo -> Gate 2 -> Execute -> Verify -> Gate 3 -> Lessons`, with "No evidence = not done" as a core principle.
-- Current documented skills are `decompose-feature`, `plan-parallel-work`, `ensure-atomic-pr`, `workflow-orchestrator`, `execute-plan-loop`, `achieve-goal`, `refresh-related-docs`, and `scan-image-vulnerabilities`.
+- Stage 13 should review the workflow-oriented skills `decompose-feature`, `plan-parallel-work`, `ensure-atomic-pr`, `workflow-orchestrator`, `execute-plan-loop`, `achieve-goal`, and `refresh-related-docs` as source material.
+- `scan-image-vulnerabilities` is excluded from Stage 13 because it is domain-specific security tooling rather than core harness capability evidence for this slice.
 - The workflow contract maps worker skills but has no harness-engineering, tool/CLI, plugin, entropy, or recurring-agent delivery layer.
-- `agent-coding` has no package manifest or obvious installable CLI/plugin package today; the file list is mostly Markdown skills plus one Trivy shell script under `scan-image-vulnerabilities`.
-- These skills are evidence and possible adapters, not constraints on the `harness-engineering` repository.
+- `agent-coding` has no package manifest or obvious installable CLI/plugin package today; the relevant workflow inputs are mostly Markdown skills.
+- These skills are source material for harness-native capability decisions, not constraints, product namespaces, or runtime dependencies for the `harness-engineering` repository.
 
 ## External research evidence
 
@@ -58,15 +59,15 @@ The second research report was also saved as a session artifact during Gate 1. T
 
 ## Key constraints
 
-1. **Product identity must be explicit.** `harness-engineering` is the canonical harness-as-code platform; `agent-coding` is a migration source and potential adapter package.
-2. **Portability cannot silently break.** If users still install `agent-coding` skills with `npx skills add`, those skills should not start depending on a local CLI or plugin unless that dependency is declared as a compatibility tier.
+1. **Product identity must be explicit.** `harness-engineering` is the canonical harness-as-code platform; external skills are learning material, not product namespaces or runtime dependencies.
+2. **Portability cannot silently break.** If a future cross-repo change touches external skills, those skills should not start depending on a local CLI or plugin unless that dependency is declared outside this repository as a compatibility tier.
 3. **Mechanical checks need a contract.** A future `harness-doctor` cannot reliably scan "entropy" or "routing conflicts" until each check has a machine-checkable definition, inputs, severity, and expected output.
 4. **Behavioral evals are not doctor checks.** Deterministic structural checks and Harbor/SWE-bench-style behavioral task evals need separate contracts even if both feed the same harness improvement loop.
 5. **Agent invocation is a first-class primitive.** A harness platform must run a model through a configured harness on real tasks; schemas and verifier-only checks are not enough.
 6. **Trace, approval, sandbox, and failure-taxonomy shapes must be pinned early.** Later skills, doctor checks, recurring agents, and plugins will drift if these remain only conceptual.
-7. **Existing skills are an evidence base.** Deleting, migrating, or replacing `agent-coding` skills before defining the v-next harness contract risks removing behavior the new platform should preserve or supersede deliberately.
+7. **Existing workflow skills are an evidence base.** Ignoring their practices before defining the v-next harness contract risks missing capabilities the new platform should preserve, supersede, or explicitly reject.
 8. **Marketplace plugin-first is a north star, not a promise before feasibility.** Public docs should lead with CLI-first until a real agent/CLI marketplace distribution path and runtime capability tier are verified.
-9. **`scan-image-vulnerabilities` is an outlier.** It is useful but domain-specific security tooling rather than core harness engineering; the design should explicitly keep, move, deprecate, or reframe it.
+9. **Domain utilities are out of Stage 13 scope.** The vulnerability-scanning skill is useful but domain-specific security tooling rather than core harness engineering; Stage 13 can ignore it.
 10. **This is large enough for Gate 1.** The change affects repository identity, delivery surfaces, workflow contract, and potentially all skills. Design approval should happen before plan/todo and implementation.
 
 ## Stage 8 correction: marketplace target definition

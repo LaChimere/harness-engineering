@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/assessment.schema.json",
   "title": "Harness assessment",
-  "$comment": "provisional Stage 12 native agent-facing assessment output.",
+  "$comment": "provisional native agent-facing assessment output.",
   "type": "object",
   "required": [
     "schema_version",
@@ -199,7 +199,7 @@
       "properties": {
         "selected_route": {
           "type": "string",
-          "enum": ["repair-action", "execution-loop", "external-source-material", "cli-fallback"]
+          "enum": ["repair-action", "execution-loop", "cli-fallback"]
         },
         "routes": {
           "type": "array",
@@ -423,6 +423,11 @@
                   "required": ["kind"]
                 },
                 "then": {
+                  "properties": {
+                    "status": {
+                      "const": "unavailable"
+                    }
+                  },
                   "not": {
                     "required": ["command"]
                   }
@@ -522,34 +527,6 @@
                   "properties": {
                     "kind": {
                       "const": "execution-loop"
-                    },
-                    "status": {
-                      "const": "available"
-                    }
-                  },
-                  "required": ["kind", "status"]
-                }
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "selected_route": {
-                "const": "external-source-material"
-              }
-            },
-            "required": ["selected_route"]
-          },
-          "then": {
-            "properties": {
-              "routes": {
-                "contains": {
-                  "type": "object",
-                  "properties": {
-                    "kind": {
-                      "const": "external-source-material"
                     },
                     "status": {
                       "const": "available"

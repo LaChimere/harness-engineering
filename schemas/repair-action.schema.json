@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/repair-action.schema.json",
   "title": "Repair action",
-  "$comment": "provisional; Stage 9 distinguishes preview-backed repairs from advisory-only limited-adapter repair prompts.",
+  "$comment": "provisional; distinguishes preview-backed repairs from advisory-only limited-adapter repair prompts.",
   "type": "object",
   "required": [
     "schema_version",

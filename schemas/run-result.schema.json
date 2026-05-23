@@ -55,7 +55,7 @@
     },
     "execution": {
       "type": "object",
-      "description": "Execution semantics for verifier-only validation and Stage 6 deterministic agent runs.",
+      "description": "Execution semantics for verifier-only validation and deterministic agent runs.",
       "required": ["mode", "harness_status", "verifier_status"],
       "properties": {
         "mode": {
@@ -91,7 +91,7 @@
       "$ref": "common.schema.json#/$defs/artifactRef"
     },
     "judge_results": {
-      "description": "Distinct inferential judge-result artifact links. Stage 7 report validation checks linked results, matching run ids, and advisory/blocking policy semantics; deterministic verifier status remains in verifier_result and execution.verifier_status.",
+      "description": "Distinct inferential judge-result artifact links. Report validation checks linked results, matching run ids, and advisory/blocking policy semantics; deterministic verifier status remains in verifier_result and execution.verifier_status.",
       "$ref": "common.schema.json#/$defs/evidenceLinks"
     },
     "usage": {

@@ -6,7 +6,7 @@ feature_list:
     status: in-progress
 progress_log:
   - timestamp: "2026-05-21T00:00:00Z"
-    event: Stage 10 startup verification recorded a timeout that differs from harness.yaml.
+    event: Startup verification recorded a timeout that differs from harness.yaml.
     refs:
       - path: examples/verification/stage10-startup.yaml
         media_type: application/yaml

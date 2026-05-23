@@ -21,12 +21,12 @@ This repository is the canonical harness-as-code platform for AI coding agents. 
   - `eval` runs behavioral task/verifier suites.
 - Do not add subjective "AI slop" scoring as a doctor or GC category.
 
-## Stage boundaries
+## Roadmap boundaries
 
-- Stage 2 defines schemas before commands consume them.
-- Stage 3 implements the initial CLI.
-- Stage 8 must verify agent/CLI marketplace or install-surface feasibility before any plugin/adapter install path or specific host target is promised as available. IDE-only extension hosts are future evidence, not corrected Stage 8/9 targets.
-- Stage 13 mines external workflow skills as source material for harness-native capability decisions; it must not create an `agent-coding` product namespace, compatibility package, or default quickstart.
+- Schemas are defined before commands consume them.
+- The deterministic CLI is the implementation surface for substrate operations.
+- Agent/CLI marketplace or install-surface feasibility must be verified before any plugin/adapter install path or specific host target is promised as available. IDE-only extension hosts are future evidence, not the corrected adapter target.
+- External workflow skills are source material for harness-native capability decisions; do not create an `agent-coding` product namespace, compatibility package, or default quickstart.
 
 ## Toolchain decisions
 
@@ -48,6 +48,6 @@ When implementation begins:
 
 ## External workflow skill relationship
 
-Treat external workflow skills, including `LaChimere/agent-coding`, as learning material for harness-native capabilities. Do not copy, vendor, rewrite, merge, deprecate, install, or namespace those skills during Stage 13.
+Treat external workflow skills, including `LaChimere/agent-coding`, as learning material for harness-native capabilities. Do not copy, vendor, rewrite, merge, deprecate, install, or namespace those skills during capability mining.
 
-Stage 13 output belongs in `plans/harness-engineering-platform/capability-ledger.yaml`. Future native capability adoption requires a separately approved substrate contract with evidence, fixtures or evals, trust/sandbox requirements, and false-positive policy where relevant.
+Capability-mining output belongs in `plans/harness-engineering-platform/capability-ledger.yaml`. Future native capability adoption requires a separately approved substrate contract with evidence, fixtures or evals, trust/sandbox requirements, and false-positive policy where relevant.

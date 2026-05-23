@@ -6,13 +6,13 @@ feature_list:
     status: done
 progress_log:
   - timestamp: "2026-05-21T00:00:00Z"
-    event: Stage 10 startup verification passed before implementation work began.
+    event: Startup verification passed before implementation work began.
     refs:
       - path: examples/verification/stage10-startup.yaml
         media_type: application/yaml
         description: Startup self-verification evidence.
   - timestamp: "2026-05-21T00:20:00Z"
-    event: Stage 10 completion verification evidence recorded before completion claim.
+    event: Completion verification evidence recorded before completion claim.
     refs:
       - path: examples/verification/stage10-completion.yaml
         media_type: application/yaml

@@ -9,7 +9,7 @@ spec_reread:
 acceptance_checks:
   - id: schema-versioning
     expected: Every machine-readable artifact declares schema_version.
-    actual: Stage 2 examples and schemas require schema_version.
+    actual: Examples and schemas require schema_version.
     status: passed
 checks_run:
   - command:
@@ -23,9 +23,9 @@ checks_run:
 artifacts:
   - path: schemas/
     media_type: inode/directory
-    description: Stage 2 schema directory.
+    description: Schema directory.
 unresolved_risks:
-  - CLI verify command is not implemented until Stage 3.
+  - CLI verify command is not implemented in the initial schema-only baseline.
 evidence_links:
   - path: examples/fixtures/manifest.json
     media_type: application/json

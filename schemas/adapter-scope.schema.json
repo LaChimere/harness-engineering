@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/adapter-scope.schema.json",
   "title": "Adapter scope",
-  "$comment": "provisional Stage 9 limited-adapter scope manifest; semantic subset checks against the Stage 8 capability matrix are required before an adapter can be treated as enabled.",
+  "$comment": "provisional limited-adapter scope manifest; semantic subset checks against the capability matrix are required before an adapter can be treated as enabled.",
   "type": "object",
   "required": [
     "schema_version",

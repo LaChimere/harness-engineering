@@ -163,7 +163,7 @@ test('validate rejects composed references that escape root', async () => {
   expect(result.stdout).toContain('environment escapes root');
 });
 
-test('adapter validate proves selected scope is a subset of the Stage 8 matrix', async () => {
+test('adapter validate proves selected scope is a subset of the capability matrix', async () => {
   const result = await run(['adapter', 'validate']);
   expect(result.code).toBe(ExitCode.ok);
   expect(result.stdout).toContain('harness adapter validate ok');
@@ -364,8 +364,18 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
     }).length,
   ).toBeGreaterThan(0);
   expect(
-    schemas.validate('assessment', futureExternalSourceMaterialAssessment(assessment, routing)),
-  ).toEqual([]);
+    schemas.validate('assessment', invalidExternalSourceMaterialAssessment(assessment, routing))
+      .length,
+  ).toBeGreaterThan(0);
+  expect(
+    schemas.validate('assessment', {
+      ...assessment,
+      implementation_routing: {
+        ...routing,
+        selected_route: 'external-source-material',
+      },
+    }).length,
+  ).toBeGreaterThan(0);
   expect(getString(objectWithString(routes, 'id', 'external-workflow-skill') ?? {}, 'status')).toBe(
     'unavailable',
   );
@@ -924,7 +934,7 @@ test('assess rejects symlinked artifact inputs', async () => {
   expect(result.stderr).toContain('Refusing to read through symlink');
 });
 
-test('loop validate accepts Stage 10 start and complete gates', async () => {
+test('loop validate accepts start and complete gates', async () => {
   const startResult = await run([
     'loop',
     'validate',
@@ -1312,13 +1322,13 @@ test('migrate emits provisional no-op evidence', async () => {
   expect(result.stdout).toContain('would_change: false');
 });
 
-test('migrate rejects apply mode during the Stage 3 no-op phase', async () => {
+test('migrate rejects apply mode during the no-op phase', async () => {
   const root = await tempRoot();
   await run(['init'], root);
 
   const result = await run(['migrate', '--apply'], root);
   expect(result.code).toBe(ExitCode.usageError);
-  expect(result.stderr).toContain('Stage 3 migrate only supports dry-run/no-op evidence');
+  expect(result.stderr).toContain('migrate currently only supports dry-run/no-op evidence');
 });
 
 test('migrate rejects output paths that escape root', async () => {
@@ -1743,7 +1753,7 @@ test('report validates judge results linked from run-result artifacts', async ()
   expect(invalid.stderr).toContain('agreement_score 0.6 is below blocking threshold 0.8');
 });
 
-test('report rejects symlinked Stage 7 artifact reads', async () => {
+test('report rejects symlinked judge artifact reads', async () => {
   const parent = await tempRoot();
   const root = join(parent, 'repo');
   await mkdir(root);
@@ -2268,7 +2278,7 @@ test('run rejects deterministic runners without explicit budgets', async () => {
   expect(result.stderr).toContain("must have required property 'budgets'");
 });
 
-test('run rejects non-stub credential sources during Stage 6', async () => {
+test('run rejects non-stub credential sources', async () => {
   const root = await tempRoot();
   await run(['init'], root);
   const runnerPath = join(root, 'examples/agent-runners/stub.yaml');
@@ -2278,7 +2288,7 @@ test('run rejects non-stub credential sources during Stage 6', async () => {
   const result = await run(['run', '--run-id', 'stage6-env-credential', '--format', 'json'], root);
   expect(result.code).toBe(ExitCode.validationError);
   expect(result.stderr).toContain(
-    'Stage 6 deterministic runner requires credential_reference.source: stub',
+    'deterministic runner requires credential_reference.source: stub',
   );
 });
 
@@ -2613,7 +2623,7 @@ function objectWithString(
   return objects.find((object) => getString(object, key) === value);
 }
 
-function futureExternalSourceMaterialAssessment(
+function invalidExternalSourceMaterialAssessment(
   assessment: JsonObject,
   routing: JsonObject,
 ): JsonObject {
@@ -2621,7 +2631,7 @@ function futureExternalSourceMaterialAssessment(
     ...assessment,
     implementation_routing: {
       ...routing,
-      selected_route: 'external-source-material',
+      selected_route: 'execution-loop',
       routes: [
         ...jsonObjects(getArray(routing, 'routes')).filter(
           (route) => getString(route, 'kind') !== 'external-source-material',

@@ -1,0 +1,193 @@
+ledger_version: "0.1"
+ledger_id: stage13-harness-native-capabilities
+status: active
+source_material:
+  repository: https://github.com/LaChimere/agent-coding
+  commit: a200a89f9949af9a2e8a2b7610be2a43b754d260
+  role: source-material-only
+  included_workflow_skills:
+    - workflow-orchestrator
+    - execute-plan-loop
+    - decompose-feature
+    - plan-parallel-work
+    - ensure-atomic-pr
+    - refresh-related-docs
+    - achieve-goal
+  excluded_source_material:
+    - source: scan-image-vulnerabilities
+      rationale: Domain-specific vulnerability scanning is security tooling, not core harness capability evidence for Stage 13.
+dogfood_assessments:
+  - assessment_id: assessment-1ac840bd31f6
+    artifact: plans/harness-engineering-platform/evidence/stage13-repo-assessment.json
+    target: examples/harness.yaml with Stage 12 evidence artifacts
+    maturity: observable
+    score: 8
+    max_score: 9
+    selected_route: execution-loop
+    gaps:
+      - id: repair-routing
+        status: advisory
+        summary: Two schema-valid repair action candidates were discovered, but none targets current missing or partial assessment evidence.
+    repair_action_applicability: No trusted repair-action id is required because no repair action is applicable to current gaps.
+  - assessment_id: assessment-950c29062dd2
+    artifact: plans/harness-engineering-platform/evidence/stage13-downstream-minimal-assessment.json
+    target: initialized tests/e2e/projects/minimal-consumer
+    maturity: validated
+    score: 5
+    max_score: 9
+    selected_route: execution-loop
+    gaps:
+      - id: doctor-evidence
+        status: partial
+        summary: Doctor checks are configured, but no doctor-result artifact was supplied.
+      - id: run-results
+        status: partial
+        summary: No passed run-result evidence was supplied.
+      - id: scoreboard-report
+        status: missing
+        summary: Scoreboard and report artifacts are absent.
+      - id: repair-routing
+        status: advisory
+        summary: No repair action candidates were discovered; assessment falls back to CLI guidance.
+    repair_action_applicability: No trusted repair-action id is required because no repair-action candidates were present.
+capabilities:
+  - capability_id: workflow-phase-gates
+    status: active
+    source_observations:
+      - source: workflow-orchestrator
+        evidence: https://github.com/LaChimere/agent-coding/blob/a200a89f9949af9a2e8a2b7610be2a43b754d260/skills/workflow-orchestrator/SKILL.md
+        summary: The workflow front door classifies discovery, design, plan, execution, recovery, and doc-refresh phases before routing work.
+    practice: Explicit workflow phase classification with approval gates, escalation points, and phase-specific handoffs.
+    failure_mode_or_gap: Agents can skip discovery or approval gates and begin implementation before the substrate evidence is sufficient.
+    candidate_surface: recurring-profile
+    disposition: advisory-candidate
+    owner_stage: Stage 17
+    required_evidence:
+      schema_contract: Profile state must record phase, gate status, evidence links, and escalation rationale before any native routing behavior ships.
+      cli_owner: A future profile or adapter command must read existing substrate artifacts instead of owning workflow state.
+      fixtures_or_evals: Fixtures must demonstrate stopping at missing approval or missing evidence rather than continuing.
+      trust_sandbox: Profile actions must inherit existing approval and sandbox policy references.
+      false_positive_policy: Phase classification must remain advisory unless every required substrate precondition is machine-checkable.
+    user_behavior_change: future-adoption
+    boundary: Skill graph triggers, prompt routing rules, and `plans/{slug}` templates remain outside harness core.
+    rationale: The phase/gate practice is valuable, but native adoption needs evidence-backed profile semantics rather than prompt-only orchestration.
+  - capability_id: execution-atomic-slices
+    status: active
+    source_observations:
+      - source: execute-plan-loop
+        evidence: https://github.com/LaChimere/agent-coding/blob/a200a89f9949af9a2e8a2b7610be2a43b754d260/skills/execute-plan-loop/SKILL.md
+        summary: The execution loop requires small reviewable slices, status refreshes, relevant checks, docs checks, and periodic deeper review.
+    practice: Execute approved work as atomic slices with per-slice evidence, status refresh, and review cadence.
+    failure_mode_or_gap: Long-running work can appear complete while missing per-slice verification, current todo status, or review evidence.
+    candidate_surface: self-verification
+    disposition: deterministic-candidate
+    owner_stage: Stage 15
+    required_evidence:
+      schema_contract: Self-verification or continuity evidence must be able to reference slice boundaries, checks, docs/status updates, and review checkpoints.
+      cli_owner: "`harness loop validate` or a later execution-evidence validator must enforce any required slice evidence."
+      fixtures_or_evals: Positive and negative fixtures must prove missing slice evidence is detected without relying on commit history heuristics.
+      trust_sandbox: Slice checks must retain declared command, trust, and sandbox requirements.
+      false_positive_policy: Atomicity-related gates must distinguish indivisible changes from mixed-concern changes.
+    user_behavior_change: future-adoption
+    boundary: Commit creation cadence, branch management, and agent-specific loop prompts stay outside harness core.
+    rationale: Stage 10 validates startup and completion gates; this candidate captures the remaining per-slice discipline as future evidence expansion.
+  - capability_id: planning-feature-decomposition
+    status: active
+    source_observations:
+      - source: decompose-feature
+        evidence: https://github.com/LaChimere/agent-coding/blob/a200a89f9949af9a2e8a2b7610be2a43b754d260/skills/decompose-feature/SKILL.md
+        summary: The skill requires small mergeable PRs with dependencies, allowed/prohibited changes, acceptance criteria, validation commands, and mergeability notes.
+    practice: Decompose broad work into independently reviewable, mergeable slices with explicit scope and validation.
+    failure_mode_or_gap: Broad roadmap work can become unreviewable or create broken intermediate states if slice dependencies and validation are not explicit.
+    candidate_surface: planning-artifact
+    disposition: advisory-candidate
+    owner_stage: deferred
+    required_evidence:
+      schema_contract: A future planning artifact would need stable slice ids, dependencies, allowed/prohibited scope, validation commands, and mergeability notes.
+      cli_owner: No CLI owner is selected until the repository decides whether planning decomposition belongs in harness core or remains human/agent guidance.
+      fixtures_or_evals: Example decompositions must prove intermediate states remain valid and reviewable.
+      trust_sandbox: Decomposition itself is read-only, but validation commands in each slice must declare trust and sandbox requirements if executed.
+      false_positive_policy: Avoid treating every multi-file feature as too broad; document indivisible-change exceptions.
+    user_behavior_change: none
+    boundary: PR sequencing advice remains non-runtime guidance until a schema contract and CLI consumer are approved.
+    rationale: The practice is useful, but no current substrate surface owns PR decomposition.
+  - capability_id: parallel-work-ownership
+    status: active
+    source_observations:
+      - source: plan-parallel-work
+        evidence: https://github.com/LaChimere/agent-coding/blob/a200a89f9949af9a2e8a2b7610be2a43b754d260/skills/plan-parallel-work/SKILL.md
+        summary: The skill requires base prerequisites, branch/worktree boundaries, owned paths, forbidden paths, dependencies, validation, and merge order.
+    practice: Plan parallel agent work with explicit ownership boundaries, serial prerequisites, conflict hotspots, and convergence ownership.
+    failure_mode_or_gap: Parallel agents can overwrite shared contracts or create merge conflicts when ownership and convergence are implicit.
+    candidate_surface: adapter-guidance
+    disposition: advisory-candidate
+    owner_stage: deferred
+    required_evidence:
+      schema_contract: A future topology artifact would need base prerequisite, owned/forbidden paths, dependencies, validation, merge order, and convergence owner.
+      cli_owner: No CLI owner is selected until runner/worktree support proves a native topology contract is useful.
+      fixtures_or_evals: Scenarios must demonstrate conflict prevention and safe convergence, not only prettier plans.
+      trust_sandbox: Worktree or branch operations must follow repository ownership and sandbox policy.
+      false_positive_policy: Path ownership checks must account for shared lockfiles, generated files, and unavoidable shared contracts.
+    user_behavior_change: none
+    boundary: Branch creation, worktree allocation, and multi-agent orchestration stay outside harness core until runner/worktree contracts exist.
+    rationale: This is important agent practice, but current harness substrate does not yet own branch/worktree topology.
+  - capability_id: review-atomicity-evidence
+    status: active
+    source_observations:
+      - source: ensure-atomic-pr
+        evidence: https://github.com/LaChimere/agent-coding/blob/a200a89f9949af9a2e8a2b7610be2a43b754d260/skills/ensure-atomic-pr/SKILL.md
+        summary: The skill identifies mixed concerns, mechanical-vs-semantic changes, proposed splits, and recovery guidance for oversized diffs.
+    practice: Assess change atomicity and propose recovery boundaries when a diff mixes unrelated concerns.
+    failure_mode_or_gap: Review quality drops when one diff combines unrelated behavior, mechanical churn, fixtures, docs, and cleanup.
+    candidate_surface: gc-evidence
+    disposition: advisory-candidate
+    owner_stage: Stage 14
+    required_evidence:
+      schema_contract: GC evidence must represent input diff metadata, concern labels, confidence, false-positive policy, and atomic cleanup slices.
+      cli_owner: "`harness gc audit` may own deterministic subsets only after algorithms and fixtures are approved."
+      fixtures_or_evals: Passing and failing fixtures must cover mixed concerns, indivisible renames, tests-with-code, and over-splitting false positives.
+      trust_sandbox: Diff inspection is read-only, but any generated cleanup slice must declare review and sandbox requirements before execution.
+      false_positive_policy: Subjective atomicity scoring cannot block; deterministic categories need explicit algorithms and exceptions.
+    user_behavior_change: future-adoption
+    boundary: Narrative split proposals remain advisory until deterministic evidence exists.
+    rationale: Atomicity maps naturally to GC/assessment evidence, but only as advisory or deterministic subcategories with false-positive controls.
+  - capability_id: docs-freshness-profile
+    status: active
+    source_observations:
+      - source: refresh-related-docs
+        evidence: https://github.com/LaChimere/agent-coding/blob/a200a89f9949af9a2e8a2b7610be2a43b754d260/skills/refresh-related-docs/SKILL.md
+        summary: The skill detects doc-staleness after behavior, configuration, API, or milestone changes and requires explicit approval before broad edits.
+    practice: Track documentation freshness candidates and approval state after behavior, config, interface, or milestone changes.
+    failure_mode_or_gap: Code and plan behavior can change while README, AGENTS, CLI docs, or slug status remain stale.
+    candidate_surface: recurring-profile
+    disposition: advisory-candidate
+    owner_stage: Stage 17
+    required_evidence:
+      schema_contract: A doc-freshness profile must record changed surfaces, candidate docs, approval state, allowed actions, and handoff evidence.
+      cli_owner: A future recurring profile may suggest docs but should not rewrite high-impact docs without explicit approval.
+      fixtures_or_evals: Examples must demonstrate stopping when docs are current, requesting approval for broad docs, and avoiding unrelated rewrites.
+      trust_sandbox: Doc edits must remain reviewable and should not access network or secrets unless explicitly declared.
+      false_positive_policy: Doc freshness signals must distinguish direct behavior/config/API drift from stylistic preferences.
+    user_behavior_change: future-adoption
+    boundary: Tone-preserving rewrites and broad documentation refreshes remain human-approved activities.
+    rationale: This is a strong recurring-profile candidate because it consumes evidence artifacts and has clear stop conditions.
+  - capability_id: goal-lifecycle-profile
+    status: active
+    source_observations:
+      - source: achieve-goal
+        evidence: https://github.com/LaChimere/agent-coding/blob/a200a89f9949af9a2e8a2b7610be2a43b754d260/skills/achieve-goal/SKILL.md
+        summary: The skill models active, paused, blocked, budget-limited, complete, and cleared states with acceptance criteria, progress, blockers, and completion audit.
+    practice: Persist long-running objectives with lifecycle state, budgets, blockers, deferred items, and completion audit.
+    failure_mode_or_gap: Long-running harness work can lose objective, budget, blocker, or completion-audit context across turns.
+    candidate_surface: recurring-profile
+    disposition: advisory-candidate
+    owner_stage: Stage 17
+    required_evidence:
+      schema_contract: A future goal/profile contract must define lifecycle states, objective, acceptance criteria, budget, blockers, progress evidence, and completion audit.
+      cli_owner: A recurring profile or continuity extension may own validation only after profile state and stop conditions are defined.
+      fixtures_or_evals: Fixtures must prove pause/resume/block/budget/complete transitions and refusal to claim completion without audit evidence.
+      trust_sandbox: Goal continuation must respect approval gates, sandbox policies, and explicit budget limits.
+      false_positive_policy: Goal state must not become an excuse for autonomous scope expansion beyond approved work.
+    user_behavior_change: future-adoption
+    boundary: Markdown goal state and skill control commands stay outside harness core until recurring-profile contracts exist.
+    rationale: Goal lifecycle semantics are useful for recurring profiles but need first-class state and stop-condition evidence before native adoption.

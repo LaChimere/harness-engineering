@@ -287,7 +287,7 @@
     {
       "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml",
       "schema": "schemas/harness.schema.json",
-      "reason": "Stage 2 harness roots must reject plugin-only source-of-truth keys.",
+      "reason": "Harness roots must reject plugin-only source-of-truth keys.",
       "expected_keyword": "unevaluatedProperties",
       "expected_path": []
     },
@@ -579,7 +579,7 @@
     {
       "path": "examples/fixtures/invalid/plugin-capability-matrix-tier-consequence.json",
       "schema": "schemas/plugin-capability-matrix.schema.json",
-      "reason": "Capability tier must imply a matching Stage 9 consequence.",
+      "reason": "Capability tier must imply a matching adapter consequence.",
       "expected_keyword": "const",
       "expected_path": ["hosts", 0, "stage9_consequence"]
     },
@@ -593,7 +593,7 @@
     {
       "path": "examples/fixtures/invalid/plugin-capability-matrix-ide-in-scope.json",
       "schema": "schemas/plugin-capability-matrix.schema.json",
-      "reason": "IDE-only surfaces must be recorded as future evidence rather than Stage 9 candidates.",
+      "reason": "IDE-only surfaces must be recorded as future evidence rather than adapter candidates.",
       "expected_keyword": "const",
       "expected_path": ["hosts", 0, "candidate_status"]
     }
@@ -673,7 +673,7 @@
     {
       "path": "examples/fixtures/invalid/plugin-capability-matrix-selects-cli-fallback.json",
       "check": "plugin_capability_matrix_invariants",
-      "reason": "Stage 8 must not select a CLI-first fallback host as a Stage 9 target.",
+      "reason": "The capability matrix must not select a CLI-first fallback host as an adapter target.",
       "expected_error_code": "PCM_DECISION_UNSELECTABLE_TIER",
       "expected_message_contains": "cannot select fallback-host at tier cli-first-fallback"
     },
@@ -701,7 +701,7 @@
     {
       "path": "examples/fixtures/invalid/plugin-capability-matrix-tier-consequence.json",
       "check": "plugin_capability_matrix_invariants",
-      "reason": "Host tier and Stage 9 consequence must stay consistent.",
+      "reason": "Host tier and adapter consequence must stay consistent.",
       "expected_error_code": "PCM_TIER_CONSEQUENCE",
       "expected_message_contains": "tier must use proceed-limited-adapter consequence"
     },
@@ -746,7 +746,7 @@
       "path": "examples/fixtures/invalid/adapter-scope-wrong-host.json",
       "check": "adapter_scope_matrix_subset",
       "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
-      "reason": "Adapter scope must target the Stage 8-selected host.",
+      "reason": "Adapter scope must target the selected host.",
       "expected_error_code": "ASM_SELECTED_HOST_MISMATCH",
       "expected_message_contains": "must match matrix decision"
     },
@@ -778,7 +778,7 @@
       "path": "examples/fixtures/invalid/adapter-scope-missing-dimension.json",
       "check": "adapter_scope_matrix_subset",
       "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
-      "reason": "Adapter scope must classify every Stage 8 capability dimension.",
+      "reason": "Adapter scope must classify every capability-matrix dimension.",
       "expected_error_code": "ASM_CAPABILITY_COVERAGE",
       "expected_message_contains": "adapter scope must classify cli_bundling_bootstrap"
     },
@@ -832,13 +832,13 @@
     {
       "path": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
       "check": "plugin_capability_matrix_invariants",
-      "reason": "Stage 8 matrix must satisfy custom evidence and tier invariants."
+      "reason": "Capability matrix must satisfy custom evidence and tier invariants."
     },
     {
       "path": "examples/adapters/github-copilot-cli/adapter-scope.json",
       "check": "adapter_scope_matrix_subset",
       "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
-      "reason": "Stage 9 adapter scope must be a subset of the Stage 8-selected limited-adapter matrix evidence."
+      "reason": "Adapter scope must be a subset of the selected limited-adapter matrix evidence."
     }
   ]
 }

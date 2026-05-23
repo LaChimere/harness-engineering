@@ -256,10 +256,10 @@ function localCheckDeclarations(
         severity: 'info',
         outcome: 'skipped',
         evidenceDescription:
-          'Local doctor check is declared with trust requirements but is not executed in Stage 4.',
+          'Local doctor check is declared with trust requirements but is not executed by the current doctor command.',
         evidencePath: path,
         remediation:
-          'Keep the declaration for future local-check execution stages; Stage 4 validates registration only.',
+          'Keep the declaration for future local-check execution support; the current doctor command validates registration only.',
         fixtures: [path],
         trustRequirements,
       });

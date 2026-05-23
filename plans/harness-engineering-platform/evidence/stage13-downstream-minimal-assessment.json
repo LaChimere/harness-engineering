@@ -1,0 +1,333 @@
+{
+  "schema_version": "0.1.0",
+  "x-stability": "provisional",
+  "assessment_id": "assessment-950c29062dd2",
+  "adapter_path": {
+    "kind": "cli-command",
+    "command": "harness assess --format json",
+    "rationale": "The native agent-facing adapter is a deterministic CLI command so agents, plugins, skills, and CI can consume one schema-backed substrate output.",
+    "rejected_paths": [
+      "skills/harness-engineering is intentionally deferred so this repository does not introduce a skill-only source of truth; external workflow practices are recorded as source material for harness-native capability candidates."
+    ]
+  },
+  "source": {
+    "root": ".",
+    "harness": "harness.yaml",
+    "cli_version": "0.1.0"
+  },
+  "status": "needs-work",
+  "maturity": {
+    "level": 2,
+    "label": "validated",
+    "score": 5,
+    "max_score": 9
+  },
+  "scorecard": [
+    {
+      "id": "harness-source",
+      "label": "Harness source",
+      "status": "present",
+      "summary": "harness.yaml is present, schema-valid, engine-compatible, and reference-complete.",
+      "evidence": [
+        {
+          "path": "harness.yaml",
+          "media_type": "application/yaml",
+          "description": "Harness file."
+        }
+      ]
+    },
+    {
+      "id": "policy-sandbox",
+      "label": "Approval and sandbox policy",
+      "status": "present",
+      "summary": "Approval and sandbox policy references are configured and schema-valid.",
+      "evidence": [
+        {
+          "path": "examples/policies/approval-policy.yaml",
+          "media_type": "application/yaml",
+          "description": "Policy artifact."
+        },
+        {
+          "path": "examples/policies/sandbox-policy.yaml",
+          "media_type": "application/yaml",
+          "description": "Policy artifact."
+        }
+      ]
+    },
+    {
+      "id": "eval-plans",
+      "label": "Eval suites and tasks",
+      "status": "present",
+      "summary": "1 eval suite reference(s) are configured and schema-valid through harness validation.",
+      "evidence": [
+        {
+          "path": "examples/evals/harness-self-test/v1.0.0/",
+          "media_type": "application/yaml",
+          "description": "Eval task suite."
+        }
+      ]
+    },
+    {
+      "id": "doctor-evidence",
+      "label": "Doctor evidence",
+      "status": "partial",
+      "summary": "Doctor checks are configured, but no doctor-result artifact was supplied.",
+      "evidence": []
+    },
+    {
+      "id": "run-results",
+      "label": "Run-result ledger",
+      "status": "partial",
+      "summary": "0 run-result record(s) are readable: 0 passed, 0 failed, 0 error, 0 skipped. All supplied run-result records must be passed before treating run evidence as present.",
+      "evidence": [
+        {
+          "path": ".harness/run-results.jsonl",
+          "media_type": "application/jsonl",
+          "description": "Run-result ledger."
+        }
+      ]
+    },
+    {
+      "id": "trace-evidence",
+      "label": "Trace evidence",
+      "status": "present",
+      "summary": "2 trace example reference(s) are configured and schema-valid through harness validation.",
+      "evidence": [
+        {
+          "path": "examples/traces/native-cli-trace.json",
+          "media_type": "application/json",
+          "description": "Trace example."
+        },
+        {
+          "path": "examples/traces/external-import.json",
+          "media_type": "application/json",
+          "description": "Trace example."
+        }
+      ]
+    },
+    {
+      "id": "scoreboard-report",
+      "label": "Scoreboard and report",
+      "status": "missing",
+      "summary": "Provide both scoreboard and report artifacts for reviewer-friendly assessment.",
+      "evidence": []
+    },
+    {
+      "id": "continuity-loop",
+      "label": "Continuity and loop gates",
+      "status": "present",
+      "summary": "Continuity state directory and startup smoke-test settings are configured.",
+      "evidence": [
+        {
+          "path": "harness.yaml#/continuity",
+          "media_type": "application/yaml",
+          "description": "Continuity configuration."
+        }
+      ]
+    },
+    {
+      "id": "repair-routing",
+      "label": "Repair-action routing",
+      "status": "advisory",
+      "summary": "No repair action candidates were discovered; the adapter will emit a CLI fallback route.",
+      "evidence": []
+    }
+  ],
+  "missing_primitives": [
+    {
+      "id": "doctor-evidence",
+      "label": "Doctor evidence",
+      "severity": "info",
+      "recommendation": "Run harness doctor --format json and provide the doctor-result artifact."
+    },
+    {
+      "id": "run-results",
+      "label": "Run-result ledger",
+      "severity": "info",
+      "recommendation": "Run harness run or harness eval run to produce a run-result ledger."
+    },
+    {
+      "id": "scoreboard-report",
+      "label": "Scoreboard and report",
+      "severity": "warning",
+      "recommendation": "Provide both a scoreboard and a report artifact for reviewer-facing evidence."
+    }
+  ],
+  "rollout_stage_plan": [
+    {
+      "stage": "stage-0",
+      "title": "Bootstrap harness source and schema validation.",
+      "status": "done",
+      "actions": ["Run harness init if harness.yaml is missing.", "Run harness validate."]
+    },
+    {
+      "stage": "stage-1",
+      "title": "Add policy, sandbox, and structural doctor checks.",
+      "status": "next",
+      "actions": [
+        "Reference approval and sandbox policy artifacts.",
+        "Run harness doctor --format json."
+      ]
+    },
+    {
+      "stage": "stage-2",
+      "title": "Exercise eval, run, trace, and scoreboard evidence.",
+      "status": "later",
+      "actions": [
+        "Run harness eval validate.",
+        "Run harness eval run.",
+        "Generate harness report output."
+      ]
+    },
+    {
+      "stage": "stage-3",
+      "title": "Gate long-running work with continuity and self-verification.",
+      "status": "done",
+      "actions": [
+        "Record continuity state and self-verification evidence.",
+        "Run harness loop validate before completion claims."
+      ]
+    },
+    {
+      "stage": "stage-4",
+      "title": "Route agent implementation through reviewed repair or fallback paths.",
+      "status": "later",
+      "actions": ["Add repair-action artifacts or document CLI fallback approval flow."]
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "eval",
+      "severity": "info",
+      "message": "Run harness doctor --format json and provide the doctor-result artifact.",
+      "evidence": []
+    },
+    {
+      "category": "eval",
+      "severity": "info",
+      "message": "Run harness run or harness eval run to produce a run-result ledger.",
+      "evidence": [
+        {
+          "path": ".harness/run-results.jsonl",
+          "media_type": "application/jsonl",
+          "description": "Run-result ledger."
+        }
+      ]
+    },
+    {
+      "category": "eval",
+      "severity": "warning",
+      "message": "Provide both a scoreboard and a report artifact for reviewer-facing evidence.",
+      "evidence": []
+    }
+  ],
+  "implementation_routing": {
+    "selected_route": "execution-loop",
+    "routes": [
+      {
+        "id": "native-execution-loop",
+        "kind": "execution-loop",
+        "status": "available",
+        "summary": "Continuity configuration is present; agents can produce continuity/self-verification evidence and validate explicit artifacts with harness loop validate.",
+        "evidence": [
+          {
+            "path": "harness.yaml#/continuity",
+            "media_type": "application/yaml",
+            "description": "Continuity configuration."
+          }
+        ]
+      },
+      {
+        "id": "external-workflow-skill",
+        "kind": "external-source-material",
+        "status": "unavailable",
+        "summary": "External workflow skills are not implementation routes for this repository; useful practices are mined into harness-native capability candidates instead.",
+        "evidence": []
+      },
+      {
+        "id": "cli-fallback",
+        "kind": "cli-fallback",
+        "status": "fallback",
+        "summary": "When no approved native repair action or execution-loop route is configured, ask for approval and run the relevant deterministic harness CLI commands directly with explicit artifact inputs.",
+        "evidence": []
+      }
+    ]
+  },
+  "artifacts_read": [
+    {
+      "path": ".harness/run-results.jsonl",
+      "media_type": "application/jsonl",
+      "description": "Run-result ledger."
+    },
+    {
+      "path": "AGENTS.md",
+      "media_type": "text/markdown",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/agent-runners/stub.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/checks/doc-links.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/environments/local.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/evals/harness-self-test/v1.0.0",
+      "media_type": "text/plain",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/failure-taxonomy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/judges/policy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/model-profiles/stub.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/policies/approval-policy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/policies/sandbox-policy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/traces/external-import.json",
+      "media_type": "application/json",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/traces/native-cli-trace.json",
+      "media_type": "application/json",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "harness.yaml",
+      "media_type": "application/yaml",
+      "description": "Harness source of truth."
+    },
+    {
+      "path": "README.md",
+      "media_type": "text/markdown",
+      "description": "Composed harness reference."
+    }
+  ]
+}

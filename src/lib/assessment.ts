@@ -154,9 +154,9 @@ export async function buildAssessment(request: AssessmentRequest): Promise<JsonO
       kind: 'cli-command',
       command: 'harness assess --format json',
       rationale:
-        'Stage 12 ships the native agent-facing adapter as a deterministic CLI command so agents, plugins, skills, and CI can consume one schema-backed substrate output.',
+        'The native agent-facing adapter is a deterministic CLI command so agents, plugins, skills, and CI can consume one schema-backed substrate output.',
       rejected_paths: [
-        'skills/harness-engineering is intentionally deferred so this repository does not introduce a skill-only source of truth before Stage 13 mines external workflow practices into harness-native capability candidates.',
+        'skills/harness-engineering is intentionally deferred so this repository does not introduce a skill-only source of truth; external workflow practices are recorded as source material for harness-native capability candidates.',
       ],
     },
     source: {
@@ -944,7 +944,7 @@ function implementationRoutingFor(
     kind: 'external-source-material',
     status: 'unavailable',
     summary:
-      'External workflow skills are not implementation routes for this repository; Stage 13 mines useful practices into harness-native capability candidates instead.',
+      'External workflow skills are not implementation routes for this repository; useful practices are mined into harness-native capability candidates instead.',
     evidence: [],
   });
   routes.push({

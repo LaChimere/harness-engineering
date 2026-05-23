@@ -632,22 +632,22 @@ Stage 13 should not copy, vendor, rewrite, merge, or deprecate any skill. It sho
 Capability ledger records use this shape:
 
 ```yaml
-- capability_id: execute-plan-loop.atomic-slices
+- capability_id: execution-atomic-slices
   status: active # active | deferred | rejected | retired
   source_observations:
     - source: execute-plan-loop
       evidence: path-or-url
   practice: Atomic execution slices with per-slice verification.
   failure_mode_or_gap: Large unreviewable changes lose acceptance evidence.
-  candidate_surface: continuity-state | self-verification | gc-evidence | recurring-profile | cli-command | non-core
+  candidate_surface: continuity-state | self-verification | gc-evidence | recurring-profile | cli-command | planning-artifact | adapter-guidance | non-core
   disposition: deterministic-candidate | advisory-candidate | non-core | rejected | deferred
   owner_stage: Stage 14 # or deferred
   required_evidence:
-    schema_contract: required
-    cli_owner: required
-    fixtures_or_evals: required
-    trust_sandbox: required
-    false_positive_policy: required
+    schema_contract: Describe the artifact contract required before adoption.
+    cli_owner: Name the future command/profile owner, or explain why none is selected.
+    fixtures_or_evals: Name required positive/negative fixtures or eval evidence.
+    trust_sandbox: State trust, sandbox, approval, and credential requirements.
+    false_positive_policy: State deterministic limits, advisory posture, or rejection rationale.
   user_behavior_change: none # none | future-adoption | supersede-existing-guidance
   boundary: What remains outside harness core.
   rationale: Why this disposition is appropriate.
@@ -704,7 +704,7 @@ Capability ledger records use this shape:
 ### Stage 17: Recurring profiles and scheduled maintenance
 
 - **Goal:** Add long-running maintenance roles after artifacts exist.
-- **Dependencies:** Stage 12 and Stage 16. Stage 9 is needed for plugin-driven profiles; Stage 11 is only needed for CI-scheduled profiles.
+- **Dependencies:** Stage 12 and Stage 13. Stage 9 is needed for plugin-driven profiles; Stage 11 is only needed for CI-scheduled profiles. Stage 16 may follow after profile adoption creates cleanup work.
 - **Allowed changes:**
   - Add profiles such as entropy-auditor, doc-gardener, eval-curator, and trace-reviewer.
   - Promote Stage 13 capability candidates owned by Stage 17 only when the recurring-profile contract can express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.

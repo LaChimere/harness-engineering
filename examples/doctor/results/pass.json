@@ -161,10 +161,10 @@
         {
           "path": "examples/checks/doc-links.yaml",
           "media_type": "application/yaml",
-          "description": "Local doctor check is declared with trust requirements but is not executed in Stage 4."
+          "description": "Local doctor check is declared with trust requirements but is not executed by the current doctor command."
         }
       ],
-      "remediation": "Keep the declaration for future local-check execution stages; Stage 4 validates registration only.",
+      "remediation": "Keep the declaration for future local-check execution support; the current doctor command validates registration only.",
       "fixtures": ["examples/checks/doc-links.yaml"],
       "false_positive_policy": "Doctor findings are deterministic structural findings. Treat false positives as schema/check contract bugs and fix the fixture or check definition before suppressing.",
       "exit_semantics": {

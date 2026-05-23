@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1.0",
   "x-stability": "provisional",
-  "assessment_id": "assessment-195151c7239c",
+  "assessment_id": "assessment-1ac840bd31f6",
   "adapter_path": {
     "kind": "cli-command",
     "command": "harness assess --format json",
@@ -12,25 +12,25 @@
   },
   "source": {
     "root": ".",
-    "harness": "examples/fixtures/invalid/harness-with-plugin-key.yaml",
+    "harness": "examples/harness.yaml",
     "cli_version": "0.1.0"
   },
-  "status": "needs-work",
+  "status": "ready",
   "maturity": {
-    "level": 2,
-    "label": "validated",
-    "score": 5,
+    "level": 3,
+    "label": "observable",
+    "score": 8,
     "max_score": 9
   },
   "scorecard": [
     {
       "id": "harness-source",
       "label": "Harness source",
-      "status": "partial",
-      "summary": "schema: <root> unevaluatedProperties: must NOT have unevaluated properties",
+      "status": "present",
+      "summary": "harness.yaml is present, schema-valid, engine-compatible, and reference-complete.",
       "evidence": [
         {
-          "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml",
+          "path": "examples/harness.yaml",
           "media_type": "application/yaml",
           "description": "Harness file."
         }
@@ -39,8 +39,8 @@
     {
       "id": "policy-sandbox",
       "label": "Approval and sandbox policy",
-      "status": "partial",
-      "summary": "Approval and sandbox policy references are configured, but harness validation did not complete.",
+      "status": "present",
+      "summary": "Approval and sandbox policy references are configured and schema-valid.",
       "evidence": [
         {
           "path": "examples/policies/approval-policy.yaml",
@@ -57,8 +57,8 @@
     {
       "id": "eval-plans",
       "label": "Eval suites and tasks",
-      "status": "partial",
-      "summary": "1 eval suite reference(s) are configured, but harness validation did not complete.",
+      "status": "present",
+      "summary": "1 eval suite reference(s) are configured and schema-valid through harness validation.",
       "evidence": [
         {
           "path": "examples/evals/harness-self-test/v1.0.0/",
@@ -127,11 +127,11 @@
     {
       "id": "continuity-loop",
       "label": "Continuity and loop gates",
-      "status": "partial",
-      "summary": "Continuity settings are configured, but harness validation did not complete.",
+      "status": "present",
+      "summary": "Continuity state directory and startup smoke-test settings are configured.",
       "evidence": [
         {
-          "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml#/continuity",
+          "path": "examples/harness.yaml#/continuity",
           "media_type": "application/yaml",
           "description": "Continuity configuration."
         }
@@ -140,8 +140,8 @@
     {
       "id": "repair-routing",
       "label": "Repair-action routing",
-      "status": "present",
-      "summary": "1 trusted applicable approved repair action candidate(s) discovered.",
+      "status": "advisory",
+      "summary": "2 schema-valid repair action candidate(s) discovered, but none target current missing or partial assessment evidence.",
       "evidence": [
         {
           "path": "examples/repair-actions/advisory-cli-redirect.yaml",
@@ -156,43 +156,18 @@
       ]
     }
   ],
-  "missing_primitives": [
-    {
-      "id": "harness-source",
-      "label": "Harness source",
-      "severity": "info",
-      "recommendation": "Create or repair harness.yaml, then run harness validate."
-    },
-    {
-      "id": "policy-sandbox",
-      "label": "Approval and sandbox policy",
-      "severity": "info",
-      "recommendation": "Reference approval and sandbox policy artifacts from harness.yaml."
-    },
-    {
-      "id": "eval-plans",
-      "label": "Eval suites and tasks",
-      "severity": "info",
-      "recommendation": "Add at least one eval suite with deterministic verifier tasks."
-    },
-    {
-      "id": "continuity-loop",
-      "label": "Continuity and loop gates",
-      "severity": "info",
-      "recommendation": "Configure continuity state and validate completion evidence with harness loop validate."
-    }
-  ],
+  "missing_primitives": [],
   "rollout_stage_plan": [
     {
       "stage": "stage-0",
       "title": "Bootstrap harness source and schema validation.",
-      "status": "next",
+      "status": "done",
       "actions": ["Run harness init if harness.yaml is missing.", "Run harness validate."]
     },
     {
       "stage": "stage-1",
       "title": "Add policy, sandbox, and structural doctor checks.",
-      "status": "later",
+      "status": "done",
       "actions": [
         "Reference approval and sandbox policy artifacts.",
         "Run harness doctor --format json."
@@ -201,7 +176,7 @@
     {
       "stage": "stage-2",
       "title": "Exercise eval, run, trace, and scoreboard evidence.",
-      "status": "later",
+      "status": "done",
       "actions": [
         "Run harness eval validate.",
         "Run harness eval run.",
@@ -211,7 +186,7 @@
     {
       "stage": "stage-3",
       "title": "Gate long-running work with continuity and self-verification.",
-      "status": "later",
+      "status": "done",
       "actions": [
         "Record continuity state and self-verification evidence.",
         "Run harness loop validate before completion claims."
@@ -220,75 +195,21 @@
     {
       "stage": "stage-4",
       "title": "Route agent implementation through reviewed repair or fallback paths.",
-      "status": "done",
+      "status": "next",
       "actions": ["Add repair-action artifacts or document CLI fallback approval flow."]
     }
   ],
-  "recommendations": [
-    {
-      "category": "routing",
-      "severity": "info",
-      "message": "Create or repair harness.yaml, then run harness validate.",
-      "evidence": [
-        {
-          "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml",
-          "media_type": "application/yaml",
-          "description": "Harness file."
-        }
-      ]
-    },
-    {
-      "category": "policy",
-      "severity": "info",
-      "message": "Reference approval and sandbox policy artifacts from harness.yaml.",
-      "evidence": [
-        {
-          "path": "examples/policies/approval-policy.yaml",
-          "media_type": "application/yaml",
-          "description": "Policy artifact."
-        },
-        {
-          "path": "examples/policies/sandbox-policy.yaml",
-          "media_type": "application/yaml",
-          "description": "Policy artifact."
-        }
-      ]
-    },
-    {
-      "category": "eval",
-      "severity": "info",
-      "message": "Add at least one eval suite with deterministic verifier tasks.",
-      "evidence": [
-        {
-          "path": "examples/evals/harness-self-test/v1.0.0/",
-          "media_type": "application/yaml",
-          "description": "Eval task suite."
-        }
-      ]
-    },
-    {
-      "category": "continuity",
-      "severity": "info",
-      "message": "Configure continuity state and validate completion evidence with harness loop validate.",
-      "evidence": [
-        {
-          "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml#/continuity",
-          "media_type": "application/yaml",
-          "description": "Continuity configuration."
-        }
-      ]
-    }
-  ],
+  "recommendations": [],
   "implementation_routing": {
-    "selected_route": "repair-action",
+    "selected_route": "execution-loop",
     "routes": [
       {
         "id": "repair-action:approved-schema-fix",
         "kind": "repair-action",
-        "status": "available",
-        "summary": "An approved repair-action artifact is available for review. This assessment routes to the artifact and metadata; it does not emit or execute repair commands.",
+        "status": "unavailable",
+        "summary": "Repair-action target files do not overlap current missing or partial assessment evidence; approval state is approved, and the artifact is not selected for implementation routing.",
         "approval_state": "approved",
-        "approval_trust": "trusted",
+        "approval_trust": "untrusted",
         "risk_class": "low",
         "repair_mode": "preview-backed",
         "sandbox_requirement": "worktree",
@@ -302,7 +223,7 @@
           "allowed_outputs": [".harness/repairs/approved-schema-fix.patch"]
         },
         "target_files": ["examples/fixtures/invalid/harness-with-plugin-key.yaml"],
-        "applicability": "applicable",
+        "applicability": "not-applicable",
         "evidence": [
           {
             "path": "examples/repair-actions/approved-schema-fix.yaml",
@@ -347,7 +268,7 @@
         "summary": "Continuity configuration is present; agents can produce continuity/self-verification evidence and validate explicit artifacts with harness loop validate.",
         "evidence": [
           {
-            "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml#/continuity",
+            "path": "examples/harness.yaml#/continuity",
             "media_type": "application/yaml",
             "description": "Continuity configuration."
           }
@@ -371,14 +292,64 @@
   },
   "artifacts_read": [
     {
+      "path": "AGENTS.md",
+      "media_type": "text/markdown",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/agent-runners/stub.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/checks/doc-links.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
       "path": "examples/doctor/results/pass.json",
       "media_type": "application/json",
       "description": "doctor result artifact."
     },
     {
-      "path": "examples/fixtures/invalid/harness-with-plugin-key.yaml",
+      "path": "examples/environments/local.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/evals/harness-self-test/v1.0.0",
+      "media_type": "text/plain",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/failure-taxonomy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/harness.yaml",
       "media_type": "application/yaml",
       "description": "Harness source of truth."
+    },
+    {
+      "path": "examples/judges/policy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/model-profiles/stub.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/policies/approval-policy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
+    },
+    {
+      "path": "examples/policies/sandbox-policy.yaml",
+      "media_type": "application/yaml",
+      "description": "Composed harness reference."
     },
     {
       "path": "examples/repair-actions/advisory-cli-redirect.yaml",
@@ -406,9 +377,19 @@
       "description": "scoreboard artifact."
     },
     {
+      "path": "examples/traces/external-import.json",
+      "media_type": "application/json",
+      "description": "Composed harness reference."
+    },
+    {
       "path": "examples/traces/native-cli-trace.json",
       "media_type": "application/json",
       "description": "trace artifact."
+    },
+    {
+      "path": "README.md",
+      "media_type": "text/markdown",
+      "description": "Composed harness reference."
     }
   ]
 }

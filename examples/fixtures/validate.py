@@ -592,7 +592,7 @@ def validate_adapter_scope_against_matrix(document: Any, matrix: Any) -> list[st
         errors.append(
             adapter_error(
                 "ASM_MATRIX_DECISION_UNSUPPORTED",
-                "Stage 9 adapter validation requires a matrix decision with a selected host",
+                "adapter validation requires a matrix decision with a selected host",
             )
         )
     elif isinstance(selected_host_id, str) and selected_host_id != matrix_selected_host_id:
@@ -641,7 +641,7 @@ def validate_adapter_selected_host_fields(
         errors.append(
             adapter_error(
                 "ASM_MATRIX_TIER_UNSUPPORTED",
-                "Stage 9 adapter validation currently requires a limited-adapter matrix decision",
+                "adapter validation currently requires a limited-adapter matrix decision",
             )
         )
     for scope_field, host_field in [
@@ -660,12 +660,12 @@ def validate_adapter_selected_host_fields(
                 )
             )
     if host.get("candidate_status") != "in-scope-candidate":
-        errors.append(adapter_error("ASM_HOST_OUT_OF_SCOPE", f"{host_id} is not an in-scope Stage 9 candidate"))
+        errors.append(adapter_error("ASM_HOST_OUT_OF_SCOPE", f"{host_id} is not an in-scope adapter candidate"))
     if host.get("tier") != "limited-adapter":
         errors.append(
             adapter_error(
                 "ASM_HOST_TIER_UNSUPPORTED",
-                f"{host_id} must be selected at limited-adapter tier for this Stage 9 adapter scope",
+                f"{host_id} must be selected at limited-adapter tier for this adapter scope",
             )
         )
 

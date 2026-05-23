@@ -187,7 +187,7 @@ export async function runAgentEvalSuite(
     }
     if (discovery.taskPaths.length !== 1) {
       throw new CliError(
-        'Stage 6 eval run supports exactly one configured eval task for the selected runner. Multi-task runner mapping is a later-stage feature.',
+        'eval run currently supports exactly one configured eval task for the selected runner. Multi-task runner mapping is a future capability.',
         ExitCode.validationError,
       );
     }
@@ -318,7 +318,7 @@ async function loadRunnerContext(request: AgentRunRequest): Promise<RunnerContex
     schemaName: 'agent-runner',
     schemas: request.schemas,
   });
-  validateStage6Runner(runner);
+  validateDeterministicRunner(runner);
 
   const taskPath = await canonicalTaskPathForRunner(request.root, runner, request.taskPath);
   const task = taskData(
@@ -1043,11 +1043,11 @@ function validateRunnerTaskBinding(root: string, runner: JsonObject, taskPath: s
   }
 }
 
-function validateStage6Runner(runner: JsonObject): void {
+function validateDeterministicRunner(runner: JsonObject): void {
   const credential = requiredObject(runner, 'credential_reference');
   if (requiredString(credential, 'source') !== 'stub') {
     throw new CliError(
-      'Stage 6 deterministic runner requires credential_reference.source: stub.',
+      'deterministic runner requires credential_reference.source: stub.',
       ExitCode.validationError,
     );
   }
@@ -1057,7 +1057,7 @@ function validateStage6Runner(runner: JsonObject): void {
     getNumber(budgets, 'max_requests') === undefined
   ) {
     throw new CliError(
-      'Stage 6 deterministic runner requires explicit cost and request budgets.',
+      'deterministic runner requires explicit cost and request budgets.',
       ExitCode.validationError,
     );
   }
@@ -1066,7 +1066,7 @@ function validateStage6Runner(runner: JsonObject): void {
 function validateStubModelProfile(modelProfile: JsonObject): void {
   if (requiredString(modelProfile, 'provider') !== 'harness-fixture') {
     throw new CliError(
-      'Stage 6 deterministic runner only supports harness-fixture model profiles.',
+      'deterministic runner only supports harness-fixture model profiles.',
       ExitCode.validationError,
     );
   }
@@ -1148,21 +1148,21 @@ function candidatePathForCase(root: string, task: EvalTaskData, caseKind: AgentC
 function validateVerifierTrust(context: RunnerContext, candidatePath: string): string | undefined {
   const kind = requiredString(context.task.verifier, 'kind');
   if (kind !== 'command') {
-    return `Stage 6 deterministic runner only executes command verifiers, not ${kind} verifiers.`;
+    return `deterministic runner only executes command verifiers, not ${kind} verifiers.`;
   }
   const trust = requiredObject(context.task.verifier, 'trust_requirements');
   if (requiredString(trust, 'trust_level') !== 'sandboxed') {
-    return 'Stage 6 deterministic runner requires sandboxed verifier trust.';
+    return 'deterministic runner requires sandboxed verifier trust.';
   }
   if (requiredString(trust, 'sandbox_required') !== 'process') {
-    return 'Stage 6 deterministic runner can only satisfy process sandbox declarations.';
+    return 'deterministic runner can only satisfy process sandbox declarations.';
   }
   if (
     getBoolean(trust, 'network_access') !== false ||
     getBoolean(trust, 'secret_access') !== false ||
     getBoolean(trust, 'host_file_access') !== false
   ) {
-    return 'Stage 6 deterministic runner refuses verifiers with network, secret, or host-file access.';
+    return 'deterministic runner refuses verifiers with network, secret, or host-file access.';
   }
   const allowedInputs = normalizedDeclaredPaths(
     context.root,

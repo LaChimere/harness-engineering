@@ -10,7 +10,7 @@ progress_log:
     refs:
       - path: plans/harness-engineering-platform/todo.md
         media_type: text/markdown
-        description: Stage 10 work log.
+        description: Execution work log.
   - timestamp: "2026-05-21T00:10:00Z"
     event: Startup verification recorded too late.
     refs:

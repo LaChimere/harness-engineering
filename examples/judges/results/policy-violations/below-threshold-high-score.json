@@ -3,7 +3,7 @@
   "result_id": "judge-below-threshold-high-score",
   "run_id": "stage7-semantic-invalid-run",
   "policy_ref": "examples/judges/policy.yaml",
-  "policy_digest": "sha256:16c624712971179282d2178dba74cf1be6946127b25d31677230f67e43d829f1",
+  "policy_digest": "sha256:3ee0ad0da66bc7777c93959b76dc61740fc1652baebb937eb6ac5e3e92396071",
   "policy_id": "harness-self-test-judge-policy",
   "judge_id": "harness-self-test-reviewer",
   "produced_at": "2026-05-21T00:00:00Z",

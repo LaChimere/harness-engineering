@@ -41,7 +41,7 @@
       "fallback": "supported",
       "evidence_ids": ["github-copilot-cli-install"],
       "user_label": "GitHub Copilot CLI install or marketplace setup",
-      "note": "Adapter enablement can rely on the Stage 8-proven Copilot CLI install and marketplace distribution path."
+      "note": "Adapter enablement can rely on the proven Copilot CLI install and marketplace distribution path."
     },
     {
       "capability": "cli_bundling_bootstrap",
@@ -83,7 +83,7 @@
       "fallback": "supported",
       "evidence_ids": ["github-copilot-cli-repair"],
       "user_label": "Host-supported repair preview and approval",
-      "note": "Stage 8 proves host repair preview and approval affordances. The current un-packaged scope still keeps write classes advisory-only until a runtime adapter can safely execute host-surface writes."
+      "note": "Host repair preview and approval affordances are proven. The current un-packaged scope still keeps write classes advisory-only until a runtime adapter can safely execute host-surface writes."
     }
   ],
   "unavailable_capabilities": [
@@ -92,14 +92,14 @@
       "fallback": "advisory-only",
       "evidence_ids": ["github-copilot-cli-hooks"],
       "user_label": "Durable inline annotations",
-      "reason": "Stage 8 found hooks but no public durable annotation API, so annotations remain advisory text until a host API is proven."
+      "reason": "Hooks are available but no public durable annotation API is proven, so annotations remain advisory text until a host API is proven."
     },
     {
       "capability": "trace_deep_links",
       "fallback": "cli-redirect",
       "evidence_ids": ["github-copilot-cli-trace"],
       "user_label": "Structured trace deep links",
-      "reason": "Stage 8 found transcript sharing, but no stable item-level trace deep-link API; users are redirected to CLI trace artifacts."
+      "reason": "Transcript sharing is available, but no stable item-level trace deep-link API is proven; users are redirected to CLI trace artifacts."
     }
   ],
   "write_classes": {

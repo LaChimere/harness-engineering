@@ -163,7 +163,7 @@
     },
     "judges": {
       "type": "object",
-      "description": "Stage 7 inferential judge policy declarations. Judge result artifacts remain runtime evidence and are not deterministic verifier results.",
+      "description": "Inferential judge policy declarations. Judge result artifacts remain runtime evidence and are not deterministic verifier results.",
       "required": ["policies"],
       "properties": {
         "policies": {

@@ -29,7 +29,7 @@ export async function runMigrate(
   }
   if (hasFlag(options, 'apply')) {
     throw new CliError(
-      'Stage 3 migrate only supports dry-run/no-op evidence. Omit --apply.',
+      'migrate currently only supports dry-run/no-op evidence. Omit --apply.',
       ExitCode.usageError,
     );
   }

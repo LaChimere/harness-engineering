@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/plugin-capability-matrix.schema.json",
   "title": "Plugin capability matrix",
-  "$comment": "provisional Stage 8 matrix; hosts reuse plugin-capability.schema.json as the per-host row type so Stage 9 has one capability source of truth.",
+  "$comment": "provisional capability matrix; hosts reuse plugin-capability.schema.json as the per-host row type so adapters have one capability source of truth.",
   "type": "object",
   "required": [
     "schema_version",
@@ -66,7 +66,7 @@
     },
     "decision": {
       "type": "object",
-      "$comment": "JSON Schema constrains null decisions structurally. Non-null selected_host_id consistency with hosts[].host.id, selected tier, candidate status, and Stage 9 consequence is enforced by the required plugin_capability_matrix_invariants custom check.",
+      "$comment": "JSON Schema constrains null decisions structurally. Non-null selected_host_id consistency with hosts[].host.id, selected tier, candidate status, and adapter consequence is enforced by the required plugin_capability_matrix_invariants custom check.",
       "required": ["selected_host_id", "selected_tier", "stage9_consequence", "rationale"],
       "properties": {
         "selected_host_id": {

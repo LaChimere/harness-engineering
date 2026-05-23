@@ -85,7 +85,7 @@ export function validateAdapterScopeAgainstMatrix(
     errors.push(
       adapterScopeError(
         'ASM_MATRIX_DECISION_UNSUPPORTED',
-        'Stage 9 adapter validation requires a matrix decision with a selected host',
+        'adapter validation requires a matrix decision with a selected host',
       ),
     );
   } else if (selectedHostId !== undefined && selectedHostId !== matrixSelectedHostValue) {
@@ -153,7 +153,7 @@ function validateSelectedHostFields(
     errors.push(
       adapterScopeError(
         'ASM_MATRIX_TIER_UNSUPPORTED',
-        'Stage 9 adapter validation currently requires a limited-adapter matrix decision',
+        'adapter validation currently requires a limited-adapter matrix decision',
       ),
     );
   }
@@ -165,14 +165,14 @@ function validateSelectedHostFields(
 
   if (getString(host, 'candidate_status') !== 'in-scope-candidate') {
     errors.push(
-      adapterScopeError('ASM_HOST_OUT_OF_SCOPE', `${hostId} is not an in-scope Stage 9 candidate`),
+      adapterScopeError('ASM_HOST_OUT_OF_SCOPE', `${hostId} is not an in-scope adapter candidate`),
     );
   }
   if (getString(host, 'tier') !== 'limited-adapter') {
     errors.push(
       adapterScopeError(
         'ASM_HOST_TIER_UNSUPPORTED',
-        `${hostId} must be selected at limited-adapter tier for this Stage 9 adapter scope`,
+        `${hostId} must be selected at limited-adapter tier for this adapter scope`,
       ),
     );
   }

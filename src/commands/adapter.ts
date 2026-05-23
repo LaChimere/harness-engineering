@@ -120,5 +120,5 @@ function adapterHelpText(): string {
   return `harness adapter <subcommand>
 
 Subcommands:
-  validate   Validate a Stage 9 adapter scope against the Stage 8 capability matrix.`;
+  validate   Validate an adapter scope against the capability matrix.`;
 }

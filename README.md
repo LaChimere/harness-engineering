@@ -6,20 +6,20 @@ The product goal is a versioned harness substrate that makes agent work reproduc
 
 ## Current status
 
-This repository has completed the Stage 12 native agent-facing assessment slice. It has not shipped an installable adapter package, CI adapter, native skill package, or live agent runtime.
+This repository has completed the agent-practice mining slice. It has not shipped an installable adapter package, CI adapter, native skill package, or live agent runtime.
 
-The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. Stage 8 selected GitHub Copilot CLI as the first **limited adapter** target, not a full-plugin target. Stage 9 adds an adapter-scope manifest and `harness adapter validate`; Stage 10 adds `harness loop validate` over continuity and self-verification evidence; Stage 12 adds `harness assess` as the read-only native agent-facing assessment adapter. No installable host package, CI adapter, native skill adapter, or live model runner is available from this repository today.
+The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. GitHub Copilot CLI is the first **limited adapter** target, not a full-plugin target. The repo includes an adapter-scope manifest and `harness adapter validate`, execution-loop validation over continuity and self-verification evidence, `harness assess` as the read-only native agent-facing assessment adapter, and `plans/harness-engineering-platform/capability-ledger.yaml` for harness-native capability candidates mined from external workflow skill source material. No installable host package, CI adapter, native skill adapter, or live model runner is available from this repository today.
 
 ## Entrypoint matrix
 
 | Entrypoint | Status now | Intended role | First stage that makes it concrete |
 |---|---|---|---|
-| CLI plus `harness.yaml` | Initial Stage 12 CLI exists locally with `init`, `adapter validate`, `assess`, `loop validate`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, execution-loop evidence gates, future GC, adapter-scope checks, native assessment, and reports. | Stage 3 implements the initial CLI; Stage 4 implements doctor MVP; Stage 5 implements verifier-only eval validation; Stage 6 implements CI-safe stub agent runs and trace normalization; Stage 7 implements inferential judge policy validation; Stage 9 validates limited-adapter scope; Stage 10 validates execution-loop evidence gates; Stage 12 adds the native agent-facing assessment command. |
-| Agent/CLI marketplace adapter or plugin | Stage 9 ships a GitHub Copilot CLI limited-adapter scope manifest and validator. No installable host package is shipped yet, so users cannot enable an adapter runtime from this repository today. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Stage 8 verified feasibility; Stage 9 may ship only the proven limited adapter scope. |
-| External workflow skill source material | External skills are learning material only; they are not a product surface, dependency, or default quickstart. | Mine useful practices into harness-native capability decisions without creating an `agent-coding` namespace or compatibility package. | Stage 13. |
-| CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Stage 11. |
+| CLI plus `harness.yaml` | The local CLI includes `init`, `adapter validate`, `assess`, `loop validate`, `validate`, `migrate`, `doctor`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, evals, traces, verification, execution-loop evidence gates, future GC, adapter-scope checks, native assessment, and reports. | Available locally in this checkout. |
+| Agent/CLI marketplace adapter or plugin | A GitHub Copilot CLI limited-adapter scope manifest and validator exist. No installable host package is shipped yet, so users cannot enable an adapter runtime from this repository today. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Feasibility is recorded; runtime packaging is not shipped. |
+| External workflow skill source material | External skills are learning material only; they are not a product surface, dependency, or default quickstart. | Mine useful practices into harness-native capability decisions without creating an `agent-coding` namespace or compatibility package. | Captured in the capability ledger. |
+| CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Planned. |
 
-Until a real agent/CLI full-plugin tier is verified and shipped, the public path stays CLI-first. Stage 8 proved only limited-adapter scope, so any Stage 9 adapter must label unsupported rich UX as unavailable. The current local command shape is:
+Until a real agent/CLI full-plugin tier is verified and shipped, the public path stays CLI-first. Current adapter evidence proves only limited-adapter scope, so any adapter must label unsupported rich UX as unavailable. The current local command shape is:
 
 ```bash
 bun run build
@@ -46,7 +46,7 @@ The npm package metadata and `harness` binary mapping exist, but the package has
 | Tier | Surface | Responsibility |
 |---|---|---|
 | 0 | Harness-as-code substrate | `harness.yaml`, schemas, examples, artifact conventions, and versioning. |
-| 1 | Deterministic CLI | Current `init`, `adapter validate`, `assess`, `loop validate`, `validate`, `migrate`, `run`, `doctor`, `eval`, `trace`, `verify`, and `report`; future `gc` remains planned for Stage 14. |
+| 1 | Deterministic CLI | Current `init`, `adapter validate`, `assess`, `loop validate`, `validate`, `migrate`, `run`, `doctor`, `eval`, `trace`, `verify`, and `report`; GC remains planned. |
 | 2 | Agent/CLI marketplace adapters | Rich guided UX only where a supported full-plugin host and runtime APIs exist; otherwise limited commands/hooks/MCP/skills over the CLI when proven feasible. |
 | 3 | Portable skills | Agent-facing adapters that consume substrate artifacts. |
 | 4 | Optional CI adapters | Objective enforcement or advisory checks for teams that opt in. |
@@ -66,7 +66,7 @@ The npm package metadata and `harness` binary mapping exist, but the package has
 
 ## Schema publication and compatibility
 
-Stage 2 added JSON schemas under `schemas/` with versioned `$id` values. External tools can validate artifacts from a local checkout today; Stage 3 package metadata includes the same schemas so installed package consumers can resolve them from `node_modules/@lachimere/harness-engineering/schemas/` after the package is published.
+The schema substrate lives under `schemas/` with versioned `$id` values. External tools can validate artifacts from a local checkout today; package metadata includes the same schemas so installed package consumers can resolve them from `node_modules/@lachimere/harness-engineering/schemas/` after the package is published.
 
 Every machine-readable artifact must include `schema_version`. Each schema uses semantic versioning, and `harness.yaml` pins compatible ranges with `engines.schemas`. The CLI validates artifacts only against schema versions inside its supported range and reports version mismatch as an explicit compatibility error.
 
@@ -80,9 +80,9 @@ Migrations must be previewable, reproducible without a plugin, and backed by mac
 
 External workflow skills, including those in `LaChimere/agent-coding`, are source material for harness-native capability design. This repository does not expose `agent-coding` as a product namespace, dependency, compatibility package, or default quickstart.
 
-Stage 13 will mine workflow-oriented external skills into `plans/harness-engineering-platform/capability-ledger.yaml`. Each ledger record describes a harness capability candidate, the observed practice and failure mode, the possible substrate surface, required evidence, and what remains outside harness core. Domain-specific utility skills such as vulnerability scanning are ignored for Stage 13.
+The approved plan mined workflow-oriented external skills into `plans/harness-engineering-platform/capability-ledger.yaml`. Each ledger record describes a harness capability candidate, the observed practice and failure mode, the possible substrate surface, required evidence, and what remains outside harness core. Domain-specific utility skills such as vulnerability scanning are ignored for this capability-mining work.
 
-Stage 13 does **not** copy, vendor, rewrite, merge, deprecate, or install external skills. Future native capability adoption must go through approved schema/CLI/profile/eval/GC contracts with fixtures, trust/sandbox requirements, and false-positive policy where relevant.
+This repository does **not** copy, vendor, rewrite, merge, deprecate, or install external skills. Future native capability adoption must go through approved schema/CLI/profile/eval/GC contracts with fixtures, trust/sandbox requirements, and false-positive policy where relevant.
 
 
 ## Roadmap
@@ -94,4 +94,4 @@ The approved roadmap lives in:
 - `plans/harness-engineering-platform/plan.md`
 - `plans/harness-engineering-platform/todo.md`
 
-Stages 1 through 10 and Stage 12 are implemented in the current roadmap. Stage 11 CI adapters are intentionally deferred for now. Stage 9 has a schema-backed GitHub Copilot CLI limited-adapter scope manifest and validator; Stage 10 adds native execution-loop startup/completion gate validation over continuity and self-verification evidence; Stage 12 adds schema-backed `harness assess` output for maturity, missing primitives, rollout guidance, and implementation routing. Installable host packaging, runtime enablement, CI enforcement, and live model execution remain constrained by later stages and future host evidence.
+The current roadmap has implemented the CLI-first substrate, doctor/eval/run/trace/report flows, limited-adapter scope validation, execution-loop evidence gates, native assessment, and capability mining. CI adapters remain intentionally deferred for now. Installable host packaging, runtime enablement, CI enforcement, and live model execution remain constrained by future host evidence.

@@ -44,4 +44,4 @@ calibration_examples:
 evidence:
   - path: plans/harness-engineering-platform/design.md#stage-7-llm-judge-and-inferential-review-policy
     media_type: text/markdown
-    description: Approved Stage 7 policy requirements.
+    description: Approved judge policy requirements.

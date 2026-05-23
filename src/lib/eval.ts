@@ -526,23 +526,23 @@ function validateVerifierExecutionTrust(
 ): string | undefined {
   const kind = requiredString(task.verifier, 'kind');
   if (kind !== 'command') {
-    return `Stage 5 eval validate only executes command verifiers, not ${kind} verifiers.`;
+    return `eval validate only executes command verifiers, not ${kind} verifiers.`;
   }
   const trust = requiredObject(task.verifier, 'trust_requirements');
   const trustLevel = requiredString(trust, 'trust_level');
   if (trustLevel !== 'sandboxed') {
-    return `Stage 5 eval validate requires sandboxed verifier trust, got ${trustLevel}.`;
+    return `eval validate requires sandboxed verifier trust, got ${trustLevel}.`;
   }
   const sandboxRequired = requiredString(trust, 'sandbox_required');
   if (sandboxRequired !== 'process') {
-    return `Stage 5 eval validate can only satisfy process sandbox declarations, got ${sandboxRequired}.`;
+    return `eval validate can only satisfy process sandbox declarations, got ${sandboxRequired}.`;
   }
   if (
     getBoolean(trust, 'network_access') !== false ||
     getBoolean(trust, 'secret_access') !== false ||
     getBoolean(trust, 'host_file_access') !== false
   ) {
-    return 'Stage 5 eval validate refuses verifiers with network, secret, or host-file access.';
+    return 'eval validate refuses verifiers with network, secret, or host-file access.';
   }
 
   const allowedInputs = normalizedDeclaredPaths(
@@ -556,7 +556,7 @@ function validateVerifierExecutionTrust(
     input.root,
     getArray(trust, 'allowed_outputs') ?? [],
   );
-  // Stage 5 declaration-gates verifier outputs; it does not enforce child-process writes.
+  // Eval validation declaration-gates verifier outputs; it does not enforce child-process writes.
   if (input.outputPath !== undefined && !declaresPath(allowedOutputs, input.outputPath)) {
     return `Verifier allowed_outputs does not include run-result output: ${input.outputPath}`;
   }
@@ -697,7 +697,7 @@ function unsupportedBaselineKindIssue(task: EvalTaskData): string | undefined {
   if (task.baseline === undefined || task.baseline.kind === 'expected-failure') {
     return undefined;
   }
-  return `Stage 5 eval validate only supports baseline.kind expected-failure, got ${task.baseline.kind}.`;
+  return `eval validate only supports baseline.kind expected-failure, got ${task.baseline.kind}.`;
 }
 
 function taskSummary(input: {

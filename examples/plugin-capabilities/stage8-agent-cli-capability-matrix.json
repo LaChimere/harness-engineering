@@ -3,7 +3,7 @@
   "x-stability": "provisional",
   "matrix_id": "stage8-agent-cli-capability-matrix",
   "review_date": "2026-05-22",
-  "candidate_boundary": "In-scope candidates are named coding-agent or CLI host surfaces with install or discovery mechanisms, agent-facing extension points, repository workspace access, and a CLI invocation or bootstrap path. IDE-only, CI-only, and hosted review surfaces are future evidence only and cannot be Stage 9 targets in this slug.",
+  "candidate_boundary": "In-scope candidates are named coding-agent or CLI host surfaces with install or discovery mechanisms, agent-facing extension points, repository workspace access, and a CLI invocation or bootstrap path. IDE-only, CI-only, and hosted review surfaces are future evidence only and cannot be selected adapter targets in this slug.",
   "capability_dimensions": [
     "agent_cli_install_distribution",
     "cli_bundling_bootstrap",
@@ -622,17 +622,17 @@
     "plugin_capability": {
       "conclusion": "sufficient-for-stage9",
       "required_changes": ["tier", "surface-kind", "evidence-id", "evidence-link", "fallback"],
-      "note": "Stage 8 revalidated plugin-capability as the per-host row type for the capability matrix with tiers, surface kind, stable evidence ids, evidence entries, and fallback behavior."
+      "note": "plugin-capability is the per-host row type for the capability matrix with tiers, surface kind, stable evidence ids, evidence entries, and fallback behavior."
     },
     "repair_action": {
       "conclusion": "extend-before-stage9",
       "required_changes": ["advisory-repair-mode"],
-      "note": "Current repair-action shape supports preview-backed repair proposals, but limited adapters without host preview and approval affordances need an advisory-only repair mode before writes are exposed through Stage 9."
+      "note": "Current repair-action shape supports preview-backed repair proposals, but limited adapters without host preview and approval affordances need an advisory-only repair mode before writes are exposed through an adapter."
     },
     "adapter_scope_metadata": {
       "conclusion": "extend-before-stage9",
       "required_changes": ["adapter-scope-metadata"],
-      "note": "Stage 9 must add a schema-backed adapter scope manifest or equivalent revalidated plugin-capability metadata to prove implemented scope is a subset of Stage 8 evidence."
+      "note": "Adapter implementations must add a schema-backed adapter scope manifest or equivalent revalidated plugin-capability metadata to prove implemented scope is a subset of capability-matrix evidence."
     }
   },
   "decision": {

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/plugin-capability.schema.json",
   "title": "Plugin capability",
-  "$comment": "provisional; Stage 8 revalidated this as the per-host row shape for the agent/CLI capability matrix before Stage 9 consumes it.",
+  "$comment": "provisional; this is the per-host row shape for the agent/CLI capability matrix before an adapter consumes it.",
   "type": "object",
   "required": [
     "schema_version",

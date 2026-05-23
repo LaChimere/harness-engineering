@@ -75,9 +75,9 @@
       "accessed_date": "2026-05-22",
       "source_type": "local-reproduction",
       "finding": "negative",
-      "note": "Stage 8 must prove a named agent/CLI host before any adapter path can be selected."
+      "note": "A named agent/CLI host must be proven before any adapter path can be selected."
     }
   ],
   "stage9_consequence": "defer-stage9-cli-first",
-  "stage9_scope_summary": "Placeholder host keeps public guidance CLI-first until Stage 8 records positive capability evidence."
+  "stage9_scope_summary": "Placeholder host keeps public guidance CLI-first until positive capability evidence is recorded."
 }

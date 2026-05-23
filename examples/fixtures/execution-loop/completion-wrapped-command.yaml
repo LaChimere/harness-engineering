@@ -8,11 +8,11 @@ spec_reread:
   status: matched
 acceptance_checks:
   - id: original-spec-reread
-    expected: Completion evidence records that the original Stage 10 spec was reread.
-    actual: spec_reread.status is matched for the Stage 10 plan reference.
+    expected: Completion evidence records that the original spec was reread.
+    actual: spec_reread.status is matched for the plan reference.
     status: passed
   - id: acceptance-criteria-compared
-    expected: Completion evidence compares the Stage 10 acceptance criteria before completion.
+    expected: Completion evidence compares the acceptance criteria before completion.
     actual: Acceptance criteria were compared.
     status: passed
   - id: approval-policy-followed-or-escalated

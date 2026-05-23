@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 13: agent-practice mining for harness-native capabilities.
+Stages 1 through 10 and Stages 12 through 13 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 14: GC framework and first deterministic categories.
 
 ## Goals
 
@@ -59,7 +59,7 @@ Stages 1 through 10 and Stage 12 are complete. Stage 11 optional CI adapters are
 | 14 | GC framework and first deterministic categories | Stage 4, Stage 6 | `harness gc audit/validate` produces append-only evidence and reviewable cleanup slices for mechanical categories |
 | 15 | Evidence-driven GC expansion | Stage 5, Stage 7, Stage 14 | GC can promote/retire rules, checks, templates, and evals using evidence and holdout results |
 | 16 | Capability adoption cleanup and migration | Stage 13, Stage 15, and a real adopted capability or substrate-backed replacement; otherwise dormant | Cleanup operates only on adopted capabilities or replacement paths with evidence |
-| 17 | Recurring profiles and scheduled maintenance | Stage 12, Stage 16 | Entropy auditor, doc gardener, eval curator, and trace reviewer consume substrate artifacts with measurable stop conditions |
+| 17 | Recurring profiles and scheduled maintenance | Stage 12, Stage 13 | Entropy auditor, doc gardener, eval curator, and trace reviewer consume substrate artifacts with measurable stop conditions; Stage 16 may follow after profile adoption creates cleanup work |
 
 ## Stage acceptance criteria
 

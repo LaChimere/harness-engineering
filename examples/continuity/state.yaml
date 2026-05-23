@@ -2,15 +2,15 @@ schema_version: "0.1.0"
 session_id: harness-stage2-example
 feature_list:
   - id: schema-substrate
-    title: Define the Stage 2 schema substrate.
+    title: Define the schema substrate.
     status: in-progress
     refs:
       - path: plans/harness-engineering-platform/todo.md
         media_type: text/markdown
-        description: Stage 2 execution checklist.
+        description: Schema-substrate execution checklist.
 progress_log:
   - timestamp: "2026-05-20T00:00:00Z"
-    event: Stage 2 schema substrate initialized.
+    event: Schema substrate initialized.
     refs:
       - path: examples/harness.yaml
         media_type: application/yaml
@@ -37,4 +37,4 @@ usage_aggregate:
   source: stub
 runs_counted: 0
 unresolved_risks:
-  - CLI support for continuity validation begins in Stage 3.
+  - CLI support for continuity validation begins after the initial CLI baseline.

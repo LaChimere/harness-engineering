@@ -490,7 +490,7 @@ Evidence: Stage 12 ships `harness assess` as the native agent-facing adapter pat
 - [x] Document `capability_id` stability: committed ids are not reused, and retired records remain in the ledger as `status: retired`.
 - [x] Run `git diff --check`.
 
-Evidence: Stage 13 mines external workflow skills only as source material and records seven harness-native capability candidates in `plans/harness-engineering-platform/capability-ledger.yaml`: `workflow-phase-gates`, `execution-atomic-slices`, `planning-feature-decomposition`, `parallel-work-ownership`, `review-atomicity-evidence`, `docs-freshness-profile`, and `goal-lifecycle-profile`. The ledger cites `LaChimere/agent-coding` source material at commit `a200a89f9949af9a2e8a2b7610be2a43b754d260` but creates no `agent-coding` namespace, adapter path, default quickstart, or runtime dependency. `scan-image-vulnerabilities` is explicitly excluded as domain-specific security tooling. Dogfood assessment evidence is preserved at `plans/harness-engineering-platform/evidence/stage13-repo-assessment.json` and `plans/harness-engineering-platform/evidence/stage13-downstream-minimal-assessment.json`: the canonical example assessed as `observable` 8/9 with execution-loop route and only advisory repair-routing gap, while an initialized downstream minimal fixture assessed as `validated` 5/9 with missing or partial doctor, run-result, scoreboard/report, and repair-routing evidence. Stage 13 does not change the assessment scorecard or maturity thresholds; future capability adoption is routed to Stage 14/15/17 gates and Stage 16 remains dormant until an adopted capability or replacement path exists. Stage 12 selected-route Markdown polish remains deferred to Stage 17; empty/ephemeral repair-action fixture handling and production repair-action discovery/default-directory policy remain deferred to Stage 14.
+Evidence: Stage 13 mines external workflow skills only as source material and records seven harness-native capability candidates in `plans/harness-engineering-platform/capability-ledger.yaml`: `workflow-phase-gates`, `execution-atomic-slices`, `planning-feature-decomposition`, `parallel-work-ownership`, `review-atomicity-evidence`, `docs-freshness-profile`, and `goal-lifecycle-profile`. The ledger cites `LaChimere/agent-coding` source material at commit `a200a89f9949af9a2e8a2b7610be2a43b754d260` but creates no `agent-coding` namespace, adapter path, default quickstart, or runtime dependency. `scan-image-vulnerabilities` is explicitly excluded as domain-specific security tooling. Dogfood assessment evidence is preserved at `plans/harness-engineering-platform/evidence/stage13-repo-assessment.json` and `plans/harness-engineering-platform/evidence/stage13-downstream-minimal-assessment.json`: the canonical example assessed as `observable` 8/9 with execution-loop route and only advisory repair-routing gap, while an initialized downstream minimal fixture assessed as `validated` 5/9 with missing or partial doctor, run-result, scoreboard/report, and repair-routing evidence. Stage 13 does not change the assessment scorecard or maturity thresholds; future capability adoption is routed to Stage 14/15 evidence gates or Stage 19 recurring-profile gates, and Stage 16 remains dormant until an adopted capability or replacement path exists. Stage 12 selected-route Markdown polish is deferred until profile or delivery-surface consumption is concrete; empty/ephemeral repair-action fixture handling and production repair-action discovery/default-directory policy remain deferred until cleanup eligibility or repair execution has a product path.
 
 ### Stage 13 acceptance criteria
 
@@ -514,7 +514,7 @@ Evidence: Stage 13 mines external workflow skills only as source material and re
 - [x] Add passing/failing fixtures for each category.
 - [x] Document false-positive policy for each category.
 - [x] Promote Stage 13 capability candidates only when they can be expressed as deterministic GC evidence rather than subjective process scoring.
-- [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
+- [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
 - [x] Produce ranked atomic cleanup slices.
 - [x] Include evidence refs and confidence.
 - [x] Include blast radius and atomicity notes.
@@ -544,7 +544,7 @@ Evidence: Stage 14 adds `harness gc audit` and `harness gc validate` as read-onl
 - [x] Document that future behavioral promotion must cite holdout results, not only optimization-suite improvement.
 - [x] Document evidence requirements for future stale rule/template/eval retirement.
 - [x] Keep promotion/retirement citation-only in this slice rather than shipping automatic promotion or retirement.
-- [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
+- [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
 - [x] Ensure a single preference cannot become a durable rule.
 - [x] Ensure LLM-judge evidence follows Stage 7 calibration policy.
 - [x] Run GC expansion tests.
@@ -559,52 +559,112 @@ Evidence: Stage 15 extends `harness gc audit` with optional evidence inputs for 
 - [x] LLM-judge evidence follows Stage 7 calibration policy.
 - [x] Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
 
-## Stage 16: Capability adoption cleanup and migration
+## Stage 16: Productization gate and cleanup eligibility
 
-- [ ] Add checks only for capabilities this repo has actually adopted or superseded.
-- [ ] Confirm Stage 16 is active only after Stage 13 records a capability and a later stage produces a real adopted capability or substrate-backed replacement.
-- [ ] Add stale capability guidance checks.
-- [ ] Add duplicated adapter guidance checks.
-- [ ] Add obsolete skill reference checks.
-- [ ] Add migration cleanup categories.
-- [ ] Connect findings to Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
-- [ ] Ensure no cleanup slice deletes behavior without documented replacement.
-- [ ] Run capability adoption cleanup tests.
+- [ ] Review `capability-ledger.yaml` and mark whether Stage 14/15 candidates were adopted, deferred, superseded, or still advisory.
+- [ ] Confirm whether any capability has a substrate-backed replacement path.
+- [ ] If no replacement exists, record Stage 16 as dormant and add no cleanup categories.
+- [ ] If a replacement exists, define the exact cleanup target, replacement path, migration evidence, and false-positive policy before implementation.
+- [ ] Ensure every capability has explicit `adoption_status` and `cleanup_eligible` fields before cleanup eligibility is evaluated.
+- [ ] Ensure cleanup eligibility never deletes user-facing behavior without documented replacement.
+- [ ] Update roadmap status to point to local project health checks as the next product-value slice.
+- [ ] Run eligibility/status tests or docs validation where available.
 - [ ] Run `git diff --check`.
 
 ### Stage 16 acceptance criteria
 
-- [ ] Capability-specific GC findings cite Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
-- [ ] Stage 16 produces no cleanup work when no adopted capability or substrate-backed replacement exists.
+- [ ] The stage records active or dormant cleanup status with evidence.
+- [ ] Every capability record has explicit adoption and cleanup eligibility metadata.
+- [ ] Any future capability-specific GC finding cites Stage 13 capability-ledger records, required evidence, and supported-path migration notes.
+- [ ] Stage 16 produces no cleanup implementation when no adopted capability or substrate-backed replacement exists.
 - [ ] No cleanup slice deletes user-facing behavior without a documented replacement path.
 
-## Stage 17: Recurring profiles and scheduled maintenance
+## Stage 17: Local project health checks
 
-- [ ] Add entropy-auditor profile.
-- [ ] Add doc-gardener profile.
-- [ ] Add eval-curator profile.
-- [ ] Add trace-reviewer profile.
-- [ ] Document trigger for each profile.
-- [ ] Document inputs for each profile.
-- [ ] Document state artifacts for each profile.
-- [ ] Document allowed actions for each profile.
-- [ ] Document measurable stop condition for each profile.
-- [ ] Document handoff artifact for each profile.
-- [ ] Add plugin- or scheduler-driven examples if useful.
-- [ ] Ensure profiles consume substrate artifacts and add value beyond one-shot summaries.
-- [ ] Add fixtures or examples demonstrating profile stopping when condition is met.
-- [ ] Promote Stage 13 capability candidates owned by Stage 17 only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
-- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
-- [ ] Run profile tests/evals where available.
+- [ ] Define `harness health` as the executable local project health-check surface without creating a second source of truth.
+- [ ] Keep `doctor` as the structural harness checker and document the boundary with `health`.
+- [ ] Reuse existing trust requirements plus approval and sandbox policy artifacts for health checks.
+- [ ] Require trust and sandbox declarations before any local check can execute.
+- [ ] Record command, timeout, status, failure class, artifacts, and trust/sandbox evidence for each check.
+- [ ] Extend `harness assess` to accept health evidence through a scorecard version with a distinct `project-health` dimension.
+- [ ] Mark existing Stage 13 assessment fixtures as the pre-health scorecard baseline or re-baseline them explicitly when the scorecard version changes.
+- [ ] Add pass/fail/timeout/unsafe-declaration fixtures.
+- [ ] Add policy-mismatch refusal fixtures, such as a check requesting network access when policy denies it.
+- [ ] Add downstream example checks such as lint, test, typecheck, or doc-link checks that require no network or secrets.
+- [ ] Ensure local health checks do not collapse `doctor`, `verify`, and `eval` into one generic runner.
+- [ ] Add command tests and schema/fixture validation.
 - [ ] Run `git diff --check`.
 
 ### Stage 17 acceptance criteria
 
-- [ ] Profiles consume substrate artifacts and add behavior beyond one-shot summaries.
-- [ ] Stage 13 capability candidates owned by Stage 17 are promoted only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions.
-- [ ] The initial shipped profile set includes entropy-auditor, doc-gardener, eval-curator, and trace-reviewer profiles.
-- [ ] Each profile has a measurable stop condition and handoff artifact.
-- [ ] Fixtures or examples demonstrate each profile stopping when its condition is met.
+- [ ] A downstream fixture reports configured check statuses and an overall health status beyond schema validity.
+- [ ] A downstream fixture demonstrates at least one passing and one failing health check with machine-readable evidence.
+- [ ] Assessment output cites health evidence and reflects it in the versioned maturity scorecard.
+- [ ] Local check execution is refused when trust/sandbox declarations are missing or unsafe.
+- [ ] Check evidence is machine-readable and cites command, timeout, status, artifacts, and failure class.
+- [ ] The starter path remains safe without network, secrets, or unbounded host access.
+
+## Stage 18: Real runner readiness
+
+- [ ] Define the minimum contract for non-stub model/agent runner execution.
+- [ ] Require explicit credential references, cost/token/request budgets, approval policy, sandbox requirements, trace output, and trace redaction/scoping.
+- [ ] Define the supported credential-reference shape for this slice.
+- [ ] Define a field-level trace allowlist and refuse trace fields that reference credential environment variables.
+- [ ] Add refusal cases for trace-redaction or trace-scope violations.
+- [ ] Preserve deterministic stub/recorded runners as CI-safe defaults.
+- [ ] Add refusal cases for missing credentials, missing budgets, unsupported sandbox, and unbounded live execution.
+- [ ] Add readiness docs explaining what is supported now versus what remains planned.
+- [ ] Add tests or fixtures for refusal behavior.
+- [ ] Run `git diff --check`.
+
+### Stage 18 acceptance criteria
+
+- [ ] No live runner path can execute without explicit credentials, budgets, and trace capture.
+- [ ] Live-runner traces cannot capture secrets or unsupported sensitive data without an explicit redaction/scoping policy.
+- [ ] The product can explain exactly what must be configured before real execution is allowed.
+- [ ] CI-safe validation does not require live credentials.
+
+## Stage 19: Recurring maintenance profile substrate and MVP
+
+- [ ] Define recurring-profile state, trigger, inputs, state artifacts, allowed actions, stop condition, and handoff contract.
+- [ ] Ship entropy-auditor as the MVP profile because it can consume GC and health evidence without live-runner support.
+- [ ] Document objective trigger thresholds for non-MVP profiles: doc-gardener needs docs-health evidence, eval-curator needs holdout eval evidence, and trace-reviewer needs Stage 18 trace evidence.
+- [ ] Implement or document the MVP profile only when it consumes substrate evidence and adds value beyond a one-shot summary.
+- [ ] Add plugin- or scheduler-driven examples if useful.
+- [ ] Add fixtures or examples demonstrating the MVP profile stopping when its condition is met.
+- [ ] Promote Stage 13 capability candidates owned by recurring profiles only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
+- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
+- [ ] Run profile tests/evals where available.
+- [ ] Run `git diff --check`.
+
+### Stage 19 acceptance criteria
+
+- [ ] The MVP profile consumes substrate artifacts and adds behavior beyond one-shot summaries.
+- [ ] Stage 13 capability candidates owned by recurring profiles are promoted only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions.
+- [ ] Future profiles have objective trigger thresholds before implementation begins.
+- [ ] The MVP profile has a measurable stop condition and handoff artifact.
+- [ ] Fixtures or examples demonstrate the MVP profile stopping when its condition is met.
+
+## Stage 20: Delivery surface and adoption packaging
+
+- [ ] Harden package contents for external users.
+- [ ] Document the CLI-first quickstart from install/invoke through first health check and evidence review.
+- [ ] Verify schema distribution and examples are included in the deliverable package.
+- [ ] Add a sandboxed downstream adoption smoke test that runs install/invoke -> init -> health -> evidence inspection -> assessment with health evidence.
+- [ ] Require the downstream smoke test to reach at least 8/10 on the scorecard version that adds `project-health`, improving on the Stage 13 downstream baseline of 5/9 without reinterpreting the old denominator.
+- [ ] Ensure the downstream smoke test has no critical gaps for initialization, local health evidence, and basic assessment/report output.
+- [ ] Document unsupported paths clearly: full plugin, CI enforcement, and live runners remain optional or planned until proven.
+- [ ] Ensure adapter and CI guidance remain projections over CLI/schema artifacts.
+- [ ] Run package/build validation.
+- [ ] Run `git diff --check`.
+
+### Stage 20 acceptance criteria
+
+- [ ] A downstream user can install or invoke the CLI and initialize a harness without repo-author handholding.
+- [ ] Quickstart explains generated artifacts, safe defaults, and next health-check command.
+- [ ] The downstream smoke test reaches at least 8/10 on the scorecard version that adds `project-health`.
+- [ ] Package contents include dist, schemas, examples, docs, and no implementation-only assumptions.
+- [ ] Public docs distinguish current product support from planned adapters, CI, and live-runner paths.
 
 ## Cross-cutting checks before each stage
 

@@ -26,3 +26,13 @@ This file records historical process corrections for the slug. `design.md`, `pla
 - Bind trusted repair-action approval to a unique action id and reject duplicate ids before routing. Otherwise a second artifact can inherit trust intended for another repair action.
 - Repair-action applicability must be based on current assessment gaps, not global candidate presence. Non-applicable repair actions should remain visible as evidence but unavailable for implementation routing.
 - Assessment routes must not emit or execute repair commands. Repair artifacts can cite `equivalent_cli_command` for review, but CLI/schema artifacts remain the source of truth and write execution belongs to a later approved flow.
+
+## Post-Stage 15 productization route
+
+- Do not continue the roadmap just because the next numbered stage exists. After GC evidence is available, the product should optimize for deliverable user value: safe project health checks, real-runner readiness, recurring maintenance, and adoption packaging.
+- Stage 16 cleanup must stay dormant unless a capability was actually adopted or superseded with a documented replacement path. Cleanup without replacement evidence is product risk, not product maturity.
+- Recurring profiles should wait until the harness can produce meaningful project health evidence; otherwise they risk becoming scheduled summaries of incomplete artifacts.
+- Treat "mature harness product" as an external-user adoption standard: install or invoke it, initialize a repo, run meaningful checks, trust the evidence, and understand unsupported paths.
+- Stage 15's final acceptance is intentionally citation-only for rule/eval lifecycle decisions. Automatic promotion or retirement was narrowed out after review so GC remains evidence-producing rather than rule-mutating.
+- The Stage 15 todo was reworded after review to match what shipped: evidence-driven findings and citation hooks, not automatic lifecycle mutation. This was a correction to prevent overclaiming, not a new Stage 15 implementation.
+- CLI is the v1 delivery surface. Plugin, CI, and portable agent UX can improve adoption later, but they must never be required for the core product to work.

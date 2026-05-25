@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 16 only after a real adopted capability or substrate-backed replacement exists.
+Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI adapters are deferred by user request. After Stage 15, the roadmap shifts from substrate construction toward a deliverable productization path: prove cleanup eligibility before deleting anything, then add real project health checks, real-runner readiness, recurring maintenance, and adoption packaging.
 
 ## Goals
 
@@ -16,6 +16,8 @@ Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI 
 - Keep agent/CLI marketplace plugins as the north-star UX, but do not promise a plugin path until agent/CLI marketplace or install-surface feasibility and capability tier are proven.
 - Learn from external agent-workflow skills in Stage 13, then record harness-native capability candidates; later adoption requires a separately approved substrate contract.
 - Make GC, recurring profiles, and adapters evidence-driven rather than prompt-only.
+- Turn the validated substrate into a deliverable product: easy to install, safe to run on real projects, credible in its evidence, and useful without repo-author handholding.
+- Treat the CLI package as the v1 delivery surface. Plugins, CI, and agent adapters are post-v1 or optional UX/enforcement surfaces over the same CLI/schema artifacts, not prerequisites for the product core.
 
 ## Non-goals
 
@@ -24,6 +26,7 @@ Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI 
 - Do not ship a plugin-first install path before Stage 8 proves a real agent/CLI marketplace path and capability tier.
 - Do not implement subjective "AI slop" scoring as a doctor or GC category.
 - Do not let plugins, CI adapters, or skills create a second source of truth outside the CLI/schema substrate.
+- Do not block the CLI-first product on live-runner, plugin, CI, or recurring-profile availability; unsupported paths must be documented as planned or optional rather than silently implied.
 
 ## Execution principles
 
@@ -57,9 +60,12 @@ Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI 
 | 12 | Native agent-facing harness-engineering adapter | Stage 10 | Portable agent UX reads substrate evidence and produces assessment/rollout plans |
 | 13 | Agent-practice mining for harness-native capabilities | Stage 1 to start research; Stage 10/12 before binding decisions | External workflow skills are mined into `plans/harness-engineering-platform/capability-ledger.yaml` records with candidate substrate surfaces, evidence requirements, future owner stages, and non-core boundaries |
 | 14 | GC framework and first deterministic categories | Stage 4, Stage 6 | `harness gc audit/validate` produces append-only evidence and reviewable cleanup slices for mechanical categories |
-| 15 | Evidence-driven GC expansion | Stage 5, Stage 7, Stage 14 | GC can promote/retire rules, checks, templates, and evals using evidence and holdout results |
-| 16 | Capability adoption cleanup and migration | Stage 13, Stage 15, and a real adopted capability or substrate-backed replacement; otherwise dormant | Cleanup operates only on adopted capabilities or replacement paths with evidence |
-| 17 | Recurring profiles and scheduled maintenance | Stage 12, Stage 13 | Entropy auditor, doc gardener, eval curator, and trace reviewer consume substrate artifacts with measurable stop conditions; Stage 16 may follow after profile adoption creates cleanup work |
+| 15 | Evidence-driven GC expansion | Stage 5, Stage 7, Stage 14 | GC records evidence-backed findings and citation hooks for future rule lifecycle decisions without automatic promotion or cleanup |
+| 16 | Productization gate and cleanup eligibility | Stage 13, Stage 15 | Decide whether any capability was actually adopted or superseded; if not, explicitly keep cleanup dormant and update the maturity gaps |
+| 17 | Local project health checks | Stage 2, Stage 4, Stage 10, Stage 15 | `harness health` safely executes declared local checks such as lint, test, typecheck, and doc checks with trust/sandbox evidence |
+| 18 | Real runner readiness | Stage 6, Stage 7, Stage 17 | Prepare non-stub live agent/model runs with explicit credential references, budgets, sandbox requirements, trace redaction, and refusal modes |
+| 19 | Recurring maintenance profile substrate and MVP | Stage 12, Stage 15, Stage 17 | Define recurring-profile contracts and ship one evidence-backed MVP profile before expanding the full profile set |
+| 20 | Delivery surface and adoption packaging | Stage 3, Stage 17; Stage 18/19 only for advertised live-runner/profile paths | External users can install, initialize, run health checks, and understand current support through package, quickstart, examples, and adapter/CI guidance |
 
 ## Stage acceptance criteria
 
@@ -188,33 +194,61 @@ Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI 
 - GC evidence output is append-only and preserves historical audit runs.
 - Cleanup slices include evidence refs, confidence, blast radius, and atomicity notes; they do not mix unrelated concerns.
 - No GC category ships unless its inputs, algorithm, false-positive policy, and passing/failing fixtures are documented.
-- Stage 13 capability candidates are promoted only when they fit deterministic GC evidence; subjective agent-process scoring remains advisory or deferred.
-- Any Stage 14 adoption of a Stage 13 capability records the adopted `capability_id` and whether Stage 16 cleanup is triggered.
+- Stage 13 capability candidates are considered for adoption only when they fit deterministic GC evidence; subjective agent-process scoring remains advisory or deferred.
+- Any Stage 14 adoption of a Stage 13 capability records the adopted `capability_id` and whether cleanup eligibility is triggered.
 - Repair-action routing polish from Stage 12 is revisited when GC/repair evidence exists, especially trusted approval provenance, duplicate action ids, risk/sandbox presentation, and review metadata, without turning assessment routes into executable commands.
 
 ### Stage 15: Evidence-driven GC expansion
 
-- Promotion/retirement cites evidence artifacts.
-- A single preference cannot become a durable rule.
-- LLM-judge evidence follows Stage 7 calibration policy.
-- Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
-- Any Stage 15 adoption of a Stage 13 capability records the adopted `capability_id` and whether Stage 16 cleanup is triggered.
+- GC findings cite evidence artifacts and may carry promotion/retirement decision references.
+- A single preference cannot become a durable rule because Stage 15 records findings only; it does not automatically promote or retire rules, checks, templates, or evals.
+- LLM-judge GC findings stay limited to schema-valid calibration status; full policy digest, threshold, staleness, and blocking eligibility remain owned by `harness report`.
+- Future behavioral rule/eval promotion must cite holdout results, not only optimization-suite improvement.
+- Any future adoption of a Stage 13 capability records the adopted `capability_id` and whether cleanup eligibility is triggered.
 
-### Stage 16: Capability adoption cleanup and migration
+### Stage 16: Productization gate and cleanup eligibility
 
-- Capability-specific GC findings cite Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
-- Stage 16 produces no cleanup work when no adopted capability or substrate-backed replacement exists.
+- Confirm whether Stage 14 or Stage 15 actually adopted or superseded any Stage 13 capability candidate.
+- If no adopted capability or substrate-backed replacement exists, record Stage 16 as dormant and produce no cleanup categories.
+- If a capability is adopted later, cleanup findings must cite capability-ledger records, required evidence, replacement paths, and migration notes.
 - No cleanup slice deletes user-facing behavior without a documented replacement path.
 
-### Stage 17: Recurring profiles and scheduled maintenance
+### Stage 17: Local project health checks
+
+- Harness executes declared local project checks through a distinct `harness health` surface so `doctor` remains structural by default.
+- `harness health` can run only when trust and sandbox requirements are explicit.
+- Local check output is recorded as evidence with command, timeout, status, artifact paths, and failure classification.
+- Local health checks remain distinguishable from `doctor`, `verify`, and `eval` responsibilities.
+- `harness assess` consumes health evidence through a scorecard version that adds a distinct `project-health` dimension, rather than folding executable checks into `doctor-evidence`.
+- The starter and downstream fixtures demonstrate useful project health checks without network, secrets, or unbounded host access.
+- A concrete downstream fixture must show pass and fail health checks, an overall health status, and machine-readable evidence beyond schema validity.
+
+### Stage 18: Real runner readiness
+
+- Live or non-stub runner paths require explicit credential references, cost/token/request budgets, sandbox and approval policy, and trace output.
+- Credential references have a deterministic supported shape, such as typed environment-variable references or an explicitly declared future secret-manager indirection.
+- Trace capture has a redaction and scoping policy so prompts, tool results, secrets, and customer data are not recorded accidentally.
+- The CLI refuses live-model execution when credentials, budgets, or sandbox declarations are missing.
+- The product preserves deterministic stub/recorded runners for CI-safe validation while adding a clear path to real runs.
+
+### Stage 19: Recurring maintenance profile substrate and MVP
 
 - Profiles consume substrate artifacts and add behavior beyond one-shot summaries.
-- Stage 13 capability candidates owned by Stage 17 are promoted only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
-- Any Stage 17 adoption of a Stage 13 capability records the adopted `capability_id` and whether Stage 16 cleanup is triggered.
-- The initial shipped profile set includes entropy-auditor, doc-gardener, eval-curator, and trace-reviewer profiles.
-- Each profile has a measurable stop condition and handoff artifact.
-- Fixtures or examples demonstrate each profile stopping when its condition is met.
+- Stage 13 capability candidates owned by recurring profiles are promoted only when profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
+- Any profile adoption of a Stage 13 capability records the adopted `capability_id` and whether cleanup eligibility is triggered.
+- Stage 19 first ships the recurring-profile substrate and the entropy-auditor MVP profile with a measurable stop condition and handoff artifact.
+- Additional profiles require their own trigger thresholds before shipping: doc-gardener needs Stage 17 doc-link or docs-health evidence, eval-curator needs holdout eval evidence, and trace-reviewer needs Stage 18 trace evidence.
+- Fixtures or examples demonstrate the MVP profile stopping when its condition is met.
 - Human-facing assessment/report polish, including richer Markdown or dashboard summaries, is deferred until recurring profile and adapter consumption patterns are concrete.
+
+### Stage 20: Delivery surface and adoption packaging
+
+- The CLI can be installed and run by external users without cloning implementation-only assumptions.
+- Quickstart examples explain the current CLI-first path, expected artifacts, safe defaults, and unsupported paths.
+- Package contents, schema distribution, examples, and docs are coherent enough for a downstream repository to adopt the harness.
+- A sandboxed downstream smoke test runs install/invoke, `harness init`, `harness health`, evidence inspection, and `harness assess` with health evidence against the 8/10 maturity target.
+- The minimum Stage 20 target is at least 8/10 on the scorecard version that adds `project-health`, improving on the Stage 13 downstream baseline of 5/9 without reinterpreting the old denominator, with no critical gaps for initialization, local health evidence, and basic assessment/report output.
+- CI and adapter guidance remain optional projections over CLI/schema artifacts, not separate product sources of truth.
 
 ## Milestones
 
@@ -262,11 +296,17 @@ Includes Stage 12 and Stage 13.
 
 This adds a native agent-facing adapter and mines external workflow skills as learning material for harness-native capabilities, without making the source project a product namespace or dependency.
 
-### Milestone E: Continuous improvement loop
+### Milestone E: Productization gate and real project health
 
 Includes Stage 14 through Stage 17.
 
-This makes entropy/GC operational, expands evidence-driven rule promotion/retirement, and adds recurring maintenance profiles after enough artifacts exist to make those roles useful.
+This makes entropy/GC operational, confirms cleanup is dormant unless a real replacement exists, and adds executable local project health checks so the harness becomes useful on real repositories instead of only fixture projects.
+
+### Milestone F: Mature product path
+
+Includes Stage 18 through Stage 20.
+
+This prepares real runner paths, recurring maintenance profiles, and adoption packaging so external users can install the product, run it safely, trust the evidence, and understand the supported delivery surfaces. Stage 20 may package the CLI-first path before live runners or profiles are advertised, but any advertised path must have its Stage 18 or Stage 19 evidence first.
 
 ## Validation strategy
 
@@ -280,6 +320,7 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 - Plugin/adapter stages must prove the selected host surface is an adapter over CLI/schema artifacts and cannot create a second source of truth.
 - Stage 8 must define and run automated matrix validation for completeness, enum validity, and evidence presence. Stage 9 must validate its adapter scope manifest or equivalent revalidated plugin-capability metadata against the Stage 8 matrix so implemented scope is a subset of proven capabilities.
 - Practice-mining and migration stages must document before/after workflows only when an adopted, moved, extracted, deprecated, superseded, or unsupported capability path changes user behavior.
+- Productization stages must prove external-user value: installability or documented invocation, real-project checks, safe refusal modes, and a clear distinction between current support and future paths.
 
 ## Stage 1 decisions to document
 
@@ -303,8 +344,10 @@ This makes entropy/GC operational, expands evidence-driven rule promotion/retire
 
 - The repo has a documented, working CLI-first harness baseline.
 - The platform can run at least one end-to-end behavioral eval through `harness run` / `harness eval run`.
+- The platform can execute declared local project health checks with trust/sandbox evidence.
 - Traces, run-results, verifier results, and reports are schema-backed and reproducible.
 - Agent/CLI marketplace feasibility is either proven at a full-plugin or limited-adapter tier and followed by a matching MVP, or explicitly deferred with CLI-first docs.
 - Optional CI enforcement is portable and does not assume GitHub as the only host.
 - Native agent adapters and external agent-practice mining are clearly separated.
 - GC and recurring profiles operate over real evidence artifacts, not subjective prose.
+- Delivery docs, package contents, and quickstarts are coherent enough for a downstream project to adopt the current CLI-first product safely.

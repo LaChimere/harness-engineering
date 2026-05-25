@@ -132,6 +132,33 @@ Within that layered model, separate these contracts:
 - **Plugin capability and repair-action contracts** keep marketplace plugins and limited adapters safe projections over CLI artifacts rather than second sources of truth.
 - **Agent profiles** are recurring or long-running roles that consume skills, doctor output, eval results, and traces; they are not just new skills with a different name.
 
+## Productization correction after GC substrate
+
+After Stage 15, the roadmap should optimize for a mature, deliverable harness product rather than continuing stage order mechanically. The product gap is no longer "can the substrate exist"; it is whether an external repository can install or invoke the CLI, run meaningful project health checks, trust the evidence, and understand the supported path without repo-author handholding.
+
+Recommended next order:
+
+1. **Cleanup eligibility gate:** confirm whether any capability was actually adopted or superseded before implementing cleanup. If not, keep cleanup dormant.
+2. **Local project health checks:** make the harness useful on real projects by safely executing declared lint/test/typecheck/doc checks with trust and sandbox evidence.
+3. **Real runner readiness:** add or prepare non-stub execution only after credentials, budgets, sandbox, approval policy, traces, and refusal modes are explicit.
+4. **Recurring maintenance profiles:** schedule entropy/doc/eval/trace maintenance only after local checks and run evidence make those profiles more useful than one-shot summaries.
+5. **Delivery surface:** package, quickstart, examples, schema distribution, and adapter/CI guidance should make the current CLI-first product adoptable by downstream users.
+
+This keeps the product promise grounded: mature harness product means safe real-project checks, credible evidence, clear refusal behavior, and installable adoption path, not merely more internal planning artifacts.
+
+Primary downstream user for the productization path:
+
+- A repository maintainer who wants a local, schema-backed project health signal before trusting agent work.
+- An agent or teammate who needs machine-readable evidence to decide what to fix, verify, or defer.
+- A team that may later add CI or plugin UX, but should get value from the CLI-first path first.
+
+Top tasks for v1 delivery:
+
+1. Install or invoke the CLI in a downstream repo.
+2. Initialize a harness without adopting plugin, CI, or live-runner assumptions.
+3. Run a local project health check and inspect the evidence.
+4. Run assessment/reporting over that evidence to understand the repo's current maturity and next action.
+
 ## Rubber-duck critique incorporated
 
 The critique raised three important blockers:

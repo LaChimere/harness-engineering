@@ -16,6 +16,9 @@ source_material:
   excluded_source_material:
     - source: scan-image-vulnerabilities
       rationale: Domain-specific vulnerability scanning is security tooling, not core harness capability evidence for Stage 13.
+field_semantics:
+  adoption_status: Tracks whether a capability is adopted, superseded, deferred, not adopted, or waiting for its owner stage.
+  cleanup_eligible: False means Stage 16 records or preserves a dormant outcome for this capability and implements no cleanup category for it.
 dogfood_assessments:
   - assessment_id: assessment-1ac840bd31f6
     artifact: plans/harness-engineering-platform/evidence/stage13-repo-assessment.json
@@ -50,6 +53,16 @@ dogfood_assessments:
         status: advisory
         summary: No repair action candidates were discovered; assessment falls back to CLI guidance.
     repair_action_applicability: No trusted repair-action id is required because no repair-action candidates were present.
+adoption_summary:
+  - checkpoint: post-stage15
+    status: no-native-capability-adopted
+    summary: Stage 14 and Stage 15 added GC substrate and evidence-driven findings, but did not adopt or supersede any Stage 13 capability candidate as a durable native capability.
+    cleanup_eligible: false
+    next_gate: Stage 16 must confirm cleanup eligibility before any capability cleanup category is implemented.
+  - checkpoint: post-stage15-productization-route
+    status: roadmap-resequenced
+    summary: The roadmap now prioritizes local project health checks, real-runner readiness, recurring maintenance substrate, and delivery packaging before any capability cleanup implementation.
+    cleanup_eligible: false
 capabilities:
   - capability_id: workflow-phase-gates
     status: active
@@ -61,7 +74,10 @@ capabilities:
     failure_mode_or_gap: Agents can skip discovery or approval gates and begin implementation before the substrate evidence is sufficient.
     candidate_surface: recurring-profile
     disposition: advisory-candidate
-    owner_stage: Stage 17
+    owner_stage: Stage 19
+    adoption_status: pending-owner-stage
+    cleanup_eligible: false
+    adoption_note: Recurring-profile substrate has not been implemented; Stage 19 must define measurable stop conditions before native adoption.
     required_evidence:
       schema_contract: Profile state must record phase, gate status, evidence links, and escalation rationale before any native routing behavior ships.
       cli_owner: A future profile or adapter command must read existing substrate artifacts instead of owning workflow state.
@@ -82,6 +98,9 @@ capabilities:
     candidate_surface: self-verification
     disposition: deterministic-candidate
     owner_stage: Stage 15
+    adoption_status: not-adopted
+    cleanup_eligible: false
+    adoption_note: Stage 15 added evidence-driven GC categories but did not implement per-slice atomic execution evidence or adopt this capability as a native gate.
     required_evidence:
       schema_contract: Self-verification or continuity evidence must be able to reference slice boundaries, checks, docs/status updates, and review checkpoints.
       cli_owner: "`harness loop validate` or a later execution-evidence validator must enforce any required slice evidence."
@@ -102,6 +121,9 @@ capabilities:
     candidate_surface: planning-artifact
     disposition: advisory-candidate
     owner_stage: deferred
+    adoption_status: deferred
+    cleanup_eligible: false
+    adoption_note: No current substrate surface owns PR decomposition.
     required_evidence:
       schema_contract: A future planning artifact would need stable slice ids, dependencies, allowed/prohibited scope, validation commands, and mergeability notes.
       cli_owner: No CLI owner is selected until the repository decides whether planning decomposition belongs in harness core or remains human/agent guidance.
@@ -122,6 +144,9 @@ capabilities:
     candidate_surface: adapter-guidance
     disposition: advisory-candidate
     owner_stage: deferred
+    adoption_status: deferred
+    cleanup_eligible: false
+    adoption_note: Native ownership depends on future runner/worktree topology evidence.
     required_evidence:
       schema_contract: A future topology artifact would need base prerequisite, owned/forbidden paths, dependencies, validation, merge order, and convergence owner.
       cli_owner: No CLI owner is selected until runner/worktree support proves a native topology contract is useful.
@@ -142,6 +167,9 @@ capabilities:
     candidate_surface: gc-evidence
     disposition: advisory-candidate
     owner_stage: Stage 14
+    adoption_status: not-adopted
+    cleanup_eligible: false
+    adoption_note: Stage 14 added deterministic GC categories, but subjective or diff-level atomicity remains deferred until deterministic algorithms and false-positive policy exist.
     required_evidence:
       schema_contract: GC evidence must represent input diff metadata, concern labels, confidence, false-positive policy, and atomic cleanup slices.
       cli_owner: "`harness gc audit` may own deterministic subsets only after algorithms and fixtures are approved."
@@ -161,7 +189,10 @@ capabilities:
     failure_mode_or_gap: Code and plan behavior can change while README, AGENTS, CLI docs, or slug status remain stale.
     candidate_surface: recurring-profile
     disposition: advisory-candidate
-    owner_stage: Stage 17
+    owner_stage: Stage 19
+    adoption_status: pending-owner-stage
+    cleanup_eligible: false
+    adoption_note: Doc freshness remains a recurring-profile candidate until profile contracts, approval state, and stop conditions exist.
     required_evidence:
       schema_contract: A doc-freshness profile must record changed surfaces, candidate docs, approval state, allowed actions, and handoff evidence.
       cli_owner: A future recurring profile may suggest docs but should not rewrite high-impact docs without explicit approval.
@@ -181,7 +212,10 @@ capabilities:
     failure_mode_or_gap: Long-running harness work can lose objective, budget, blocker, or completion-audit context across turns.
     candidate_surface: recurring-profile
     disposition: advisory-candidate
-    owner_stage: Stage 17
+    owner_stage: Stage 19
+    adoption_status: pending-owner-stage
+    cleanup_eligible: false
+    adoption_note: Goal lifecycle remains a recurring-profile candidate until profile lifecycle state and completion-audit evidence exist.
     required_evidence:
       schema_contract: A future goal/profile contract must define lifecycle states, objective, acceptance criteria, budget, blockers, progress evidence, and completion audit.
       cli_owner: A recurring profile or continuity extension may own validation only after profile state and stop conditions are defined.

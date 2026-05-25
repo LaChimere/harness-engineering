@@ -8,7 +8,7 @@ The core deliverable is not a new skill. The core deliverable is a versioned har
 
 - `harness.yaml` as the repo-local source of truth.
 - JSON schemas for spec, policy, agent invocation, trace, eval task, run result, doctor result, plugin capability, repair actions, and GC evidence.
-- A deterministic `harness` CLI for init, validation, agent runs, doctor checks, eval/trace validation, migrations, GC audits, and reports.
+- A deterministic `harness` CLI for init, validation, agent runs, doctor checks, project health checks, eval/trace validation, migrations, GC audits, and reports.
 - Agent/CLI marketplace plugins as the default interactive product surface for users who want guided setup, dashboards, repairs, and trace/eval navigation, but only when a full-plugin capability tier is proven.
 - Optional CI adapters that turn harness drift into objective change feedback for teams that want enforcement.
 - Skills as portable agent-facing adapters over the same artifacts.
@@ -58,6 +58,7 @@ Until Stage 8 verifies a real agent/CLI marketplace full-plugin tier and Stage 9
 ```text
 npx @lachimere/harness-engineering init
 npx @lachimere/harness-engineering doctor
+npx @lachimere/harness-engineering health
 npx @lachimere/harness-engineering run examples/evals/harness-self-test/v1.0.0/
 npx @lachimere/harness-engineering eval run
 npx @lachimere/harness-engineering report
@@ -113,7 +114,7 @@ Proposed package shape:
   git hooks: Lefthook with user-provided configuration
   runtime target: Node-compatible public CLI
   bin: harness
-  commands: init, validate, migrate, run, doctor, eval, trace, verify, gc, report
+  commands: init, validate, migrate, run, doctor, health, eval, trace, verify, gc, report
 ```
 
 The repository should commit Bun's text lockfile and keep TypeScript checks explicit with `tsc --noEmit`; Bun's transpiler/bundler is not the type checker. Biome and Lefthook are required toolchain components, but their concrete rules/hooks should come from the user's configuration rather than being invented during planning.
@@ -303,7 +304,9 @@ The key point is composition: the spec points to policies, eval suites, trace lo
 
 5. **Long-running maintenance**
    - Recurring profiles consume append-only run results, doctor output, traces, eval outcomes, and review comments.
-   - They propose atomic cleanup slices and evidence-backed rule/eval promotion or retirement.
+   - They propose atomic cleanup slices and evidence-backed rule/eval promotion or retirement decisions for human review.
+
+The v1 delivery surface is the CLI package. Agent/CLI plugins, CI integrations, and portable skills can improve UX or enforcement after the core is useful, but they must remain projections over the same CLI/schema artifacts.
 
 ## Cross-tier primitives
 
@@ -322,13 +325,14 @@ These primitives should be schema-backed where possible and reused by CLI, CI, p
 | Eval task schema | Instruction, environment, verifier, oracle solution, task version, dataset hash, optional solution, artifacts, timeout, reward/result | eval-task schema |
 | Run-result log | Append-only run results with task/schema/model/harness versions for regression tracking and trend analysis | run-result schema |
 | Doctor check registry | Deterministic checks, fixtures, severity, remediation, exit semantics | doctor CLI + schema |
+| Project health evidence | Executed local lint/test/typecheck/doc checks with trust/sandbox declarations, status, failure class, and artifacts | health CLI + assessment |
 | Continuity state | Feature list, progress log, init script, startup smoke test, git checkpoint, handoff | continuity schema + CLI validator |
 | Self-verification evidence | Spec re-read result, acceptance comparison, checks run, artifacts, unresolved risks | verification schema + CLI validator |
 | Model/provider profile | Model-specific tool format, prompt assumptions, context, reasoning budget, quirks | harness spec |
 | Failure taxonomy | Stable failure codes for tool errors, timeouts, loops, verification failures, context loss, routing misses | schema package |
 | Plugin capability | Host-specific declaration of supported actions such as init, report rendering, annotations, background runs, repair actions, and CLI management | plugin-capability schema |
 | Repair action | Previewable, approval-gated, CLI-reproducible change proposal emitted by plugin or agent repair flows | repair-action schema + CLI |
-| Entropy/GC evidence | Detect, classify, rank, slice, cleanup, promote durable rules, retire stale rules | GC schema + CLI |
+| Entropy/GC evidence | Detect, classify, rank, slice, cleanup, and cite future rule/eval lifecycle decisions | GC schema + CLI |
 
 ## Schema minimums
 
@@ -355,13 +359,13 @@ Stage 2 should define the minimum viable shapes, not only file names.
 | Module | Responsibility |
 |---|---|
 | Harness substrate | Owns `harness.yaml`, schemas, examples, artifact conventions, and versioning |
-| Harness CLI | Owns deterministic local operations: init, validate, migrate, adapter validate, assess, loop validate, run, doctor, eval run, trace validate/import, verify, GC audit/validate, report |
+| Harness CLI | Owns deterministic local operations: init, validate, migrate, adapter validate, assess, loop validate, run, doctor, health, eval run, trace validate/import, verify, GC audit/validate, report |
 | CI adapters | Run CLI checks in stages and publish objective results |
 | Agent/CLI marketplace plugins | Provide the best interactive UX by visualizing and acting on substrate artifacts when the full-plugin tier is proven; first target must be validated against agent/CLI marketplace distribution and host APIs |
 | Native agent adapters | Optional portable agent UX over substrate evidence; added only after CLI/schema contracts exist |
 | Harness-native practice mining | Distills external agent-workflow source material into harness-native capability decisions; source projects are not product namespaces or source-of-truth state |
 | Behavioral eval suite | Task-level outcomes, holdouts, deterministic verifiers, LLM-judge calibration policy |
-| GC loop | Evidence-backed entropy detection, cleanup slicing, rule/eval promotion and retirement |
+| GC loop | Evidence-backed entropy detection, cleanup slicing, and rule/eval lifecycle decision evidence |
 | Recurring profiles | Scheduled or long-running maintenance roles over run logs, traces, evals, and doctor output |
 
 ## Mining external skills into harness-native capabilities
@@ -377,7 +381,7 @@ This table is illustrative; the canonical Stage 13 artifact is `plans/harness-en
 | `decompose-feature` | Reviewable PR sequencing, dependencies, allowed/prohibited scope, acceptance criteria | Decomposition artifact or planning profile after substrate ownership is designed | Do not make narrative PR plans a harness contract without fixtures and validation |
 | `plan-parallel-work` | Worktree/branch ownership, forbidden paths, merge order, convergence owner | Parallel-work topology artifact or adapter guidance after runner/worktree support exists | Do not enforce path ownership without deterministic conflict evidence |
 | `ensure-atomic-pr` | Mixed-concern detection, split proposals, atomicity exceptions | Advisory GC/assessment evidence category with false-positive policy | Do not ship subjective atomicity scoring as a blocking check |
-| `refresh-related-docs` | Doc freshness triggers, approval-before-editing, high-impact doc handling | Doc-gardener recurring profile or doc-freshness evidence after Stage 17 profile design | Do not add automatic doc rewrites or tone/style checks as doctor categories |
+| `refresh-related-docs` | Doc freshness triggers, approval-before-editing, high-impact doc handling | Doc-gardener recurring profile or doc-freshness evidence after Stage 19 profile design | Do not add automatic doc rewrites or tone/style checks as doctor categories |
 | `achieve-goal` | Goal lifecycle, pause/resume/blocker/budget states, completion audit | Goal/recurring-profile lifecycle schema or continuity extension after profile semantics exist | Do not make Markdown goal state a substrate primitive |
 
 Stage 13 should not copy, vendor, rewrite, merge, or deprecate any skill. It should produce a durable harness capability ledger, not a skill backlog. Each row should start from an observed failure mode or substrate gap, then record the capability, source observations, candidate surface, deterministic/advisory/non-core disposition, owner stage or `deferred` rationale, required schema/CLI/profile/eval/GC proof, fixtures or evals required, trust/sandbox and false-positive requirements, and what remains outside harness core.
@@ -658,13 +662,13 @@ Capability ledger records use this shape:
 ### Stage 14: GC framework and first deterministic categories
 
 - **Goal:** Make entropy management operational without creating an unreviewable all-category GC stage.
-- **Dependencies:** Stage 4 and Stage 6. Stage 13 may supply candidate ideas, but Stage 14 only promotes those with deterministic inputs and false-positive policy.
+- **Dependencies:** Stage 4 and Stage 6. Stage 13 may supply candidate ideas, but Stage 14 only considers those with deterministic inputs and false-positive policy.
 - **Allowed changes:**
   - Implement `harness gc audit` and `harness gc validate`.
   - Add GC evidence append-only output.
   - Implement 2-3 low-risk deterministic categories, such as broken references, duplicate IDs, stale schema versions, or other mechanically defined forms of context/routing/doc entropy, with explicit algorithms and fixtures.
   - Optionally draw from Stage 13 capability candidates, such as atomicity or doc freshness, only when they can be expressed as deterministic evidence rather than subjective process scoring.
-  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
+  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
   - Produce ranked atomic cleanup slices with evidence refs and confidence.
 - **Prohibited changes:** No fully automated cleanup without human review; no ad hoc taxonomy mutation without versioning and decision logs.
 - **Acceptance criteria:**
@@ -680,42 +684,98 @@ Capability ledger records use this shape:
 - **Allowed changes:**
   - Add tool/policy, verification, execution, eval, and trace entropy categories where evidence is available.
   - Revisit Stage 13 advisory capability candidates only after Stage 14 proves the relevant evidence shape and false-positive policy.
-  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
-  - Promote repeated feedback into durable rules/checks/templates/evals only with evidence thresholds and holdout evidence where behavioral evals are involved.
-  - Retire stale rules, templates, or evals when evidence shows they no longer add value.
+  - Record promotion/retirement citation hooks, but do not automatically promote or retire rules/checks/templates/evals in this slice.
+  - When a future stage adopts a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
+  - Document that durable promotion needs repeated evidence and holdout evidence where behavioral evals are involved.
+  - Document that retirement needs evidence showing a rule, template, or eval no longer adds value.
 - **Acceptance criteria:**
-  - Promotion/retirement cites evidence artifacts.
-  - A single preference cannot become a durable rule.
-  - LLM-judge evidence follows Stage 7 calibration policy.
-  - Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
+  - GC findings cite evidence artifacts and preserve reviewable cleanup slices.
+  - A single preference cannot become a durable rule because Stage 15 does not automatically promote rules.
+  - LLM-judge GC findings remain bounded by schema-valid calibration status; full blocking policy remains in report validation.
+  - Future behavioral rule/eval promotion must cite holdout results, not only optimization-suite improvement.
 
-### Stage 16: Capability adoption cleanup and migration
+### Stage 16: Productization gate and cleanup eligibility
 
-- **Goal:** Add cleanup only after a Stage 13 capability candidate is explicitly adopted or superseded with a substrate-backed replacement.
+- **Goal:** Prevent roadmap drift by confirming whether cleanup is actually eligible before implementing any cleanup categories.
 - **Dependencies:** Stage 13, Stage 15, and whichever later stage produced an actual substrate-backed replacement. If no adopted capability or replacement exists, Stage 16 remains dormant.
 - **Allowed changes:**
-  - Add cleanup categories for obsolete guidance, duplicated process rules, or stale references only for capabilities this repo has actually adopted or superseded.
-  - Connect superseded capability evidence to GC cleanup slices.
+  - Review `capability-ledger.yaml` and record which candidates remain advisory, adopted, superseded, or deferred.
+  - Produce no cleanup implementation when no adopted capability or substrate-backed replacement exists.
+  - Add cleanup categories only for capabilities this repo has actually adopted or superseded.
+  - Connect superseded capability evidence to GC cleanup slices only when a replacement path is documented.
   - Remove or rewrite external-source references only after a documented substrate replacement exists.
 - **Acceptance criteria:**
+  - The stage records whether cleanup is active or dormant.
   - Capability-specific GC findings cite Stage 13 capability-ledger records, required evidence, and any supported-path migration notes.
   - No cleanup slice deletes user-facing behavior without a documented replacement path.
 
-### Stage 17: Recurring profiles and scheduled maintenance
+### Stage 17: Local project health checks
 
-- **Goal:** Add long-running maintenance roles after artifacts exist.
-- **Dependencies:** Stage 12 and Stage 13. Stage 9 is needed for plugin-driven profiles; Stage 11 is only needed for CI-scheduled profiles. Stage 16 may follow after profile adoption creates cleanup work.
+- **Goal:** Make the product immediately useful on real downstream repositories by executing declared local checks safely.
+- **Dependencies:** Stage 2, Stage 4, Stage 10, and Stage 15.
 - **Allowed changes:**
-  - Add profiles such as entropy-auditor, doc-gardener, eval-curator, and trace-reviewer.
-  - Promote Stage 13 capability candidates owned by Stage 17 only when the recurring-profile contract can express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
-  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
-  - Document trigger, inputs, state artifacts, allowed actions, stop condition, and handoff.
+  - Add a distinct `harness health` command for executable local project checks; `doctor` remains the deterministic structural harness checker.
+  - Define how harness-owned local health checks are declared, executed, timed out, and recorded as evidence.
+  - Reuse existing trust requirements plus approval and sandbox policy artifacts for local health checks; do not introduce a second approval or sandbox source of truth.
+  - Execute only checks with explicit trust and sandbox requirements; refuse network, secret, or host-file access unless the policy explicitly allows it.
+  - Extend `harness assess` to consume health evidence by adding a scorecard version with a distinct `project-health` dimension, rather than folding executable checks into `doctor-evidence`.
+  - Keep `doctor`, `health`, `verify`, and `eval` responsibilities separate: structural doctor checks, executable project health checks, explicit self-verification, and behavioral evals must not collapse into one generic test runner.
+  - Add starter/downstream examples for lint, test, typecheck, or doc-link style checks that run without secrets or network access.
+- **Acceptance criteria:**
+  - A downstream fixture reports configured check statuses and an overall health status beyond schema validity.
+  - Assessment output can cite health evidence and reflect it in the versioned maturity scorecard.
+  - Local check evidence records command, timeout, status, failure class, trust/sandbox requirements, and artifacts.
+  - Unsafe or undeclared checks are refused with clear errors.
+  - Fixtures cover pass, failure, timeout, unsafe declaration, and missing artifact cases.
+  - Fixtures cover policy-mismatch refusal, such as a check requesting network access when the selected sandbox policy denies it.
+  - A downstream fixture demonstrates at least one passing and one failing health check with machine-readable evidence.
+
+### Stage 18: Real runner readiness
+
+- **Goal:** Prepare the runner layer for real model or agent execution without weakening the deterministic substrate.
+- **Dependencies:** Stage 6, Stage 7, and Stage 17.
+- **Allowed changes:**
+  - Add non-stub live runner contracts or readiness checks only when credential references, budgets, approval policy, sandbox requirements, trace output, and trace redaction/scoping are explicit.
+  - Define the supported credential-reference shape for this slice, such as typed environment-variable references, and refuse unsupported indirection.
+  - Define trace redaction and scoping rules so secrets, credentials, and sensitive prompt/tool-result material are not captured accidentally. The minimum policy is field-level allowlisting for recorded trace content, refusal to record fields that reference credential environment variables, and negative fixtures for both rules.
+  - Preserve deterministic stub/recorded runners as the CI-safe path.
+  - Add refusal paths for missing credentials, missing budgets, unsupported sandbox, and unbounded live execution.
+- **Acceptance criteria:**
+  - The product can explain exactly what is needed before a real run is allowed.
+  - No live model path can execute without explicit credentials, budgets, and trace capture.
+  - Real-runner readiness does not make live credentials necessary for the starter or CI-safe tests.
+  - Fixtures prove missing credential references and trace-redaction violations are refused.
+
+### Stage 19: Recurring maintenance profile substrate and MVP
+
+- **Goal:** Add a recurring-profile contract and one useful MVP profile after artifacts exist.
+- **Dependencies:** Stage 12, Stage 13, Stage 15, and Stage 17. Stage 9 is needed for plugin-driven profiles; Stage 11 is only needed for CI-scheduled profiles. Cleanup eligibility may follow after profile adoption creates replacement evidence.
+- **Allowed changes:**
+  - Define the recurring-profile state contract, trigger, inputs, allowed actions, measurable stop condition, and handoff artifact.
+  - Ship entropy-auditor as the MVP profile first because it can consume Stage 14/15 GC evidence plus Stage 17 health evidence without requiring live-runner support.
+  - Additional profiles require separate trigger thresholds: doc-gardener needs Stage 17 doc-link or docs-health evidence, eval-curator needs holdout eval evidence, and trace-reviewer needs Stage 18 trace evidence.
+  - Promote Stage 13 capability candidates owned by recurring profiles only when the recurring-profile contract can express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
+  - When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
   - Add plugin- or scheduler-driven examples if useful.
 - **Acceptance criteria:**
-  - Profiles consume substrate artifacts and add behavior beyond one-shot summaries.
-  - The initial shipped profile set includes entropy-auditor, doc-gardener, eval-curator, and trace-reviewer profiles.
-  - Each profile has a measurable stop condition and handoff artifact.
-  - Fixtures or examples demonstrate each profile stopping when its condition is met.
+  - The MVP profile consumes substrate artifacts and adds behavior beyond one-shot summaries.
+  - Each future profile has an objective trigger threshold before implementation begins.
+  - The MVP profile has a measurable stop condition and handoff artifact.
+  - Fixtures or examples demonstrate the MVP profile stopping when its condition is met.
+
+### Stage 20: Delivery surface and adoption packaging
+
+- **Goal:** Make the current product path deliverable to external users.
+- **Dependencies:** Stage 3 and Stage 17 for CLI-first packaging; Stage 18 is required only for advertised live-runner support, and Stage 19 is required only for advertised recurring-profile support.
+- **Allowed changes:**
+  - Harden package contents, schema distribution, quickstart, examples, and downstream adoption docs.
+  - Document supported current paths separately from planned adapter, CI, plugin, and live-runner paths.
+  - Add a packaged/downstream smoke test for CLI usage.
+- **Acceptance criteria:**
+  - A downstream user can install or invoke the CLI, initialize a harness, run project health checks, and understand the generated evidence.
+  - Package contents include the necessary dist, schemas, examples, and docs without implementation-only assumptions.
+  - A sandboxed downstream fixture runs init -> health -> evidence inspection -> assessment with health evidence and reaches at least 8/10 on the scorecard version that adds the `project-health` dimension, improving on the Stage 13 downstream baseline of 5/9 without reinterpreting the old denominator.
+  - Optional CI and adapter guidance remain projections over CLI/schema artifacts, not separate sources of truth.
 
 ## Parallelization readiness
 
@@ -730,8 +790,11 @@ Capability ledger records use this shape:
 - **Stage 13 gate:** Practice-mining research can start after Stage 1, but binding `plans/harness-engineering-platform/capability-ledger.yaml` records should wait until Stage 10 and Stage 12 provide enough substrate and assessment evidence to distinguish useful capabilities from prompt-only workflow habits.
 - **Can start after Stage 4 and Stage 6:** Stage 14 substrate GC can begin with deterministic categories independent of Stage 13 capability mining.
 - **Should wait for Stage 7 and Stage 14:** Stage 15 GC expansion can add non-skill evidence-driven categories after judge policy and first GC framework exist.
-- **Should wait for Stage 13, Stage 15, and a real replacement path:** Stage 16 capability adoption cleanup needs capability-ledger records plus general evidence-driven GC and an actual adopted capability or substrate-backed replacement to clean up.
-- **Final optional work:** Stage 17 recurring profiles should wait until GC and plugin/skill adapter paths prove useful.
+- **Should run after Stage 15:** Stage 16 is a productization gate that confirms cleanup eligibility and should normally produce no cleanup when no replacement exists.
+- **Should follow Stage 16:** Stage 17 local project health checks are the next product-value slice because they make the harness useful on real repositories beyond examples.
+- **Should follow Stage 17:** Stage 18 real runner readiness needs stronger local health evidence and refusal behavior before live execution expands.
+- **Should follow Stage 17:** Stage 19 recurring-profile substrate can begin once local health evidence exists. Stage 18 runner evidence is required only if the MVP profile depends on live-runner or trace-reviewer behavior.
+- **Should follow product proof:** Stage 20 CLI-first delivery packaging can happen after the CLI provides real project health value. Advertised live-runner or recurring-profile paths require their Stage 18 or Stage 19 evidence first.
 
 Use `plan-parallel-work` after Gate 1 if multiple agents will implement the stages.
 
@@ -750,6 +813,9 @@ Use `plan-parallel-work` after Gate 1 if multiple agents will implement the stag
 - **Trace/eval overfitting:** Eval-driven improvement can overfit without holdouts, baseline runs, and human review.
 - **Weak isolation:** Local process or worktree execution is convenient but must not be presented as equivalent to container/VM-backed reproducible evals.
 - **Harness complexity rot:** Guardrails that are useful for today's models may become stale as models improve; rules and evals need retirement paths.
+- **Premature cleanup:** Cleanup categories without real adopted replacements can delete useful guidance or create false confidence. Stage 16 must explicitly allow dormant outcome.
+- **Productization gap:** A rich substrate without local project health checks, packaging, and quickstart polish can remain impressive but undeliverable.
+- **Live-runner risk:** Adding real model execution before credential, budget, sandbox, and trace refusal paths are boring and deterministic would undermine trust.
 - **Scope creep:** Adding schemas, CLI, plugins, CI, skills, agents, and deletions in one stage would be unreviewable.
 - **Unplanned deletion:** Removing existing skills without replacement paths risks losing useful behavior, but deletion or extraction remains valid when the new harness substrate supersedes them.
 
@@ -769,7 +835,7 @@ Stage 8 correction note: later review supersedes any generic "host marketplace" 
 8. Shared primitives: harness spec, schemas, context map, environment, approval/sandbox policy, agent runner, trace, eval task, run-result log, doctor result, plugin capability, repair action, continuity, self-verification evidence, model profile, failure taxonomy, and GC evidence.
 9. Doctor/eval separation: deterministic doctor checks and behavioral eval suites have different contracts.
 10. First behavioral proof: the roadmap must reach an end-to-end `harness run` / `harness eval run` milestone before GC expansion or recurring profiles.
-11. Roadmap order: substrate -> CLI -> doctor/verifier -> agent-runner/eval/trace -> agent/CLI adapter feasibility and execution loop -> conditional adapter MVP -> optional CI -> native adapter -> external practice mining -> GC -> recurring profiles.
+11. Roadmap order: substrate -> CLI -> doctor/verifier -> agent-runner/eval/trace -> agent/CLI adapter feasibility and execution loop -> conditional adapter MVP -> optional CI -> native adapter -> external practice mining -> GC -> cleanup eligibility gate -> local project health checks -> real-runner readiness -> recurring maintenance -> delivery packaging.
 12. Current repo state is not a design constraint: this clean-slate repo can choose native structure first and only import/adapt old skills deliberately.
 13. External workflow skills are learning material only: do not copy, delete, merge, or expose them as product paths during Stage 13.
 14. Domain-specific utility skills, including vulnerability scanning, are ignored for Stage 13 unless a future approved security-tooling harness contract exists.

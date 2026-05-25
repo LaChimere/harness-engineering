@@ -19,6 +19,7 @@ source_material:
 field_semantics:
   adoption_status: Tracks whether a capability is adopted, superseded, deferred, not adopted, or waiting for its owner stage.
   cleanup_eligible: False means Stage 16 records or preserves a dormant outcome for this capability and implements no cleanup category for it.
+  last_reviewed: Records the latest roadmap checkpoint that reviewed the capability for adoption and cleanup eligibility.
 dogfood_assessments:
   - assessment_id: assessment-1ac840bd31f6
     artifact: plans/harness-engineering-platform/evidence/stage13-repo-assessment.json
@@ -63,6 +64,22 @@ adoption_summary:
     status: roadmap-resequenced
     summary: The roadmap now prioritizes local project health checks, real-runner readiness, recurring maintenance substrate, and delivery packaging before any capability cleanup implementation.
     cleanup_eligible: false
+  - checkpoint: stage16-cleanup-eligibility
+    status: dormant
+    summary: Stage 16 found no adopted or superseded capability and no substrate-backed replacement path, so no capability cleanup category is implemented.
+    cleanup_eligible: false
+    evidence:
+      gc_audit_artifact: plans/harness-engineering-platform/evidence/stage16-gc-audit.json
+      ledger_metadata_artifact: plans/harness-engineering-platform/evidence/stage16-ledger-metadata.json
+      gc_audit_command: node dist/index.js gc audit --file examples/harness.yaml --format json --capability-ledger plans/harness-engineering-platform/capability-ledger.yaml
+      gc_audit_scope: examples/harness.yaml plus capability-ledger duplicate-id namespace
+      gc_findings: 0
+      capability_count: 7
+      adopted_or_superseded_count: 0
+      cleanup_eligible_count: 0
+    re_evaluation_trigger: Re-run Stage 16 before merging any change that sets a capability adoption_status to adopted or superseded, flips cleanup_eligible to true, or documents a substrate-backed replacement path.
+    stage17_handoff: Stage 17 may proceed because cleanup_eligible_count is zero; if Stage 17 adopts or supersedes a capability, it must re-enter Stage 16 before any cleanup category is implemented.
+    next_stage: Stage 17 local project health checks
 capabilities:
   - capability_id: workflow-phase-gates
     status: active
@@ -77,6 +94,7 @@ capabilities:
     owner_stage: Stage 19
     adoption_status: pending-owner-stage
     cleanup_eligible: false
+    last_reviewed: stage16-cleanup-eligibility
     adoption_note: Recurring-profile substrate has not been implemented; Stage 19 must define measurable stop conditions before native adoption.
     required_evidence:
       schema_contract: Profile state must record phase, gate status, evidence links, and escalation rationale before any native routing behavior ships.
@@ -100,6 +118,7 @@ capabilities:
     owner_stage: Stage 15
     adoption_status: not-adopted
     cleanup_eligible: false
+    last_reviewed: stage16-cleanup-eligibility
     adoption_note: Stage 15 added evidence-driven GC categories but did not implement per-slice atomic execution evidence or adopt this capability as a native gate.
     required_evidence:
       schema_contract: Self-verification or continuity evidence must be able to reference slice boundaries, checks, docs/status updates, and review checkpoints.
@@ -123,6 +142,7 @@ capabilities:
     owner_stage: deferred
     adoption_status: deferred
     cleanup_eligible: false
+    last_reviewed: stage16-cleanup-eligibility
     adoption_note: No current substrate surface owns PR decomposition.
     required_evidence:
       schema_contract: A future planning artifact would need stable slice ids, dependencies, allowed/prohibited scope, validation commands, and mergeability notes.
@@ -146,6 +166,7 @@ capabilities:
     owner_stage: deferred
     adoption_status: deferred
     cleanup_eligible: false
+    last_reviewed: stage16-cleanup-eligibility
     adoption_note: Native ownership depends on future runner/worktree topology evidence.
     required_evidence:
       schema_contract: A future topology artifact would need base prerequisite, owned/forbidden paths, dependencies, validation, merge order, and convergence owner.
@@ -169,6 +190,7 @@ capabilities:
     owner_stage: Stage 14
     adoption_status: not-adopted
     cleanup_eligible: false
+    last_reviewed: stage16-cleanup-eligibility
     adoption_note: Stage 14 added deterministic GC categories, but subjective or diff-level atomicity remains deferred until deterministic algorithms and false-positive policy exist.
     required_evidence:
       schema_contract: GC evidence must represent input diff metadata, concern labels, confidence, false-positive policy, and atomic cleanup slices.
@@ -192,6 +214,7 @@ capabilities:
     owner_stage: Stage 19
     adoption_status: pending-owner-stage
     cleanup_eligible: false
+    last_reviewed: stage16-cleanup-eligibility
     adoption_note: Doc freshness remains a recurring-profile candidate until profile contracts, approval state, and stop conditions exist.
     required_evidence:
       schema_contract: A doc-freshness profile must record changed surfaces, candidate docs, approval state, allowed actions, and handoff evidence.
@@ -215,6 +238,7 @@ capabilities:
     owner_stage: Stage 19
     adoption_status: pending-owner-stage
     cleanup_eligible: false
+    last_reviewed: stage16-cleanup-eligibility
     adoption_note: Goal lifecycle remains a recurring-profile candidate until profile lifecycle state and completion-audit evidence exist.
     required_evidence:
       schema_contract: A future goal/profile contract must define lifecycle states, objective, acceptance criteria, budget, blockers, progress evidence, and completion audit.

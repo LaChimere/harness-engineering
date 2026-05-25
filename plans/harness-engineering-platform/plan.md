@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI adapters are deferred by user request. After Stage 15, the roadmap shifts from substrate construction toward a deliverable productization path: prove cleanup eligibility before deleting anything, then add real project health checks, real-runner readiness, recurring maintenance, and adoption packaging.
+Stages 1 through 10 and Stages 12 through 16 are complete. Stage 11 optional CI adapters are deferred by user request. Stage 16 confirmed cleanup is dormant because no Stage 13 capability has been adopted or superseded with a substrate-backed replacement. The next product-value target is Stage 17: local project health checks through `harness health`.
 
 ## Goals
 
@@ -212,6 +212,8 @@ Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI 
 - If no adopted capability or substrate-backed replacement exists, record Stage 16 as dormant and produce no cleanup categories.
 - If a capability is adopted later, cleanup findings must cite capability-ledger records, required evidence, replacement paths, and migration notes.
 - No cleanup slice deletes user-facing behavior without a documented replacement path.
+- Re-run Stage 16 before merging any future change that adopts or supersedes a capability, flips `cleanup_eligible` to true, or documents a substrate-backed replacement path.
+- Stage 17 may proceed because Stage 16 found no cleanup-eligible capability; if Stage 17 changes adoption or replacement status, it must re-enter Stage 16 before cleanup work.
 
 ### Stage 17: Local project health checks
 

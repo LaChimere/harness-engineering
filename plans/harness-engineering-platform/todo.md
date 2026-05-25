@@ -561,23 +561,28 @@ Evidence: Stage 15 extends `harness gc audit` with optional evidence inputs for 
 
 ## Stage 16: Productization gate and cleanup eligibility
 
-- [ ] Review `capability-ledger.yaml` and mark whether Stage 14/15 candidates were adopted, deferred, superseded, or still advisory.
-- [ ] Confirm whether any capability has a substrate-backed replacement path.
-- [ ] If no replacement exists, record Stage 16 as dormant and add no cleanup categories.
-- [ ] If a replacement exists, define the exact cleanup target, replacement path, migration evidence, and false-positive policy before implementation.
-- [ ] Ensure every capability has explicit `adoption_status` and `cleanup_eligible` fields before cleanup eligibility is evaluated.
-- [ ] Ensure cleanup eligibility never deletes user-facing behavior without documented replacement.
-- [ ] Update roadmap status to point to local project health checks as the next product-value slice.
-- [ ] Run eligibility/status tests or docs validation where available.
-- [ ] Run `git diff --check`.
+- [x] Review `capability-ledger.yaml` and mark whether Stage 14/15 candidates were adopted, deferred, superseded, or still advisory.
+- [x] Confirm whether any capability has a substrate-backed replacement path.
+- [x] If no replacement exists, record Stage 16 as dormant and add no cleanup categories.
+- [x] Confirm no replacement exists, so no cleanup target, migration evidence, or false-positive policy is implemented in this stage.
+- [x] Ensure every capability has explicit `adoption_status` and `cleanup_eligible` fields before cleanup eligibility is evaluated.
+- [x] Ensure cleanup eligibility never deletes user-facing behavior without documented replacement.
+- [x] Update roadmap status to point to local project health checks as the next product-value slice.
+- [x] Persist Stage 16 GC audit and ledger metadata evidence artifacts.
+- [x] Add a re-evaluation trigger for future adopted, superseded, cleanup-eligible, or replacement-path changes.
+- [x] Add a Stage 17 handoff note requiring re-entry to Stage 16 if Stage 17 changes capability adoption or replacement status.
+- [x] Run eligibility/status tests or docs validation where available.
+- [x] Run `git diff --check`.
+
+Evidence: Stage 16 is a dormant productization gate, not a cleanup implementation. The persisted GC evidence artifact `plans/harness-engineering-platform/evidence/stage16-gc-audit.json` records `findings: []` for the example harness and capability-ledger duplicate-id namespace. The persisted ledger metadata artifact `plans/harness-engineering-platform/evidence/stage16-ledger-metadata.json` records seven capabilities, zero missing `adoption_status` or `cleanup_eligible` fields, zero `cleanup_eligible: true` entries, and zero `adopted` or `superseded` capabilities. Because no Stage 13 capability has a substrate-backed replacement path, Stage 16 adds no cleanup categories and deletes no behavior. The roadmap now points to Stage 17 local project health checks as the next product-value slice. Stage 16 must be re-run before merging any future change that adopts or supersedes a capability, flips `cleanup_eligible` to true, or documents a substrate-backed replacement path.
 
 ### Stage 16 acceptance criteria
 
-- [ ] The stage records active or dormant cleanup status with evidence.
-- [ ] Every capability record has explicit adoption and cleanup eligibility metadata.
-- [ ] Any future capability-specific GC finding cites Stage 13 capability-ledger records, required evidence, and supported-path migration notes.
-- [ ] Stage 16 produces no cleanup implementation when no adopted capability or substrate-backed replacement exists.
-- [ ] No cleanup slice deletes user-facing behavior without a documented replacement path.
+- [x] The stage records active or dormant cleanup status with evidence.
+- [x] Every capability record has explicit adoption and cleanup eligibility metadata.
+- [x] No capability-specific GC finding is produced in this dormant stage; future capability-specific findings remain gated on capability-ledger records, required evidence, and supported-path migration notes.
+- [x] Stage 16 produces no cleanup implementation when no adopted capability or substrate-backed replacement exists.
+- [x] No cleanup slice deletes user-facing behavior without a documented replacement path.
 
 ## Stage 17: Local project health checks
 

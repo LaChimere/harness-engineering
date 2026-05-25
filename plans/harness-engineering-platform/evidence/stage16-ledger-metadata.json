@@ -1,0 +1,12 @@
+{
+  "schema_version": "0.1.0",
+  "evidence_id": "stage16-ledger-metadata",
+  "generated_at": "2026-05-25T09:08:04.365Z",
+  "capability_ledger": "plans/harness-engineering-platform/capability-ledger.yaml",
+  "capability_count": 7,
+  "missing_adoption_or_cleanup_metadata": [],
+  "cleanup_eligible_capabilities": [],
+  "adopted_or_superseded_capabilities": [],
+  "dormant": true,
+  "re_evaluation_trigger": "Re-run Stage 16 before merging any change that sets a capability adoption_status to adopted or superseded, flips cleanup_eligible to true, or documents a substrate-backed replacement path."
+}

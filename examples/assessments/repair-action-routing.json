@@ -20,8 +20,9 @@
     "level": 2,
     "label": "validated",
     "score": 5,
-    "max_score": 9
+    "max_score": 10
   },
+  "scorecard_version": "0.2.0",
   "scorecard": [
     {
       "id": "harness-source",
@@ -79,6 +80,13 @@
           "description": "Doctor result artifact."
         }
       ]
+    },
+    {
+      "id": "project-health",
+      "label": "Project health evidence",
+      "status": "missing",
+      "summary": "No health-result artifact is available.",
+      "evidence": []
     },
     {
       "id": "run-results",

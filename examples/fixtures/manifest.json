@@ -165,6 +165,14 @@
       "schema": "schemas/doctor-result.schema.json"
     },
     {
+      "path": "examples/health/results/pass.json",
+      "schema": "schemas/health-result.schema.json"
+    },
+    {
+      "path": "examples/health/results/fail.json",
+      "schema": "schemas/health-result.schema.json"
+    },
+    {
       "path": "examples/traces/native-cli-trace.json",
       "schema": "schemas/trace.schema.json"
     },

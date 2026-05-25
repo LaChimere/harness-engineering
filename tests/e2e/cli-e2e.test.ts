@@ -69,6 +69,20 @@ test(
       );
       expect(getString(await readJsonObject(join(root, doctorPath)), 'status')).toBe('passed');
 
+      const healthPath = '.harness/health/e2e-health.json';
+      expectSuccess(
+        await runHarness(root, [
+          'health',
+          '--accept-unsandboxed-execution',
+          '--format',
+          'json',
+          '--output',
+          healthPath,
+        ]),
+        ['health'],
+      );
+      expect(getString(await readJsonObject(join(root, healthPath)), 'status')).toBe('passed');
+
       expectSuccess(
         await runHarness(root, [
           'eval',
@@ -178,6 +192,8 @@ test(
         'json',
         '--doctor-result',
         doctorPath,
+        '--health-result',
+        healthPath,
         '--run-results',
         '.harness/run-results.jsonl',
         '--trace',
@@ -210,6 +226,8 @@ test(
         'json',
         '--doctor-result',
         doctorPath,
+        '--health-result',
+        healthPath,
         '--run-results',
         assessmentRunResultPath,
         '--trace',

@@ -4,6 +4,7 @@ export const ExitCode = {
   usageError: 2,
   notFound: 3,
   incompatibleEngines: 4,
+  healthFailure: 5,
   internalError: 70,
 } as const;
 
@@ -39,6 +40,11 @@ export const exitCodeDescriptions: ReadonlyArray<{
     code: ExitCode.incompatibleEngines,
     name: 'incompatible-engines',
     meaning: 'The harness declares CLI or schema engine ranges that this CLI cannot satisfy.',
+  },
+  {
+    code: ExitCode.healthFailure,
+    name: 'health-failure',
+    meaning: 'Local project health checks executed, but one or more checks failed.',
   },
   {
     code: ExitCode.internalError,

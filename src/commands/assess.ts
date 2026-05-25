@@ -12,6 +12,7 @@ const valueOptions = new Set([
   'file',
   'format',
   'doctor-result',
+  'health-result',
   'run-results',
   'trace',
   'scoreboard',
@@ -39,6 +40,7 @@ export async function runAssessCommand(
   const schemas = await loadSchemaRegistry(context.packageRoot);
   const cliVersion = await readPackageVersion(context.packageRoot);
   const doctorResultPath = optionValue(options, 'doctor-result');
+  const healthResultPath = optionValue(options, 'health-result');
   const runResultsPath = optionValue(options, 'run-results');
   const tracePath = optionValue(options, 'trace');
   const scoreboardPath = optionValue(options, 'scoreboard');
@@ -58,6 +60,7 @@ export async function runAssessCommand(
     cliVersion,
     schemas,
     ...(doctorResultPath === undefined ? {} : { doctorResultPath }),
+    ...(healthResultPath === undefined ? {} : { healthResultPath }),
     ...(runResultsPath === undefined ? {} : { runResultsPath }),
     ...(tracePath === undefined ? {} : { tracePath }),
     ...(scoreboardPath === undefined ? {} : { scoreboardPath }),

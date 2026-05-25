@@ -15,10 +15,16 @@ export interface ShellCommandResult {
   readonly timedOut: boolean;
   readonly stdout: string;
   readonly stderr: string;
+  readonly stdoutTruncated: boolean;
+  readonly stderrTruncated: boolean;
   readonly error?: string;
 }
 
 const maxCapturedOutputLength = 16_384;
+type ShellCommandResultWithoutTruncation = Omit<
+  ShellCommandResult,
+  'stdoutTruncated' | 'stderrTruncated'
+>;
 
 export async function runShellCommand(input: ShellCommandInput): Promise<ShellCommandResult> {
   return await new Promise((resolve) => {
@@ -28,6 +34,8 @@ export async function runShellCommand(input: ShellCommandInput): Promise<ShellCo
     const lcAllEnvKey = 'LC_ALL';
     let stdout = '';
     let stderr = '';
+    let stdoutTruncated = false;
+    let stderrTruncated = false;
     let timedOut = false;
     let settled = false;
     let killTimer: ReturnType<typeof setTimeout> | undefined;
@@ -72,10 +80,14 @@ export async function runShellCommand(input: ShellCommandInput): Promise<ShellCo
     }, input.timeoutSeconds * 1000);
 
     child.stdout.on('data', (chunk: Buffer) => {
-      stdout = appendCapturedOutput(stdout, chunk.toString('utf8'));
+      const capture = appendCapturedOutput(stdout, chunk.toString('utf8'));
+      stdout = capture.text;
+      stdoutTruncated ||= capture.truncated;
     });
     child.stderr.on('data', (chunk: Buffer) => {
-      stderr = appendCapturedOutput(stderr, chunk.toString('utf8'));
+      const capture = appendCapturedOutput(stderr, chunk.toString('utf8'));
+      stderr = capture.text;
+      stderrTruncated ||= capture.truncated;
     });
 
     child.on('error', (error) => {
@@ -91,7 +103,7 @@ export async function runShellCommand(input: ShellCommandInput): Promise<ShellCo
       });
     });
 
-    function finish(result: ShellCommandResult): void {
+    function finish(result: ShellCommandResultWithoutTruncation): void {
       if (settled) {
         return;
       }
@@ -103,7 +115,11 @@ export async function runShellCommand(input: ShellCommandInput): Promise<ShellCo
       if (forceFinishTimer !== undefined) {
         clearTimeout(forceFinishTimer);
       }
-      resolve(result);
+      resolve({
+        ...result,
+        stdoutTruncated,
+        stderrTruncated,
+      });
     }
   });
 }
@@ -142,10 +158,13 @@ function isNoSuchProcess(error: unknown): boolean {
   );
 }
 
-function appendCapturedOutput(current: string, next: string): string {
+function appendCapturedOutput(
+  current: string,
+  next: string,
+): { readonly text: string; readonly truncated: boolean } {
   const combined = `${current}${next}`;
   if (combined.length <= maxCapturedOutputLength) {
-    return combined;
+    return { text: combined, truncated: false };
   }
-  return combined.slice(0, maxCapturedOutputLength);
+  return { text: combined.slice(0, maxCapturedOutputLength), truncated: true };
 }

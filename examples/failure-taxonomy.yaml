@@ -52,3 +52,18 @@ codes:
   - code: approval-denied
     category: approval
     description: A required approval was rejected, denied, or terminated.
+  - code: trust-requirements-unsafe
+    category: sandbox
+    description: A local health check requested trust or sandbox capabilities the current declarative runner refuses.
+  - code: policy-mismatch-process
+    category: sandbox
+    description: A local health check requires process spawning while the selected sandbox policy denies process spawning.
+  - code: missing-artifact
+    category: context
+    description: A declared local health artifact was missing from the selected root.
+  - code: command-error
+    category: execution
+    description: A local health command could not be executed or terminated cleanly.
+  - code: command-failed
+    category: execution
+    description: A local health command executed and returned a non-zero exit code.

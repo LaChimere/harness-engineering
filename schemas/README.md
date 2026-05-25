@@ -43,6 +43,10 @@ Run results include an `execution` block. `verifier-only` records separate `harn
 
 Scoreboards summarize agent-run ledgers by optimization/holdout split and total counts. Their failure buckets explicitly separate `agent-failure`, `model-failure`, `harness-error`, `verifier-error`, `verification-failure`, `budget-exceeded`, and `credential-missing` so behavioral regressions do not collapse into one opaque failure class. The broken-twin fixture intentionally contributes an `agent-failure` bucket while the overall eval run can still pass because that negative control failed as expected.
 
+## Project health evidence
+
+`health-result.schema.json` records local project health checks executed by `harness health`. Health checks are declared in the optional `health` block of `harness.yaml` and reuse the shared `trustRequirements` shape plus the harness's approval and sandbox policy artifacts. The current health runner is declaration-gated and records `sandbox_enforcement: declarative` plus `runtime_enforced: false`; it refuses network, secret, host-file, missing artifact, and unsafe declarations rather than pretending to enforce a stronger runtime sandbox. `harness assess` consumes health-result evidence through scorecard version `0.2.0` as a distinct `project-health` dimension, separate from structural doctor evidence.
+
 ## Judge policy and inferential review
 
 `judge-policy.schema.json` defines the calibration contract for LLM-mediated review. A policy must include a rubric, labeled sample minimum, agreement metric, numeric blocking threshold, uncertainty notes, stale-calibration window, and below-threshold consequence. The starter policy uses `percent_agreement`; `4 / 5 = 0.8` meets its blocking threshold, while `3 / 5 = 0.6` is below threshold and therefore advisory-only.

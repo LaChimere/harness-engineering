@@ -265,6 +265,8 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
     'examples/harness.yaml',
     '--doctor-result',
     'examples/doctor/results/pass.json',
+    '--health-result',
+    'examples/health/results/pass.json',
     '--run-results',
     'examples/run-results/run-result.json',
     '--trace',
@@ -1392,6 +1394,279 @@ test('doctor emits markdown by default', async () => {
   expect(result.stdout).toContain('| local-doc-link-check | skipped | info |');
 });
 
+test('health emits schema-valid JSON and can feed assess', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const missingFlag = await run(['health', '--format', 'json'], root);
+  expect(missingFlag.code).toBe(ExitCode.usageError);
+  expect(missingFlag.stderr).toContain('--accept-unsandboxed-execution');
+  const harnessPath = join(root, 'harness.yaml');
+  const harness = await readFile(harnessPath, 'utf8');
+  await writeFile(
+    harnessPath,
+    harness.replace(
+      '        - path: AGENTS.md\n          media_type: text/markdown\n          description: Agent instruction file.',
+      '        - path: AGENTS.md\n          media_type: text/markdown\n          description: Agent instruction file.\n        - path: https://example.invalid/health-reference\n          media_type: text/plain\n          description: External health reference that does not require allowed_inputs.',
+    ),
+  );
+  const healthPath = '.harness/health/result.json';
+  const health = await run(
+    ['health', '--accept-unsandboxed-execution', '--format', 'json', '--output', healthPath],
+    root,
+  );
+  expect(health.code).toBe(ExitCode.ok);
+  expect(health.stdout).toContain('harness health passed');
+  const healthResult = JSON.parse(await readFile(join(root, healthPath), 'utf8'));
+  expect(getString(healthResult, 'status')).toBe('passed');
+  expect(getString(healthResult, 'sandbox_enforcement')).toBe('declarative');
+  expect(healthResult.runtime_enforced).toBe(false);
+  const healthCheck = jsonObjects(getArray(healthResult, 'checks'))[0] ?? {};
+  expect(getString(healthCheck, 'id')).toBe('docs-present');
+  expect(getString(healthCheck, 'sandbox_enforcement')).toBe('declarative');
+  expect(getBoolean(healthCheck, 'runtime_enforced')).toBe(false);
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('health-result', healthResult)).toEqual([]);
+
+  const assessment = await run(['assess', '--format', 'json', '--health-result', healthPath], root);
+  expect(assessment.code).toBe(ExitCode.ok);
+  const assessmentJson = JSON.parse(assessment.stdout);
+  expect(getString(assessmentJson, 'scorecard_version')).toBe('0.2.0');
+  expect(getObject(assessmentJson, 'maturity')).toMatchObject({ max_score: 10 });
+  expect(
+    getString(
+      objectWithString(
+        jsonObjects(getArray(assessmentJson, 'scorecard')),
+        'id',
+        'project-health',
+      ) ?? {},
+      'status',
+    ),
+  ).toBe('present');
+  expect(schemas.validate('assessment', assessmentJson)).toEqual([]);
+
+  const staleHealthPath = '.harness/health/stale-result.json';
+  await writeFile(
+    join(root, staleHealthPath),
+    JSON.stringify(
+      {
+        ...healthResult,
+        checks: [
+          {
+            ...healthCheck,
+            status: 'failed',
+            failure_code: 'command-failed',
+            summary: 'Stale failed check should not bind as present.',
+          },
+          {
+            ...healthCheck,
+            id: 'extra-stale-check',
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+  const staleAssessment = await run(
+    ['assess', '--format', 'json', '--health-result', staleHealthPath],
+    root,
+  );
+  expect(staleAssessment.code).toBe(ExitCode.ok);
+  const staleAssessmentJson = JSON.parse(staleAssessment.stdout);
+  const staleProjectHealth =
+    objectWithString(
+      jsonObjects(getArray(staleAssessmentJson, 'scorecard')),
+      'id',
+      'project-health',
+    ) ?? {};
+  expect(getString(staleProjectHealth, 'status')).toBe('partial');
+  expect(getString(staleProjectHealth, 'summary')).toContain('is not configured');
+  expect(getString(staleProjectHealth, 'summary')).toContain('status is not passed');
+
+  const noHealthAssessment = await run(['assess', '--format', 'json'], root);
+  expect(noHealthAssessment.code).toBe(ExitCode.ok);
+  const noHealthAssessmentJson = JSON.parse(noHealthAssessment.stdout);
+  expect(getObject(noHealthAssessmentJson, 'maturity')).toMatchObject({ max_score: 10 });
+  expect(
+    getString(
+      objectWithString(
+        jsonObjects(getArray(noHealthAssessmentJson, 'scorecard')),
+        'id',
+        'project-health',
+      ) ?? {},
+      'status',
+    ),
+  ).toBe('missing');
+});
+
+test('health reports failed checks with a distinct exit code', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const harnessPath = join(root, 'harness.yaml');
+  const harness = await readFile(harnessPath, 'utf8');
+  await writeFile(
+    harnessPath,
+    harness.replace('test -f README.md && test -f AGENTS.md', 'test -f missing-health-file.txt'),
+  );
+  const result = await run(['health', '--accept-unsandboxed-execution', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.healthFailure);
+  const healthResult = JSON.parse(result.stdout);
+  expect(getString(healthResult, 'status')).toBe('failed');
+  expect(getString(jsonObjects(getArray(healthResult, 'checks'))[0] ?? {}, 'failure_code')).toBe(
+    'command-failed',
+  );
+});
+
+test('health refuses unsafe and policy-mismatched declarations', async () => {
+  const unsafeRoot = await tempRoot();
+  await run(['init'], unsafeRoot);
+  const unsafeHarnessPath = join(unsafeRoot, 'harness.yaml');
+  const unsafeHarness = await readFile(unsafeHarnessPath, 'utf8');
+  await writeFile(
+    unsafeHarnessPath,
+    unsafeHarness.replace(
+      '      command:\n        command: test -f README.md && test -f AGENTS.md\n        timeout_seconds: 30\n      trust_requirements:\n        trust_level: sandboxed',
+      '      command:\n        command: test -f README.md && test -f AGENTS.md\n        timeout_seconds: 30\n      trust_requirements:\n        trust_level: trusted',
+    ),
+  );
+  const unsafe = await run(
+    ['health', '--accept-unsandboxed-execution', '--format', 'json'],
+    unsafeRoot,
+  );
+  expect(unsafe.code).toBe(ExitCode.validationError);
+  const unsafeCheck = jsonObjects(getArray(JSON.parse(unsafe.stdout), 'checks'))[0] ?? {};
+  expect(getString(unsafeCheck, 'status')).toBe('skipped');
+  expect(getString(unsafeCheck, 'failure_code')).toBe('trust-requirements-unsafe');
+
+  const networkRoot = await tempRoot();
+  await run(['init'], networkRoot);
+  const networkHarnessPath = join(networkRoot, 'harness.yaml');
+  const networkHarness = await readFile(networkHarnessPath, 'utf8');
+  await writeFile(
+    networkHarnessPath,
+    networkHarness.replace(
+      '      command:\n        command: test -f README.md && test -f AGENTS.md\n        timeout_seconds: 30\n      trust_requirements:\n        trust_level: sandboxed\n        sandbox_required: process\n        network_access: false',
+      '      command:\n        command: test -f README.md && test -f AGENTS.md\n        timeout_seconds: 30\n      trust_requirements:\n        trust_level: sandboxed\n        sandbox_required: process\n        network_access: true',
+    ),
+  );
+  const network = await run(
+    ['health', '--accept-unsandboxed-execution', '--format', 'json'],
+    networkRoot,
+  );
+  expect(network.code).toBe(ExitCode.validationError);
+  const networkCheck = jsonObjects(getArray(JSON.parse(network.stdout), 'checks'))[0] ?? {};
+  expect(getString(networkCheck, 'status')).toBe('skipped');
+  expect(getString(networkCheck, 'failure_code')).toBe('trust-requirements-unsafe');
+
+  const root = await tempRoot();
+  await run(['init'], root);
+  const sandboxPath = join(root, 'examples/policies/sandbox-policy.yaml');
+  const sandbox = await readFile(sandboxPath, 'utf8');
+  await writeFile(sandboxPath, sandbox.replace('allow_spawn: true', 'allow_spawn: false'));
+  const result = await run(['health', '--accept-unsandboxed-execution', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.validationError);
+  const check = jsonObjects(getArray(JSON.parse(result.stdout), 'checks'))[0] ?? {};
+  expect(getString(check, 'status')).toBe('skipped');
+  expect(getString(check, 'failure_code')).toBe('policy-mismatch-process');
+});
+
+test('health records timeout errors', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const harnessPath = join(root, 'harness.yaml');
+  const harness = await readFile(harnessPath, 'utf8');
+  await writeFile(
+    harnessPath,
+    harness
+      .replace('command: test -f README.md && test -f AGENTS.md', 'command: sleep 2')
+      .replace('timeout_seconds: 30', 'timeout_seconds: 1'),
+  );
+  const result = await run(['health', '--accept-unsandboxed-execution', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.healthFailure);
+  const check = jsonObjects(getArray(JSON.parse(result.stdout), 'checks'))[0] ?? {};
+  expect(getString(check, 'status')).toBe('error');
+  expect(getString(check, 'failure_code')).toBe('timeout');
+});
+
+test('health refuses missing declared artifacts and symlinked output', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const harnessPath = join(root, 'harness.yaml');
+  const harness = await readFile(harnessPath, 'utf8');
+  await writeFile(
+    harnessPath,
+    harness
+      .replace(
+        '        allowed_inputs:\n          - README.md\n          - AGENTS.md\n        allowed_outputs:\n          - .harness/health',
+        '        allowed_inputs:\n          - missing-health-artifact.md\n          - AGENTS.md\n        allowed_outputs:\n          - .harness/health',
+      )
+      .replace(
+        '        - path: README.md\n          media_type: text/markdown\n          description: User-facing project README.',
+        '        - path: missing-health-artifact.md\n          media_type: text/markdown\n          description: Missing health fixture.',
+      ),
+  );
+  const missingArtifact = await run(
+    ['health', '--accept-unsandboxed-execution', '--format', 'json'],
+    root,
+  );
+  expect(missingArtifact.code).toBe(ExitCode.validationError);
+  const missingCheck = jsonObjects(getArray(JSON.parse(missingArtifact.stdout), 'checks'))[0] ?? {};
+  expect(getString(missingCheck, 'failure_code')).toBe('missing-artifact');
+
+  await symlink('../../harness.yaml', join(root, '.harness/health/link.json'));
+  const beforeSymlinkedOutput = await run(
+    ['health', '--output', '.harness/health/link.json'],
+    root,
+  );
+  expect(beforeSymlinkedOutput.code).toBe(ExitCode.usageError);
+  expect(beforeSymlinkedOutput.stderr).toContain('Refusing to write through symlink');
+
+  const symlinkedOutput = await run(
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/link.json'],
+    root,
+  );
+  expect(symlinkedOutput.code).toBe(ExitCode.usageError);
+  expect(symlinkedOutput.stderr).toContain('Refusing to write through symlink');
+
+  const outsideOutput = await run(
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/outside-health.json'],
+    root,
+  );
+  expect(outsideOutput.code).toBe(ExitCode.usageError);
+  expect(outsideOutput.stderr).toContain('health --output must be inside health.output_dir');
+
+  const traversalOutput = await run(
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/../../harness.yaml'],
+    root,
+  );
+  expect(traversalOutput.code).toBe(ExitCode.usageError);
+  expect(traversalOutput.stderr).toContain('health --output must be inside health.output_dir');
+
+  const uniqueOutput = await run(
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/result.json'],
+    root,
+  );
+  expect(uniqueOutput.code).toBe(ExitCode.validationError);
+  const duplicateOutput = await run(
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/result.json'],
+    root,
+  );
+  expect(duplicateOutput.code).toBe(ExitCode.usageError);
+  expect(duplicateOutput.stderr).toContain('Health output already exists');
+});
+
+test('health rejects symlinked harness before output preflight reads it', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await symlink('harness.yaml', join(root, 'harness-link.yaml'));
+  const result = await run(
+    ['health', '--file', 'harness-link.yaml', '--output', '.harness/health/symlink-harness.json'],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Refusing to read through symlink');
+});
+
 test('gc audit emits schema-valid JSON for a healthy harness', async () => {
   const result = await run([
     'gc',
@@ -2071,7 +2346,7 @@ test('report validates judge results linked from run-result artifacts', async ()
         suite_id: 'harness-self-test',
         task_id: 'schema-smoke',
         task_version: '1.0.0',
-        dataset_hash: 'sha256:8f8141fadd48bd417cad7d3ab7d3a60746383b434ff6c1ec922656d4fe40a0cb',
+        dataset_hash: 'sha256:27aa95663ba3847b713dae33b3beed3a33280d3aeeff5cb9177f5bc9817c81fd',
         split: 'optimization',
         model_profile: 'harness://verifier-only/no-model',
         harness_version: '0.1.0',
@@ -2183,7 +2458,7 @@ test('eval validate proves oracle pass and broken twin fail deterministically', 
     expect(getString(runResult, 'task_id')).toBe('schema-smoke');
     expect(getString(runResult, 'task_version')).toBe('1.0.0');
     expect(getString(runResult, 'dataset_hash')).toBe(
-      'sha256:8f8141fadd48bd417cad7d3ab7d3a60746383b434ff6c1ec922656d4fe40a0cb',
+      'sha256:27aa95663ba3847b713dae33b3beed3a33280d3aeeff5cb9177f5bc9817c81fd',
     );
     expect(getString(runResult, 'split')).toBe('optimization');
     expect(getString(runResult, 'model_profile')).toBe('harness://verifier-only/no-model');
@@ -2903,6 +3178,7 @@ test('usage and missing input errors use stable exit codes', async () => {
     'assess     Read existing artifacts and emit agent-facing maturity/routing guidance.',
   );
   expect(help.stdout).toContain('doctor     Run deterministic structural harness checks.');
+  expect(help.stdout).toContain('health     Run declared local project health checks.');
   expect(help.stdout).toContain('run        Run deterministic stub agent tasks.');
   expect(help.stdout).toContain(
     'eval       Run eval validation or deterministic behavioral evals.',

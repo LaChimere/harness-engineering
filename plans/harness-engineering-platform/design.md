@@ -727,7 +727,7 @@ Capability ledger records use this shape:
   - Local check evidence records command, timeout, status, failure class, trust/sandbox requirements, and artifacts.
   - Unsafe or undeclared checks are refused with clear errors.
   - Fixtures cover pass, failure, timeout, unsafe declaration, and missing artifact cases.
-  - Fixtures cover policy-mismatch refusal, such as a check requesting network access when the selected sandbox policy denies it.
+  - Fixtures cover policy-mismatch refusal, such as a check requiring process spawning when the selected sandbox policy denies it.
   - A downstream fixture demonstrates at least one passing and one failing health check with machine-readable evidence.
 
 ### Stage 18: Real runner readiness

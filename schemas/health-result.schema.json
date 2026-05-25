@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/health-result.schema.json",
+  "title": "Project health result",
+  "description": "Executed local project health checks with declared trust and sandbox evidence.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "harness_version",
+    "status",
+    "sandbox_enforcement",
+    "runtime_enforced",
+    "source",
+    "checks"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "error"]
+    },
+    "sandbox_enforcement": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "runtime_enforced": {
+      "type": "boolean"
+    },
+    "source": {
+      "type": "object",
+      "required": ["harness", "approval_policy", "sandbox_policy"],
+      "properties": {
+        "harness": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "approval_policy": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        },
+        "sandbox_policy": {
+          "$ref": "common.schema.json#/$defs/artifactRef"
+        }
+      },
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "command",
+          "timeout_seconds",
+          "status",
+          "sandbox_enforcement",
+          "runtime_enforced",
+          "duration_ms",
+          "evidence",
+          "artifacts",
+          "summary",
+          "stdout_truncated",
+          "stderr_truncated",
+          "trust_requirements"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "command": {
+            "$ref": "common.schema.json#/$defs/command"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "error", "skipped"]
+          },
+          "sandbox_enforcement": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "runtime_enforced": {
+            "type": "boolean"
+          },
+          "failure_code": {
+            "$ref": "common.schema.json#/$defs/failureCode"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "exit_code": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "signal": {
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "stdout": {
+            "type": "string"
+          },
+          "stdout_truncated": {
+            "type": "boolean"
+          },
+          "stderr": {
+            "type": "string"
+          },
+          "stderr_truncated": {
+            "type": "boolean"
+          },
+          "evidence": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          },
+          "artifacts": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          },
+          "trust_requirements": {
+            "$ref": "common.schema.json#/$defs/trustRequirements"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": ["failed", "error", "skipped"]
+                }
+              },
+              "required": ["status"]
+            },
+            "then": {
+              "required": ["failure_code"]
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

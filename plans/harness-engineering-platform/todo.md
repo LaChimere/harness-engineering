@@ -586,28 +586,30 @@ Evidence: Stage 16 is a dormant productization gate, not a cleanup implementatio
 
 ## Stage 17: Local project health checks
 
-- [ ] Define `harness health` as the executable local project health-check surface without creating a second source of truth.
-- [ ] Keep `doctor` as the structural harness checker and document the boundary with `health`.
-- [ ] Reuse existing trust requirements plus approval and sandbox policy artifacts for health checks.
-- [ ] Require trust and sandbox declarations before any local check can execute.
-- [ ] Record command, timeout, status, failure class, artifacts, and trust/sandbox evidence for each check.
-- [ ] Extend `harness assess` to accept health evidence through a scorecard version with a distinct `project-health` dimension.
-- [ ] Mark existing Stage 13 assessment fixtures as the pre-health scorecard baseline or re-baseline them explicitly when the scorecard version changes.
-- [ ] Add pass/fail/timeout/unsafe-declaration fixtures.
-- [ ] Add policy-mismatch refusal fixtures, such as a check requesting network access when policy denies it.
-- [ ] Add downstream example checks such as lint, test, typecheck, or doc-link checks that require no network or secrets.
-- [ ] Ensure local health checks do not collapse `doctor`, `verify`, and `eval` into one generic runner.
-- [ ] Add command tests and schema/fixture validation.
-- [ ] Run `git diff --check`.
+- [x] Define `harness health` as the executable local project health-check surface without creating a second source of truth.
+- [x] Keep `doctor` as the structural harness checker and document the boundary with `health`.
+- [x] Reuse existing trust requirements plus approval and sandbox policy artifacts for health checks.
+- [x] Require trust and sandbox declarations before any local check can execute.
+- [x] Record command, timeout, status, failure class, artifacts, and trust/sandbox evidence for each check.
+- [x] Extend `harness assess` to accept health evidence through a scorecard version with a distinct `project-health` dimension.
+- [x] Mark existing Stage 13 assessment fixtures as the pre-health scorecard baseline or re-baseline them explicitly when the scorecard version changes.
+- [x] Add pass/fail/timeout/unsafe-declaration fixtures.
+- [x] Add policy-mismatch refusal fixtures, such as a check requiring process spawning when policy denies it.
+- [x] Add downstream example checks such as lint, test, typecheck, or doc-link checks that require no network or secrets.
+- [x] Ensure local health checks do not collapse `doctor`, `verify`, and `eval` into one generic runner.
+- [x] Add command tests and schema/fixture validation.
+- [x] Run `git diff --check`.
+
+Evidence: Stage 17 adds `harness health` as the executable local project health-check surface while keeping `doctor` structural. Health checks are declared in the optional `health` block of `harness.yaml`, reuse existing `trustRequirements`, approval policy, and sandbox policy artifacts, and emit `schemas/health-result.schema.json` evidence with command, timeout, status, failure code, duration, artifacts, and trust requirements. The current runner is declaration-gated and records `sandbox_enforcement: declarative` plus `runtime_enforced: false`; it requires explicit `--accept-unsandboxed-execution`, refuses unsafe trust, network/secret/host-file access, missing declared artifacts, policy mismatches, symlinked output, and unsafe run ids rather than pretending to enforce a stronger sandbox. `harness assess` now accepts `--health-result`, emits `scorecard_version: "0.2.0"`, and adds a distinct `project-health` dimension instead of folding executable checks into `doctor-evidence`. The starter health check verifies `README.md` and `AGENTS.md` without network or secrets. Running `node dist/index.js health --file examples/harness.yaml --format json --accept-unsandboxed-execution` passed with one `docs-present` check; running `harness assess` with `examples/health/results/pass.json` produced `status: ready`, `project-health: present`, and maturity `9/10`.
 
 ### Stage 17 acceptance criteria
 
-- [ ] A downstream fixture reports configured check statuses and an overall health status beyond schema validity.
-- [ ] A downstream fixture demonstrates at least one passing and one failing health check with machine-readable evidence.
-- [ ] Assessment output cites health evidence and reflects it in the versioned maturity scorecard.
-- [ ] Local check execution is refused when trust/sandbox declarations are missing or unsafe.
-- [ ] Check evidence is machine-readable and cites command, timeout, status, artifacts, and failure class.
-- [ ] The starter path remains safe without network, secrets, or unbounded host access.
+- [x] A downstream fixture reports configured check statuses and an overall health status beyond schema validity.
+- [x] A downstream fixture demonstrates at least one passing and one failing health check with machine-readable evidence.
+- [x] Assessment output cites health evidence and reflects it in the versioned maturity scorecard.
+- [x] Local check execution is refused when trust/sandbox declarations are missing or unsafe.
+- [x] Check evidence is machine-readable and cites command, timeout, status, artifacts, and failure class.
+- [x] The starter path remains safe without network, secrets, or unbounded host access.
 
 ## Stage 18: Real runner readiness
 

@@ -12,6 +12,7 @@
     "source",
     "status",
     "maturity",
+    "scorecard_version",
     "scorecard",
     "missing_primitives",
     "rollout_stage_plan",
@@ -92,6 +93,10 @@
         }
       },
       "additionalProperties": false
+    },
+    "scorecard_version": {
+      "type": "string",
+      "enum": ["0.2.0"]
     },
     "scorecard": {
       "type": "array",
@@ -178,7 +183,7 @@
         "properties": {
           "category": {
             "type": "string",
-            "enum": ["policy", "eval", "trace", "continuity", "routing"]
+            "enum": ["policy", "eval", "health", "trace", "continuity", "routing"]
           },
           "severity": {
             "$ref": "common.schema.json#/$defs/severity"

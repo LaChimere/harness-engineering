@@ -15,6 +15,7 @@ engines:
     continuity-state: ">=0.1 <0.2"
     self-verification: ">=0.1 <0.2"
     doctor-result: ">=0.1 <0.2"
+    health-result: ">=0.1 <0.2"
     eval-task: ">=0.1 <0.2"
     agent-runner: ">=0.1 <0.2"
     trace: ">=0.1 <0.2"
@@ -68,6 +69,31 @@ doctor:
           - AGENTS.md
         allowed_outputs:
           - .harness/doctor/doc-links.json
+health:
+  output_dir: .harness/health
+  checks:
+    - id: docs-present
+      command:
+        command: test -f README.md && test -f AGENTS.md
+        timeout_seconds: 30
+      trust_requirements:
+        trust_level: sandboxed
+        sandbox_required: process
+        network_access: false
+        secret_access: false
+        host_file_access: false
+        allowed_inputs:
+          - README.md
+          - AGENTS.md
+        allowed_outputs:
+          - .harness/health
+      artifacts:
+        - path: README.md
+          media_type: text/markdown
+          description: User-facing project README.
+        - path: AGENTS.md
+          media_type: text/markdown
+          description: Agent instruction file.
 continuity:
   state_dir: .harness/continuity
   startup_smoke_test:

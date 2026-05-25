@@ -47,6 +47,7 @@ const starterDirectories = [
   '.harness/handoffs',
   '.harness/gc',
   '.harness/doctor',
+  '.harness/health',
   '.harness/verifier-results',
   '.harness/scoreboards',
   '.harness/approvals',

@@ -23,6 +23,7 @@ export interface AssessmentRequest {
   readonly cliVersion: string;
   readonly schemas: SchemaRegistry;
   readonly doctorResultPath?: string;
+  readonly healthResultPath?: string;
   readonly runResultsPath?: string;
   readonly tracePath?: string;
   readonly scoreboardPath?: string;
@@ -75,6 +76,14 @@ export async function buildAssessment(request: AssessmentRequest): Promise<JsonO
     schemas: request.schemas,
     artifactsRead,
   });
+  const healthResult = await loadOptionalSchemaArtifact({
+    root: request.root,
+    path: request.healthResultPath,
+    label: 'health result',
+    schemaName: 'health-result',
+    schemas: request.schemas,
+    artifactsRead,
+  });
   const runResults = await loadRunResults({
     root: request.root,
     path: request.runResultsPath ?? defaultRunResultsPath(harnessDocument),
@@ -110,6 +119,7 @@ export async function buildAssessment(request: AssessmentRequest): Promise<JsonO
     harness,
     harnessDocument,
     doctorResult,
+    healthResult,
     runResults,
     trace,
     scoreboard,
@@ -166,6 +176,7 @@ export async function buildAssessment(request: AssessmentRequest): Promise<JsonO
     },
     status: statusFor(harness, scorecard),
     maturity,
+    scorecard_version: '0.2.0',
     scorecard,
     missing_primitives: missingPrimitives,
     rollout_stage_plan: rolloutStagePlan(scorecard),
@@ -568,6 +579,7 @@ function buildScorecard(input: {
   readonly harness: LoadedArtifact;
   readonly harnessDocument: JsonObject | undefined;
   readonly doctorResult: LoadedArtifact | undefined;
+  readonly healthResult: LoadedArtifact | undefined;
   readonly runResults: LoadedArtifact | undefined;
   readonly trace: LoadedArtifact | undefined;
   readonly scoreboard: LoadedArtifact | undefined;
@@ -642,6 +654,16 @@ function buildScorecard(input: {
         input.doctorResult === undefined
           ? []
           : [artifact(input.doctorResult.path, 'application/json', 'Doctor result artifact.')],
+    },
+    {
+      id: 'project-health',
+      label: 'Project health evidence',
+      status: healthScorecardStatus(input.healthResult, harness, input.harness.path),
+      summary: healthSummary(input.healthResult, harness, input.harness.path),
+      evidence:
+        input.healthResult === undefined
+          ? []
+          : [artifact(input.healthResult.path, 'application/json', 'Health result artifact.')],
     },
     {
       id: 'run-results',
@@ -753,6 +775,148 @@ function buildScorecard(input: {
       ),
     },
   ];
+}
+
+function healthScorecardStatus(
+  healthResult: LoadedArtifact | undefined,
+  harness: JsonObject | undefined,
+  harnessPath: string,
+): ScorecardItem['status'] {
+  if (healthResult === undefined || healthResult.status === 'missing') {
+    return 'missing';
+  }
+  if (healthResult.status !== 'loaded') {
+    return 'partial';
+  }
+  if (healthResultBindingIssues(healthResult, harness, harnessPath).length > 0) {
+    return 'partial';
+  }
+  return getString(healthResult.document ?? {}, 'status') === 'passed' ? 'present' : 'partial';
+}
+
+function healthSummary(
+  healthResult: LoadedArtifact | undefined,
+  harness: JsonObject | undefined,
+  harnessPath: string,
+): string {
+  if (healthResult === undefined) {
+    return 'No health-result artifact is available.';
+  }
+  if (healthResult.status !== 'loaded') {
+    return healthResult.issues.join('; ');
+  }
+  const bindingIssues = healthResultBindingIssues(healthResult, harness, harnessPath);
+  if (bindingIssues.length > 0) {
+    return `Health result does not match the current harness: ${bindingIssues.join('; ')}`;
+  }
+  const status = getString(healthResult.document ?? {}, 'status') ?? 'unknown';
+  const checks = (getArray(healthResult.document ?? {}, 'checks') ?? []).filter(isObject);
+  return status === 'passed'
+    ? `${checks.length} local project health check(s) passed.`
+    : `Health result status is ${status}; local project health evidence is not passing.`;
+}
+
+function healthResultBindingIssues(
+  healthResult: LoadedArtifact,
+  harness: JsonObject | undefined,
+  harnessPath: string,
+): readonly string[] {
+  const document = healthResult.document ?? {};
+  const source = getObject(document, 'source') ?? {};
+  const issues: string[] = [];
+  const sourceHarness = getString(source, 'harness');
+  if (
+    sourceHarness === undefined ||
+    normalizeArtifactPath(sourceHarness) !== normalizeArtifactPath(harnessPath)
+  ) {
+    issues.push(`source.harness ${sourceHarness ?? '<missing>'} does not match ${harnessPath}`);
+  }
+  const approvalPolicy = getString(harness ?? {}, 'approval_policy');
+  const sourceApprovalPolicy = getString(source, 'approval_policy');
+  if (
+    approvalPolicy !== undefined &&
+    (sourceApprovalPolicy === undefined ||
+      normalizeArtifactPath(sourceApprovalPolicy) !== normalizeArtifactPath(approvalPolicy))
+  ) {
+    issues.push('source.approval_policy does not match harness approval_policy');
+  }
+  const sandbox = getString(harness ?? {}, 'sandbox');
+  const sourceSandboxPolicy = getString(source, 'sandbox_policy');
+  if (
+    sandbox !== undefined &&
+    (sourceSandboxPolicy === undefined ||
+      normalizeArtifactPath(sourceSandboxPolicy) !== normalizeArtifactPath(sandbox))
+  ) {
+    issues.push('source.sandbox_policy does not match harness sandbox');
+  }
+  const configuredChecks = (getArray(getObject(harness ?? {}, 'health') ?? {}, 'checks') ?? [])
+    .filter(isObject)
+    .map((check) => ({
+      id: getString(check, 'id'),
+      command: getObject(check, 'command'),
+      trust: getObject(check, 'trust_requirements'),
+      artifacts: getArray(check, 'artifacts') ?? [],
+    }));
+  const resultChecks = (getArray(document, 'checks') ?? []).filter(isObject);
+  const configuredIds = new Set(configuredChecks.map((check) => check.id));
+  const resultIds = new Set<string>();
+  for (const resultCheck of resultChecks) {
+    const resultId = getString(resultCheck, 'id');
+    if (resultId === undefined) {
+      issues.push('health result check is missing id');
+      continue;
+    }
+    if (resultIds.has(resultId)) {
+      issues.push(`health result check ${resultId} appears more than once`);
+    }
+    resultIds.add(resultId);
+    if (!configuredIds.has(resultId)) {
+      issues.push(`health result check ${resultId} is not configured in the current harness`);
+    }
+  }
+  for (const configuredCheck of configuredChecks) {
+    const resultCheck = resultChecks.find((check) => getString(check, 'id') === configuredCheck.id);
+    if (resultCheck === undefined) {
+      issues.push(`check ${configuredCheck.id ?? '<missing>'} is missing from health result`);
+      continue;
+    }
+    if (!jsonEqual(getObject(resultCheck, 'command'), configuredCheck.command)) {
+      issues.push(
+        `check ${configuredCheck.id ?? '<missing>'} command does not match current harness`,
+      );
+    }
+    if (!jsonEqual(getObject(resultCheck, 'trust_requirements'), configuredCheck.trust)) {
+      issues.push(
+        `check ${configuredCheck.id ?? '<missing>'} trust_requirements do not match current harness`,
+      );
+    }
+    if (!jsonEqual(getArray(resultCheck, 'artifacts') ?? [], configuredCheck.artifacts)) {
+      issues.push(
+        `check ${configuredCheck.id ?? '<missing>'} artifacts do not match current harness`,
+      );
+    }
+    if (getString(resultCheck, 'status') !== 'passed') {
+      issues.push(`check ${configuredCheck.id ?? '<missing>'} status is not passed`);
+    }
+  }
+  return issues;
+}
+
+function jsonEqual(left: JsonValue | undefined, right: JsonValue | undefined): boolean {
+  return stableJson(left ?? null) === stableJson(right ?? null);
+}
+
+function stableJson(value: JsonValue): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableJson).join(',')}]`;
+  }
+  if (isObject(value)) {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key] ?? null)}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function doctorScorecardStatus(
@@ -1077,6 +1241,8 @@ function recommendationForPrimitive(id: string): string {
       return 'Add at least one eval suite with deterministic verifier tasks.';
     case 'doctor-evidence':
       return 'Run harness doctor --format json and provide the doctor-result artifact.';
+    case 'project-health':
+      return 'Review configured health commands, then run harness health --accept-unsandboxed-execution --format json and provide the health-result artifact.';
     case 'run-results':
       return 'Run harness run or harness eval run to produce a run-result ledger.';
     case 'trace-evidence':
@@ -1101,6 +1267,8 @@ function recommendationCategory(id: string): string {
     case 'scoreboard-report':
     case 'doctor-evidence':
       return 'eval';
+    case 'project-health':
+      return 'health';
     case 'trace-evidence':
       return 'trace';
     case 'continuity-loop':

@@ -2,7 +2,7 @@ schema_version: "0.1.0"
 suite_id: harness-self-test
 task_id: schema-smoke
 task_version: "1.0.0"
-dataset_hash: sha256:8f8141fadd48bd417cad7d3ab7d3a60746383b434ff6c1ec922656d4fe40a0cb
+dataset_hash: sha256:27aa95663ba3847b713dae33b3beed3a33280d3aeeff5cb9177f5bc9817c81fd
 split: optimization
 confidence: validated-oracle
 instruction: Validate that the harness schema substrate can describe a deterministic self-test task.
@@ -32,7 +32,3 @@ oracle:
 baseline:
   kind: expected-failure
   artifact: examples/evals/harness-self-test/v1.0.0/broken-twin.txt
-artifacts:
-  - path: examples/harness.yaml
-    media_type: application/yaml
-    description: Harness example under validation.

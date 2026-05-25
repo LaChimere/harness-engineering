@@ -1,0 +1,55 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "health-docs-present",
+  "harness_version": "0.1.0",
+  "status": "passed",
+  "sandbox_enforcement": "declarative",
+  "runtime_enforced": false,
+  "source": {
+    "harness": "examples/harness.yaml",
+    "approval_policy": "examples/policies/approval-policy.yaml",
+    "sandbox_policy": "examples/policies/sandbox-policy.yaml"
+  },
+  "checks": [
+    {
+      "id": "docs-present",
+      "command": {
+        "command": "test -f README.md && test -f AGENTS.md",
+        "timeout_seconds": 30
+      },
+      "timeout_seconds": 30,
+      "status": "passed",
+      "sandbox_enforcement": "declarative",
+      "runtime_enforced": false,
+      "duration_ms": 0,
+      "exit_code": 0,
+      "summary": "Health check command exited 0.",
+      "stdout": "",
+      "stdout_truncated": false,
+      "stderr": "",
+      "stderr_truncated": false,
+      "evidence": [],
+      "artifacts": [
+        {
+          "path": "README.md",
+          "media_type": "text/markdown",
+          "description": "User-facing project README."
+        },
+        {
+          "path": "AGENTS.md",
+          "media_type": "text/markdown",
+          "description": "Agent instruction file."
+        }
+      ],
+      "trust_requirements": {
+        "trust_level": "sandboxed",
+        "sandbox_required": "process",
+        "network_access": false,
+        "secret_access": false,
+        "host_file_access": false,
+        "allowed_inputs": ["README.md", "AGENTS.md"],
+        "allowed_outputs": [".harness/health"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "0.1.0",
+  "session_id": "harness-gc-fixture",
+  "run_id": "run-schema-smoke-trace-failed",
+  "harness_version": "0.1.0",
+  "inputs": {
+    "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
+    "runner": "examples/agent-runners/stub.yaml"
+  },
+  "environment_snapshot": {
+    "environment": "examples/environments/local.yaml",
+    "sandbox": "examples/policies/sandbox-policy.yaml",
+    "approval_policy": "examples/policies/approval-policy.yaml",
+    "model_profile": "examples/model-profiles/stub.yaml",
+    "runner": "examples/agent-runners/stub.yaml"
+  },
+  "started_at": "2026-05-24T00:00:00Z",
+  "completed_at": "2026-05-24T00:00:01Z",
+  "duration_ms": 1000,
+  "exit_code": 1,
+  "determinism_level": "recorded",
+  "credential_reference": {
+    "source": "stub",
+    "name": "deterministic-stub",
+    "purpose": "CI-safe recorded response fixture",
+    "scope": "per-run"
+  },
+  "budgets": {
+    "max_cost_usd": 0,
+    "max_total_tokens": 1024,
+    "max_requests": 1,
+    "enforcement": "hard",
+    "scope": "per-run"
+  },
+  "usage": {
+    "billed_model_id": "stub-v1",
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "requests": 1,
+    "incurred_cost_usd": 0,
+    "source": "stub"
+  },
+  "actions": [
+    {
+      "id": "run-schema-smoke-trace-failed-verifier",
+      "type": "verifier",
+      "timestamp": "2026-05-24T00:00:01Z",
+      "summary": "Verifier reported a deterministic fixture failure.",
+      "errors": [
+        {
+          "failure_code": "verification-failure",
+          "message": "Expected schema-smoke output was not produced."
+        }
+      ]
+    }
+  ],
+  "logs": [],
+  "artifact_links": [
+    {
+      "path": "examples/run-results/failed-run-result.json",
+      "media_type": "application/json",
+      "description": "Run-result linked to this failing trace fixture."
+    }
+  ]
+}

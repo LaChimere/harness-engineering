@@ -1462,6 +1462,93 @@ test('gc audit detects deterministic categories', async () => {
   ).toEqual(['examples/fixtures/gc/duplicate-doctor-id-harness.yaml']);
 });
 
+test('gc audit accepts explicit capability ledger path', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(
+    join(root, 'custom-capabilities.yaml'),
+    [
+      'capabilities:',
+      '  - capability_id: duplicate-capability',
+      '  - capability_id: duplicate-capability',
+      '',
+    ].join('\n'),
+  );
+  const result = await run(
+    ['gc', 'audit', '--format', 'json', '--capability-ledger', 'custom-capabilities.yaml'],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  expect(
+    jsonObjects(getArray(JSON.parse(result.stdout), 'findings')).some(
+      (finding) => getString(finding, 'category') === 'duplicate-id',
+    ),
+  ).toBe(true);
+});
+
+test('gc audit accepts run-result JSONL evidence', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const failedRunResult = await readFile('examples/run-results/failed-run-result.json', 'utf8');
+  const runResult = JSON.parse(failedRunResult) as JsonObject;
+  const firstRecord = { ...runResult, run_id: 'run-cleanup-collision' };
+  const secondRecord = { ...runResult, run_id: 'run-cleanup-collision' };
+  const collidingRecord = { ...runResult, run_id: 'run-cleanup-collision-2' };
+  await writeFile(
+    join(root, '.harness/run-results.JSONL'),
+    `${JSON.stringify(firstRecord)}\n${JSON.stringify(secondRecord)}\n${JSON.stringify(collidingRecord)}\n`,
+  );
+  const result = await run(
+    ['gc', 'audit', '--format', 'json', '--run-results', '.harness/run-results.JSONL'],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const findings = jsonObjects(getArray(JSON.parse(result.stdout), 'findings'));
+  expect(findings.some((finding) => getString(finding, 'category') === 'execution-evidence')).toBe(
+    true,
+  );
+  const cleanupIds = findings
+    .map((finding) => getString(getObject(finding, 'proposed_cleanup_slice') ?? {}, 'id'))
+    .filter((id): id is string => id !== undefined);
+  expect(new Set(cleanupIds).size).toBe(cleanupIds.length);
+  const evidenceRefs = findings.flatMap((finding) =>
+    jsonObjects(getArray(finding, 'evidence_refs')),
+  );
+  expect(evidenceRefs.some((ref) => getString(ref, 'media_type') === 'application/jsonl')).toBe(
+    true,
+  );
+});
+
+test('gc audit detects evidence-driven categories', async () => {
+  const result = await run([
+    'gc',
+    'audit',
+    '--format',
+    'json',
+    '--file',
+    'examples/harness.yaml',
+    '--verification',
+    'examples/fixtures/execution-loop/completion-failed-acceptance.yaml',
+    '--run-results',
+    'examples/run-results/failed-run-result.json',
+    '--scoreboard',
+    'examples/fixtures/gc/failing-scoreboard.json',
+    '--trace',
+    'examples/fixtures/gc/failing-trace.json',
+    '--judge-result',
+    'examples/judges/results/stale-advisory.json',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  const categories = jsonObjects(getArray(JSON.parse(result.stdout), 'findings')).map((finding) =>
+    getString(finding, 'category'),
+  );
+  expect(categories).toContain('verification-evidence');
+  expect(categories).toContain('execution-evidence');
+  expect(categories).toContain('eval-evidence');
+  expect(categories).toContain('trace-evidence');
+  expect(categories).toContain('judge-calibration');
+});
+
 test('gc validate accepts schema-valid evidence and rejects semantic gaps', async () => {
   const valid = await run(['gc', 'validate', 'examples/gc/evidence.json', '--format', 'json']);
   expect(valid.code).toBe(ExitCode.ok);
@@ -1523,6 +1610,104 @@ test('gc validate accepts schema-valid evidence and rejects semantic gaps', asyn
   expect(getArray(invalidResult, 'issues')?.join('\n')).toContain(
     'cleanup target file must not include a fragment',
   );
+  expect(getArray(invalidResult, 'issues')?.join('\n')).toContain('path does not exist');
+});
+
+test('gc validate checks local references and supports reference-only escapes', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const validEvidence = {
+    schema_version: '0.1.0',
+    audit_id: 'gc-reference-valid',
+    generated_at: '2026-05-24T00:00:00Z',
+    previous_audit_ref: 'harness://gc/previous',
+    findings: [
+      {
+        category: 'broken-reference',
+        severity: 'warning',
+        confidence: 0.5,
+        evidence_refs: [{ path: '#/findings/0' }, { path: 'https://example.invalid/gc.json' }],
+        proposed_cleanup_slice: {
+          id: 'valid-reference-checks',
+          description: 'Valid local cleanup target with external evidence refs.',
+          target_files: ['harness.yaml'],
+        },
+        blast_radius: 'Single file.',
+        atomicity_notes: 'Reference validation fixture.',
+        promotion_decision_refs: [{ path: '#/findings/0' }],
+        retirement_decision_refs: [],
+      },
+    ],
+  };
+  await writeFile(join(root, 'valid-gc.json'), JSON.stringify(validEvidence, null, 2));
+  const valid = await run(['gc', 'validate', 'valid-gc.json', '--format', 'json'], root);
+  expect(valid.code).toBe(ExitCode.ok);
+
+  const invalidEvidence = {
+    ...validEvidence,
+    audit_id: 'gc-reference-invalid',
+    previous_audit_ref: '../old-gc.json',
+    findings: [
+      {
+        ...validEvidence.findings[0],
+        proposed_cleanup_slice: {
+          id: 'invalid-reference-checks',
+          description: 'External cleanup target must be rejected.',
+          target_files: ['https://example.invalid/cleanup.yaml'],
+        },
+      },
+    ],
+  };
+  await writeFile(join(root, 'invalid-ref-gc.json'), JSON.stringify(invalidEvidence, null, 2));
+  const invalid = await run(['gc', 'validate', 'invalid-ref-gc.json', '--format', 'json'], root);
+  expect(invalid.code).toBe(ExitCode.validationError);
+  const issues = getArray(JSON.parse(invalid.stdout), 'issues')?.join('\n');
+  expect(issues).toContain('previous_audit_ref path is not inside root');
+  expect(issues).toContain('cleanup target must be a local file path');
+
+  const skipped = await run(
+    ['gc', 'validate', 'invalid-ref-gc.json', '--format', 'json', '--skip-reference-checks'],
+    root,
+  );
+  expect(skipped.code).toBe(ExitCode.ok);
+});
+
+test('gc validate rejects symlinked local refs', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await symlink('harness.yaml', join(root, 'harness-link.yaml'));
+  await writeFile(
+    join(root, 'symlink-gc.json'),
+    JSON.stringify(
+      {
+        schema_version: '0.1.0',
+        audit_id: 'gc-symlink',
+        generated_at: '2026-05-24T00:00:00Z',
+        findings: [
+          {
+            category: 'broken-reference',
+            severity: 'warning',
+            confidence: 0.5,
+            evidence_refs: [{ path: 'harness-link.yaml' }],
+            proposed_cleanup_slice: {
+              id: 'symlink-reference',
+              description: 'Symlink evidence ref.',
+              target_files: ['harness.yaml'],
+            },
+            blast_radius: 'Single file.',
+            atomicity_notes: 'Symlink reference validation fixture.',
+            promotion_decision_refs: [],
+            retirement_decision_refs: [],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+  const result = await run(['gc', 'validate', 'symlink-gc.json', '--format', 'json'], root);
+  expect(result.code).toBe(ExitCode.usageError);
+  expect(result.stderr).toContain('Refusing to read through symlink');
 });
 
 test('gc audit writes append-only output', async () => {
@@ -1539,6 +1724,19 @@ test('gc audit writes append-only output', async () => {
   const second = await run(['gc', 'audit', '--output', outputPath], root);
   expect(second.code).toBe(ExitCode.usageError);
   expect(second.stderr).toContain('GC output already exists');
+});
+
+test('gc audit rejects invalid previous-audit paths before producing evidence', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+
+  const escaped = await run(['gc', 'audit', '--previous-audit', '../old-gc.json'], root);
+  expect(escaped.code).toBe(ExitCode.usageError);
+  expect(escaped.stderr).toContain('GC previous audit escapes root');
+
+  const missing = await run(['gc', 'audit', '--previous-audit', '.harness/gc/missing.json'], root);
+  expect(missing.code).toBe(ExitCode.notFound);
+  expect(missing.stderr).toContain('GC previous audit not found');
 });
 
 test('gc audit refuses schema-invalid harnesses', async () => {

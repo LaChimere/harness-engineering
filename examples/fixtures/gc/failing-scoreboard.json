@@ -1,0 +1,49 @@
+{
+  "schema_version": "0.1.0",
+  "scoreboard_id": "scoreboard-schema-smoke-failed",
+  "run_id": "eval-run-schema-smoke-failed",
+  "session_id": "harness-gc-fixture",
+  "harness_version": "0.1.0",
+  "generated_at": "2026-05-24T00:00:00Z",
+  "status": "failed",
+  "splits": [
+    {
+      "split": "optimization",
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "error": 0,
+      "failure_buckets": {
+        "agent-failure": 0,
+        "model-failure": 0,
+        "harness-error": 0,
+        "verifier-error": 0,
+        "verification-failure": 1,
+        "budget-exceeded": 0,
+        "credential-missing": 0
+      }
+    }
+  ],
+  "totals": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "error": 0,
+    "failure_buckets": {
+      "agent-failure": 0,
+      "model-failure": 0,
+      "harness-error": 0,
+      "verifier-error": 0,
+      "verification-failure": 1,
+      "budget-exceeded": 0,
+      "credential-missing": 0
+    }
+  },
+  "run_results": [
+    {
+      "path": "examples/run-results/failed-run-result.json",
+      "media_type": "application/json",
+      "description": "Failed run-result summarized by this scoreboard."
+    }
+  ]
+}

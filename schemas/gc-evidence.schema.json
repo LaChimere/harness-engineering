@@ -33,7 +33,16 @@
         "properties": {
           "category": {
             "type": "string",
-            "enum": ["broken-reference", "duplicate-id", "stale-schema-version"]
+            "enum": [
+              "broken-reference",
+              "duplicate-id",
+              "stale-schema-version",
+              "verification-evidence",
+              "execution-evidence",
+              "eval-evidence",
+              "trace-evidence",
+              "judge-calibration"
+            ]
           },
           "severity": {
             "$ref": "common.schema.json#/$defs/severity"

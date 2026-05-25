@@ -6,7 +6,12 @@ import {
   pathKind,
   writeTextNoFollowNewFileCreatingDirectories,
 } from '../lib/files.ts';
-import { runGcAudit, serializeGcJson, validateGcEvidenceSemantics } from '../lib/gc.ts';
+import {
+  runGcAudit,
+  serializeGcJson,
+  validateGcEvidenceReferences,
+  validateGcEvidenceSemantics,
+} from '../lib/gc.ts';
 import { isObject } from '../lib/json.ts';
 import { optionValue, parseOptions } from '../lib/options.ts';
 import {
@@ -27,8 +32,15 @@ const valueOptions = new Set([
   'generated-at',
   'previous-audit',
   'repair-actions-dir',
+  'capability-ledger',
+  'verification',
+  'run-results',
+  'scoreboard',
+  'trace',
+  'judge-result',
 ]);
 const flagOptions = new Set<string>();
+const validateFlagOptions = new Set(['skip-reference-checks']);
 
 export async function runGcCommand(
   args: readonly string[],
@@ -70,11 +82,20 @@ async function runGcAuditCommand(
   const generatedAt = optionValue(options, 'generated-at');
   const previousAuditRef = optionValue(options, 'previous-audit');
   const repairActionsDir = optionValue(options, 'repair-actions-dir');
+  const capabilityLedgerPath = optionValue(options, 'capability-ledger');
+  const verificationPath = optionValue(options, 'verification');
+  const runResultsPath = optionValue(options, 'run-results');
+  const scoreboardPath = optionValue(options, 'scoreboard');
+  const tracePath = optionValue(options, 'trace');
+  const judgeResultPath = optionValue(options, 'judge-result');
   const harnessPath = relativePathFromRoot(
     root,
     resolveInsideRoot(root, optionValue(options, 'file') ?? 'harness.yaml', 'Harness file'),
     'Harness file',
   );
+  if (previousAuditRef !== undefined) {
+    await validatePreviousAuditRef(root, previousAuditRef);
+  }
   const audit = await runGcAudit({
     root,
     harnessPath,
@@ -84,11 +105,18 @@ async function runGcAuditCommand(
     ...(generatedAt === undefined ? {} : { generatedAt }),
     ...(previousAuditRef === undefined ? {} : { previousAuditRef }),
     ...(repairActionsDir === undefined ? {} : { repairActionsDir }),
+    ...(capabilityLedgerPath === undefined ? {} : { capabilityLedgerPath }),
+    ...(verificationPath === undefined ? {} : { verificationPath }),
+    ...(runResultsPath === undefined ? {} : { runResultsPath }),
+    ...(scoreboardPath === undefined ? {} : { scoreboardPath }),
+    ...(tracePath === undefined ? {} : { tracePath }),
+    ...(judgeResultPath === undefined ? {} : { judgeResultPath }),
   });
 
   const issues = [
     ...schemas.validate('gc-evidence', audit.evidence).map(formatValidationIssue),
     ...validateGcEvidenceSemantics(audit.evidence),
+    ...(await validateGcEvidenceReferences(audit.evidence, root)),
   ];
   if (issues.length > 0) {
     throw new CliError(
@@ -125,11 +153,22 @@ async function runGcAuditCommand(
   return ExitCode.ok;
 }
 
+async function validatePreviousAuditRef(root: string, previousAuditRef: string): Promise<void> {
+  if (isReferenceOnlyPath(previousAuditRef)) {
+    return;
+  }
+  const absolutePreviousAuditPath = resolveInsideRoot(root, previousAuditRef, 'GC previous audit');
+  await assertNoSymlinkWithinRoot(root, absolutePreviousAuditPath, 'read');
+  if ((await pathKind(absolutePreviousAuditPath)) !== 'file') {
+    throw new CliError(`GC previous audit not found: ${previousAuditRef}`, ExitCode.notFound);
+  }
+}
+
 async function runGcValidateCommand(
   args: readonly string[],
   context: CommandContext,
 ): Promise<ExitCode> {
-  const options = parseOptions(args, valueOptions, flagOptions);
+  const options = parseOptions(args, valueOptions, validateFlagOptions);
   if (options.positionals.length > 1) {
     throw new CliError('gc validate accepts at most one evidence artifact.', ExitCode.usageError);
   }
@@ -147,10 +186,14 @@ async function runGcValidateCommand(
   }
   const document = await loadDocument(absoluteArtifactPath);
   const schemas = await loadSchemaRegistry(context.packageRoot);
+  const skipReferenceChecks = options.flags.has('skip-reference-checks');
   const issues = [
     ...schemas.validate('gc-evidence', document).map(formatValidationIssue),
     ...(isObject(document)
-      ? validateGcEvidenceSemantics(document)
+      ? [
+          ...validateGcEvidenceSemantics(document),
+          ...(skipReferenceChecks ? [] : await validateGcEvidenceReferences(document, root)),
+        ]
       : ['GC evidence must be an object']),
   ];
   const status = issues.length === 0 ? 'passed' : 'failed';
@@ -193,10 +236,24 @@ function renderGcValidationMarkdown(
   return `${lines.join('\n')}\n`;
 }
 
+function isReferenceOnlyPath(path: string): boolean {
+  return path.startsWith('#') || /^[A-Za-z][A-Za-z0-9+.-]*:/.test(path);
+}
+
 function gcHelpText(): string {
   return `harness gc <subcommand>
 
 Subcommands:
   audit      Produce deterministic GC evidence for the selected harness.
-  validate   Validate a GC evidence artifact.`;
+  validate   Validate a GC evidence artifact.
+
+Audit evidence inputs:
+  --verification <path>   Include self-verification evidence.
+  --run-results <path>    Include run-result JSON, JSON array, or JSONL evidence.
+  --scoreboard <path>     Include scoreboard evidence.
+  --trace <path>          Include trace evidence.
+  --judge-result <path>   Include LLM judge-result evidence.
+
+Validate options:
+  --skip-reference-checks   Validate archived evidence shape without resolving local refs.`;
 }

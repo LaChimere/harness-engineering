@@ -29,6 +29,14 @@
       "schema": "schemas/harness.schema.json"
     },
     {
+      "path": "examples/fixtures/gc/failing-scoreboard.json",
+      "schema": "schemas/scoreboard.schema.json"
+    },
+    {
+      "path": "examples/fixtures/gc/failing-trace.json",
+      "schema": "schemas/trace.schema.json"
+    },
+    {
       "path": "examples/policies/approval-policy.yaml",
       "schema": "schemas/approval-policy.schema.json"
     },

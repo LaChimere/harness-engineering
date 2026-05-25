@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 10 and Stages 12 through 14 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 15: evidence-driven GC expansion.
+Stages 1 through 10 and Stages 12 through 15 are complete. Stage 11 optional CI adapters are deferred by user request; the next implementation target is Stage 16 only after a real adopted capability or substrate-backed replacement exists.
 
 ## Goals
 

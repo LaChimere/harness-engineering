@@ -534,28 +534,30 @@ Evidence: Stage 14 adds `harness gc audit` and `harness gc validate` as read-onl
 
 ## Stage 15: Evidence-driven GC expansion
 
-- [ ] Add tool/policy entropy categories when evidence exists.
-- [ ] Add verification entropy categories when evidence exists.
-- [ ] Add execution entropy categories when evidence exists.
-- [ ] Add eval entropy categories when evidence exists.
-- [ ] Add trace entropy categories when evidence exists.
-- [ ] Define thresholds for promoting repeated feedback.
-- [ ] Require holdout evidence for behavioral rule/eval promotion.
-- [ ] Require behavioral promotion to cite holdout results, not only optimization-suite improvement.
-- [ ] Define retirement rules for stale rules/templates/evals.
-- [ ] Ensure promotion/retirement cites evidence artifacts.
-- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
-- [ ] Ensure a single preference cannot become a durable rule.
-- [ ] Ensure LLM-judge evidence follows Stage 7 calibration policy.
-- [ ] Run GC expansion tests.
-- [ ] Run `git diff --check`.
+- [x] Add tool/policy entropy categories when evidence exists.
+- [x] Add verification entropy categories when evidence exists.
+- [x] Add execution entropy categories when evidence exists.
+- [x] Add eval entropy categories when evidence exists.
+- [x] Add trace entropy categories when evidence exists.
+- [x] Document threshold policy for future repeated-feedback promotion without implementing automatic promotion.
+- [x] Document holdout evidence requirements for future behavioral rule/eval promotion.
+- [x] Document that future behavioral promotion must cite holdout results, not only optimization-suite improvement.
+- [x] Document evidence requirements for future stale rule/template/eval retirement.
+- [x] Keep promotion/retirement citation-only in this slice rather than shipping automatic promotion or retirement.
+- [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
+- [x] Ensure a single preference cannot become a durable rule.
+- [x] Ensure LLM-judge evidence follows Stage 7 calibration policy.
+- [x] Run GC expansion tests.
+- [x] Run `git diff --check`.
+
+Evidence: Stage 15 extends `harness gc audit` with optional evidence inputs for self-verification, run-result JSON/arrays/JSONL, scoreboard, trace, and judge-result artifacts. The new evidence-driven categories are `verification-evidence`, `execution-evidence`, `eval-evidence`, `trace-evidence`, and `judge-calibration`; all require schema-valid input artifacts and produce reviewable cleanup slices instead of applying cleanup. `harness gc validate` now checks that local evidence refs, previous-audit refs, promotion/retirement refs, and cleanup targets resolve inside the selected root, while still allowing external URI and fragment-only evidence/decision references where the schema permits references. Cleanup targets must remain local fragment-free files; archived evidence can be shape-checked with `--skip-reference-checks` when the original checkout is unavailable. The duplicate-id scan can now take an explicit `--capability-ledger` path rather than relying only on this repo's planning ledger, and generated cleanup ids are deduplicated when repeated evidence records share an id. Promotion/retirement remains citation-only in this slice: durable rules, templates, and evals are not promoted from one-off preferences, behavioral promotion must include holdout evidence, and retirement requires evidence that the rule/template/eval no longer adds value. Judge GC findings consume schema-valid judge-result calibration status only; full policy digest, threshold, staleness, and blocking-eligibility validation remains in `harness report`. No Stage 13 capability was adopted as a native category in this slice, so Stage 16 remains dormant until a later substrate-backed replacement exists.
 
 ### Stage 15 acceptance criteria
 
-- [ ] Promotion/retirement cites evidence artifacts.
-- [ ] A single preference cannot become a durable rule.
-- [ ] LLM-judge evidence follows Stage 7 calibration policy.
-- [ ] Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
+- [x] Promotion/retirement policy requires evidence citations, but automatic promotion/retirement is not shipped in this slice.
+- [x] A single preference cannot become a durable rule because GC emits evidence only and does not promote rules automatically.
+- [x] LLM-judge evidence follows Stage 7 calibration policy.
+- [x] Behavioral rule/eval promotion cites holdout results, not only optimization-suite improvement.
 
 ## Stage 16: Capability adoption cleanup and migration
 

@@ -23,12 +23,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --target node --outfile ./dist/index.js",
+    "build": "bun -e \"import { rm } from 'node:fs/promises'; await rm('./dist', { recursive: true, force: true })\" && bun build ./src/index.ts --target node --outfile ./dist/index.js",
     "check": "bun run typecheck && bun run lint",
     "lint": "biome check .",
     "prepublishOnly": "bun run build",
     "test:all": "bun run check && bun run test:unit && bun run test:e2e",
-    "test:e2e": "bun run build && bun test tests/e2e",
+    "test:e2e": "bun run build && bun test tests/e2e --test-concurrency 1",
     "test:unit": "bun test tests/cli tests/schemas tests/unit-tests tests/ci-tests",
     "typecheck": "tsc --noEmit"
   },

@@ -71,7 +71,7 @@ The native loop gate requires recorded evidence rather than inferred agent behav
 
 `failure-taxonomy.schema.json` validates taxonomy structure. The starter taxonomy data lives in `examples/failure-taxonomy.yaml` and is checked by the fixture validator so future taxonomy content can evolve through data and CLI checks rather than by rewriting the structural schema.
 
-`gc-evidence.schema.json` intentionally starts with a closed deterministic category set: `broken-reference`, `duplicate-id`, and `stale-schema-version`. New GC categories should be added through a schema-versioned change with fixtures, algorithms, and false-positive policy.
+`gc-evidence.schema.json` uses a closed category set. Current categories cover mechanical harness structure (`broken-reference`, `duplicate-id`, `stale-schema-version`) and evidence-backed validation gaps (`verification-evidence`, `execution-evidence`, `eval-evidence`, `trace-evidence`, `judge-calibration`). New GC categories should be added through a schema-versioned change with fixtures, algorithms, and false-positive policy.
 
 GC expansion depends on this judge calibration policy before any inferential judge evidence can promote or retire durable rules.
 

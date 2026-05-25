@@ -1392,6 +1392,166 @@ test('doctor emits markdown by default', async () => {
   expect(result.stdout).toContain('| local-doc-link-check | skipped | info |');
 });
 
+test('gc audit emits schema-valid JSON for a healthy harness', async () => {
+  const result = await run([
+    'gc',
+    'audit',
+    '--format',
+    'json',
+    '--file',
+    'examples/harness.yaml',
+    '--audit-id',
+    'test-gc-clean',
+    '--generated-at',
+    '2026-05-24T00:00:00Z',
+  ]);
+  expect(result.code).toBe(ExitCode.ok);
+  const evidence = JSON.parse(result.stdout);
+  expect(getString(evidence, 'audit_id')).toBe('test-gc-clean');
+  expect(getArray(evidence, 'findings')).toEqual([]);
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('gc-evidence', evidence)).toEqual([]);
+});
+
+test('gc audit detects deterministic categories', async () => {
+  const brokenReference = await run([
+    'gc',
+    'audit',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/gc/broken-reference-harness.yaml',
+  ]);
+  expect(brokenReference.code).toBe(ExitCode.ok);
+  expect(
+    jsonObjects(getArray(JSON.parse(brokenReference.stdout), 'findings')).some(
+      (finding) => getString(finding, 'category') === 'broken-reference',
+    ),
+  ).toBe(true);
+
+  const stale = await run([
+    'gc',
+    'audit',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/gc/stale-schema-version-harness.yaml',
+  ]);
+  expect(stale.code).toBe(ExitCode.ok);
+  expect(
+    jsonObjects(getArray(JSON.parse(stale.stdout), 'findings')).some(
+      (finding) => getString(finding, 'category') === 'stale-schema-version',
+    ),
+  ).toBe(true);
+
+  const duplicate = await run([
+    'gc',
+    'audit',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/gc/duplicate-doctor-id-harness.yaml',
+  ]);
+  expect(duplicate.code).toBe(ExitCode.ok);
+  const duplicateFinding = jsonObjects(getArray(JSON.parse(duplicate.stdout), 'findings')).find(
+    (finding) => getString(finding, 'category') === 'duplicate-id',
+  );
+  expect(duplicateFinding).toBeDefined();
+  expect(
+    getArray(getObject(duplicateFinding ?? {}, 'proposed_cleanup_slice') ?? {}, 'target_files'),
+  ).toEqual(['examples/fixtures/gc/duplicate-doctor-id-harness.yaml']);
+});
+
+test('gc validate accepts schema-valid evidence and rejects semantic gaps', async () => {
+  const valid = await run(['gc', 'validate', 'examples/gc/evidence.json', '--format', 'json']);
+  expect(valid.code).toBe(ExitCode.ok);
+  expect(getString(JSON.parse(valid.stdout), 'status')).toBe('passed');
+
+  const root = await tempRoot();
+  const invalidPath = join(root, 'invalid-gc.json');
+  await writeFile(
+    invalidPath,
+    JSON.stringify(
+      {
+        schema_version: '0.1.0',
+        audit_id: 'invalid-gc',
+        generated_at: '2026-05-24T00:00:00Z',
+        findings: [
+          {
+            category: 'broken-reference',
+            severity: 'warning',
+            confidence: 0.5,
+            evidence_refs: [{ path: 'harness.yaml' }],
+            proposed_cleanup_slice: {
+              id: 'duplicate-cleanup',
+              description: 'Fragment target.',
+              target_files: ['harness.yaml#/doctor/checks/0'],
+            },
+            blast_radius: 'Single file.',
+            atomicity_notes: 'Invalid semantic fixture.',
+            promotion_decision_refs: [],
+            retirement_decision_refs: [],
+          },
+          {
+            category: 'duplicate-id',
+            severity: 'warning',
+            confidence: 0.5,
+            evidence_refs: [{ path: 'harness.yaml' }],
+            proposed_cleanup_slice: {
+              id: 'duplicate-cleanup',
+              description: 'Duplicate cleanup id.',
+              target_files: ['harness.yaml'],
+            },
+            blast_radius: 'None.',
+            atomicity_notes: 'Invalid semantic fixture.',
+            promotion_decision_refs: [],
+            retirement_decision_refs: [],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+  const invalid = await run(['gc', 'validate', 'invalid-gc.json', '--format', 'json'], root);
+  expect(invalid.code).toBe(ExitCode.validationError);
+  const invalidResult = JSON.parse(invalid.stdout);
+  expect(getString(invalidResult, 'status')).toBe('failed');
+  expect(getArray(invalidResult, 'issues')?.join('\n')).toContain(
+    'duplicates proposed_cleanup_slice.id',
+  );
+  expect(getArray(invalidResult, 'issues')?.join('\n')).toContain(
+    'cleanup target file must not include a fragment',
+  );
+});
+
+test('gc audit writes append-only output', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  const outputPath = '.harness/gc/test-gc.json';
+  const first = await run(
+    ['gc', 'audit', '--format', 'json', '--output', outputPath, '--audit-id', 'append-only-gc'],
+    root,
+  );
+  expect(first.code).toBe(ExitCode.ok);
+  expect(first.stdout).toContain('wrote .harness/gc/test-gc.json');
+
+  const second = await run(['gc', 'audit', '--output', outputPath], root);
+  expect(second.code).toBe(ExitCode.usageError);
+  expect(second.stderr).toContain('GC output already exists');
+});
+
+test('gc audit refuses schema-invalid harnesses', async () => {
+  const result = await run([
+    'gc',
+    'audit',
+    '--file',
+    'examples/fixtures/invalid/harness-with-plugin-key.yaml',
+  ]);
+  expect(result.code).toBe(ExitCode.validationError);
+  expect(result.stderr).toContain('GC audit requires a schema-valid harness');
+});
+
 test('doctor canonicalizes harness paths for deterministic output', async () => {
   const first = await run(['doctor', '--format', 'json', '--file', 'examples/harness.yaml']);
   const second = await run(['doctor', '--format', 'json', '--file', './examples/./harness.yaml']);

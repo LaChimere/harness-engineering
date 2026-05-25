@@ -13,7 +13,7 @@ acceptance_checks:
     status: passed
 checks_run:
   - command:
-      command: python3 -m pip install --target /tmp/harness-schema-validation -r examples/fixtures/requirements.txt && PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py
+      command: python3 -m pip install --target "${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" -r examples/fixtures/requirements.txt && PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py
       timeout_seconds: 120
     status: passed
     evidence:

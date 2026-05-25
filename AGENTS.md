@@ -27,17 +27,16 @@ This repository is the canonical harness-as-code platform for AI coding agents. 
 - The deterministic CLI is the implementation surface for substrate operations.
 - Agent/CLI marketplace or install-surface feasibility must be verified before any plugin/adapter install path or specific host target is promised as available. IDE-only extension hosts are future evidence, not the corrected adapter target.
 - External workflow skills are source material for harness-native capability decisions; do not create an `agent-coding` product namespace, compatibility package, or default quickstart.
+- Keep roadmap-phase wording inside `plans/harness-engineering-platform/`; public docs, code, schemas, examples, fixtures, and tests should describe current capabilities directly.
 
 ## Toolchain decisions
-
-When implementation begins:
 
 - Use TypeScript 6 for implementation.
 - Use Bun for repository package management.
 - Keep the published CLI Node-compatible; end users and plugins must not need Bun.
 - Use explicit `tsc --noEmit` type checks.
-- Add Biome and Lefthook with user-provided configuration rather than inventing unrelated rules.
-- Commit Bun's text lockfile once package metadata exists.
+- Use the configured Biome and Lefthook setup rather than inventing unrelated rules.
+- Keep Bun's text lockfile committed with package metadata.
 
 ## Safety and compatibility
 

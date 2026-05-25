@@ -1,6 +1,6 @@
 # Harness CLI
 
-The deterministic `harness` CLI includes schema validation, Harness doctor checks, verifier-only eval validation, deterministic stub agent runs, behavioral eval runs, trace validation/import, offline LLM-judge policy/result validation, limited-adapter scope validation, native execution-loop evidence validation, and a read-only native agent-facing assessment command. It consumes the local schemas and examples, but it still does not ship an installable host plugin package, CI adapter, skill adapter, live model execution behavior, or formal GC behavior.
+The deterministic `harness` CLI includes schema validation, Harness doctor checks, verifier-only eval validation, deterministic stub agent runs, behavioral eval runs, trace validation/import, offline LLM-judge policy/result validation, limited-adapter scope validation, native execution-loop evidence validation, deterministic GC audit/validation, and a read-only native agent-facing assessment command. It consumes the local schemas and examples, but it still does not ship an installable host plugin package, CI adapter, skill adapter, or live model execution behavior.
 
 ## Commands
 
@@ -12,6 +12,8 @@ harness loop validate --file examples/harness.yaml --continuity examples/continu
 harness validate
 harness migrate
 harness doctor --file examples/harness.yaml
+harness gc audit --file examples/harness.yaml
+harness gc validate examples/gc/evidence.json
 harness run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
 harness eval validate --file examples/harness.yaml
 harness eval run --file examples/harness.yaml
@@ -57,6 +59,16 @@ This is an evidence validator, not an agent runner. It does not execute the star
 
 Doctor JSON conforms to `schemas/doctor-result.schema.json`. `--output <path>` writes Markdown or JSON inside the selected root and rejects symlinked write targets. Doctor does not execute local checks, shell commands, eval verifiers, agents, repairs, GC, or subjective quality scoring.
 
+`harness gc audit` runs deterministic entropy checks and emits Markdown by default or schema-valid JSON with `--format json`. Current categories are intentionally mechanical: broken references, duplicate ids in supported harness-adjacent namespaces, and stale schema-version ranges. GC audit output conforms to `schemas/gc-evidence.schema.json`; each finding includes evidence refs, confidence, a proposed cleanup slice, blast radius, and atomicity notes. `--output <path>` writes inside the selected root and refuses to overwrite existing files, preserving audit history; pass a unique path such as `.harness/gc/<audit-id>.json` for each run, and use `--format json` for artifacts you intend to feed back into `harness gc validate`. GC audit is read-only and never applies cleanup.
+
+`harness gc validate <artifact>` validates a GC evidence artifact against schema and semantic checks such as non-empty evidence refs, non-empty cleanup targets, and unique cleanup slice ids.
+
+GC category false-positive policy:
+
+- `broken-reference` is emitted only from the same deterministic reference resolution used by harness validation. It points at the harness file and should be fixed separately from schema or behavior changes.
+- `duplicate-id` is emitted only for exact duplicate stable ids in supported namespaces currently scanned by GC: doctor check ids, repair-action ids, and capability-ledger ids. It does not infer semantic duplication between differently named items.
+- `stale-schema-version` is emitted only when an `engines.schemas.<name>` range excludes the local schema family version for a known local schema. It does not claim that a migration is safe; it only proposes reviewing the range declaration.
+
 `harness eval validate` runs deterministic verifier-only eval validation. With no explicit task, it reads `harness.yaml`, discovers configured eval task files, validates them against `schemas/eval-task.schema.json`, recomputes the declared dataset hash from the task's environment, oracle, baseline, and artifact references, then runs the task verifier against the oracle and broken twin candidates. The verifier-only runner executes only `command` verifiers whose trust declaration is `sandboxed`, requires `process`, and refuses tasks that declare network, secret, or host-file access. It validates and gates declarations before execution; it does not provide a runtime sandbox, network namespace, filesystem jail, or secret isolation.
 
 Eval validation emits Markdown by default or JSON with `--format json`. `--output <path>` appends a per-invocation run-result JSONL ledger inside the selected root using unique run IDs by default and writes verifier-result JSON shaped by `schemas/verifier-result.schema.json` under `.harness/verifier-results/`, rejecting symlinked write targets; omit `--output` for stable content-derived stdout run IDs, or pass a safe `--run-id` explicitly. Run results use `execution.mode: verifier-only` with separate `harness_status` and `verifier_status` fields so reviewers can distinguish harness/verifier failures from agent/model failures. `harness eval validate` does not run agents, call models, produce agent traces, or compute scoreboards; use `harness eval run` for the deterministic stub runner path.
@@ -94,7 +106,7 @@ The starter policy uses `percent_agreement` with `labeled_sample_minimum: 5` and
 
 `harness init` can create or overwrite starter-managed files, so its `--root` value must stay inside the current working directory. Run `init` from the target repository root, or pass a child directory with `--root`.
 
-The read/report commands (`adapter validate`, `assess`, `loop validate`, `validate`, `doctor`, `trace validate`, `verify`, `report`) and the no-op `migrate` command may point `--root` at another checkout for inspection. Unlike those read/report commands, `harness eval validate`, `harness run`, and `harness eval run` may execute declaration-gated verifier commands in the selected root, including when `--root` points at another checkout. User-provided scope, matrix, file, continuity, verification, task, spec, artifact, doctor-output, eval-output, trace-output, scoreboard-output, assessment input, repair-action, repair-actions-dir, and migration-output paths are still constrained to the selected root; `--trusted-repair-action` accepts only a safe repair-action id. Doctor output, eval output, verifier-result output, trace output, scoreboard output, migration output, and init writes also reject symlinked write targets.
+The read/report commands (`adapter validate`, `assess`, `gc audit`, `gc validate`, `loop validate`, `validate`, `doctor`, `trace validate`, `verify`, `report`) and the no-op `migrate` command may point `--root` at another checkout for inspection. Unlike those read/report commands, `harness eval validate`, `harness run`, and `harness eval run` may execute declaration-gated verifier commands in the selected root, including when `--root` points at another checkout. User-provided scope, matrix, file, continuity, verification, task, spec, artifact, doctor-output, eval-output, trace-output, scoreboard-output, assessment input, repair-action, repair-actions-dir, gc-output, and migration-output paths are still constrained to the selected root; `--trusted-repair-action` accepts only a safe repair-action id. Doctor output, GC output, eval output, verifier-result output, trace output, scoreboard output, migration output, and init writes also reject symlinked write targets.
 
 ## Exit semantics
 
@@ -118,6 +130,8 @@ For `harness run` and `harness eval run`, process exit status is computed from t
 For `harness report`, invalid judge policy/result schemas or judge results that attempt to block without satisfying their referenced policy exit `1`.
 
 For `harness adapter validate`, adapter-scope schema errors, capability-matrix schema errors, and subset violations exit `1`.
+
+For `harness gc audit`, findings are reported inside the evidence artifact while the command exits `0`; usage errors and internal output-schema violations use non-zero exit codes. `harness gc validate` exits `0` for schema-valid and semantically valid GC evidence, or `1` when validation fails.
 
 For `harness assess`, missing or incomplete substrate evidence is reported inside the assessment with `status: missing-harness` or `status: needs-work` while the command exits `0`. Usage errors, root escapes, symlinked inputs, and internal output-schema violations still use the standard non-zero exit codes.
 

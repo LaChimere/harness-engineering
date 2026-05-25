@@ -256,7 +256,7 @@ Stage 7 validation evidence:
 - `bun run check`
 - `bun run test:unit`
 - `bun run build`
-- `PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py`
+- `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`
 - `node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/calibrated-blocking.json`
 - `node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/advisory-only.json`
 - `node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/below-threshold.json`
@@ -321,7 +321,7 @@ Stage 8 validation evidence:
 - `bun run check`
 - `bun run test:unit`
 - `bun run build`
-- `PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py`
+- `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`
 - `git diff --check`
 
 ## Stage 9: Conditional adapter MVP
@@ -355,7 +355,7 @@ Verification evidence:
 - `bun run check`
 - `bun run test:unit`
 - `bun run build`
-- `PYTHONPATH=/tmp/harness-schema-validation python3 examples/fixtures/validate.py`
+- `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`
 - `git diff --check`
 
 ### Stage 9 acceptance criteria
@@ -502,33 +502,35 @@ Evidence: Stage 13 mines external workflow skills only as source material and re
 
 ## Stage 14: GC framework and first deterministic categories
 
-- [ ] Implement `harness gc audit`.
-- [ ] Implement `harness gc validate`.
-- [ ] Add append-only GC evidence output.
-- [ ] Define append-only evidence format such as JSONL, timestamped files, or another durable format.
-- [ ] Document how multiple GC audits are preserved without overwriting.
-- [ ] Define first deterministic categories with explicit algorithms.
-- [ ] Add category for broken references.
-- [ ] Add category for duplicate IDs.
-- [ ] Add category for stale schema versions.
-- [ ] Add passing/failing fixtures for each category.
-- [ ] Document false-positive policy for each category.
-- [ ] Promote Stage 13 capability candidates only when they can be expressed as deterministic GC evidence rather than subjective process scoring.
-- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
-- [ ] Produce ranked atomic cleanup slices.
-- [ ] Include evidence refs and confidence.
-- [ ] Include blast radius and atomicity notes.
-- [ ] Prohibit fully automated cleanup.
-- [ ] Revisit Stage 12 repair-action routing presentation once GC repair evidence exists, including trusted approval provenance, duplicate action ids, risk, sandbox, and review metadata without emitting executable assessment-route commands.
-- [ ] Run GC tests.
-- [ ] Run `git diff --check`.
+- [x] Implement `harness gc audit`.
+- [x] Implement `harness gc validate`.
+- [x] Add append-only GC evidence output.
+- [x] Define append-only evidence format such as JSONL, timestamped files, or another durable format.
+- [x] Document how multiple GC audits are preserved without overwriting.
+- [x] Define first deterministic categories with explicit algorithms.
+- [x] Add category for broken references.
+- [x] Add category for duplicate IDs.
+- [x] Add category for stale schema versions.
+- [x] Add passing/failing fixtures for each category.
+- [x] Document false-positive policy for each category.
+- [x] Promote Stage 13 capability candidates only when they can be expressed as deterministic GC evidence rather than subjective process scoring.
+- [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether Stage 16 cleanup is triggered.
+- [x] Produce ranked atomic cleanup slices.
+- [x] Include evidence refs and confidence.
+- [x] Include blast radius and atomicity notes.
+- [x] Prohibit fully automated cleanup.
+- [x] Revisit Stage 12 repair-action routing presentation once GC repair evidence exists, including trusted approval provenance, duplicate action ids, risk, sandbox, and review metadata without emitting executable assessment-route commands.
+- [x] Run GC tests.
+- [x] Run `git diff --check`.
+
+Evidence: Stage 14 adds `harness gc audit` and `harness gc validate` as read-only deterministic GC commands. Audit output conforms to `schemas/gc-evidence.schema.json`; optional `--output` atomically creates a new file inside the selected root and refuses to overwrite existing files so audit history is append-only. The first deterministic categories are `broken-reference`, `duplicate-id`, and `stale-schema-version`; their algorithms use existing harness reference validation, schema-engine range checks, and stable id scans for doctor checks, repair actions, and the capability ledger. GC audit refuses schema-invalid harnesses instead of reporting a false clean result. Findings include evidence refs, confidence, proposed cleanup slices, blast radius, and atomicity notes; Markdown output includes evidence paths, target files, confidence, and decision refs for review. Finding fixtures live under `examples/fixtures/gc/`, and `examples/gc/evidence.json` is now a truthful no-finding example instead of a synthetic broken-reference claim. Stage 13 capability candidates were not adopted as native GC categories in this slice, so Stage 16 cleanup remains dormant. Repair-action discovery polish is limited to documenting the future policy boundary; production defaults and richer empty-directory distinctions remain candidates for later repair/GC evidence refinement.
 
 ### Stage 14 acceptance criteria
 
-- [ ] Users can run a GC audit and get reviewable cleanup slices tied to evidence.
-- [ ] GC evidence output is append-only and preserves historical audit runs.
-- [ ] Cleanup slices include evidence refs, confidence, blast radius, and atomicity notes; they do not mix unrelated concerns.
-- [ ] No GC category ships unless its inputs, algorithm, false-positive policy, and passing/failing fixtures are documented.
+- [x] Users can run a GC audit and get reviewable cleanup slices tied to evidence.
+- [x] GC evidence output is append-only and preserves historical audit runs.
+- [x] Cleanup slices include evidence refs, confidence, blast radius, and atomicity notes; they do not mix unrelated concerns.
+- [x] No GC category ships unless its inputs, algorithm, false-positive policy, and passing/failing fixtures are documented.
 
 ## Stage 15: Evidence-driven GC expansion
 

@@ -2,6 +2,7 @@ import { runAdapterCommand } from './commands/adapter.ts';
 import { runAssessCommand } from './commands/assess.ts';
 import { runDoctorCommand } from './commands/doctor.ts';
 import { runEvalCommand } from './commands/eval.ts';
+import { runGcCommand } from './commands/gc.ts';
 import { runInit } from './commands/init.ts';
 import { runLoopCommand } from './commands/loop.ts';
 import { runMigrate } from './commands/migrate.ts';
@@ -57,6 +58,8 @@ export async function runCli(args: readonly string[], context: RunContext): Prom
         return await runMigrate(commandArgs, commandContext);
       case 'doctor':
         return await runDoctorCommand(commandArgs, commandContext);
+      case 'gc':
+        return await runGcCommand(commandArgs, commandContext);
       case 'eval':
         return await runEvalCommand(commandArgs, commandContext);
       case 'run':
@@ -92,6 +95,7 @@ Commands:
   validate   Validate harness.yaml shape, engines, and composed references.
   migrate    Emit dry-run/no-op migration evidence.
   doctor     Run deterministic structural harness checks.
+  gc         Audit or validate deterministic GC evidence.
   run        Run deterministic stub agent tasks.
   eval       Run eval validation or deterministic behavioral evals.
   trace      Validate or import normalized traces.

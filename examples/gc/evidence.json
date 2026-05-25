@@ -1,28 +1,6 @@
 {
   "schema_version": "0.1.0",
-  "audit_id": "gc-stage2-example",
+  "audit_id": "gc-clean-example",
   "generated_at": "2026-05-20T00:00:00Z",
-  "findings": [
-    {
-      "category": "broken-reference",
-      "severity": "warning",
-      "confidence": 0.95,
-      "evidence_refs": [
-        {
-          "path": "examples/harness.yaml",
-          "media_type": "application/yaml",
-          "description": "Harness references checked by GC."
-        }
-      ],
-      "proposed_cleanup_slice": {
-        "id": "fix-broken-reference-example",
-        "description": "Repair a broken reference in one harness artifact.",
-        "target_files": ["examples/harness.yaml"]
-      },
-      "blast_radius": "Single harness example file.",
-      "atomicity_notes": "Do not mix reference fixes with schema changes.",
-      "promotion_decision_refs": [],
-      "retirement_decision_refs": []
-    }
-  ]
+  "findings": []
 }

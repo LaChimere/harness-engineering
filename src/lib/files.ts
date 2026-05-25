@@ -62,6 +62,19 @@ export async function writeTextNoFollowCreatingDirectories(
   );
 }
 
+export async function writeTextNoFollowNewFileCreatingDirectories(
+  root: string,
+  path: string,
+  text: string,
+): Promise<void> {
+  await writeFileNoFollowCreatingDirectories(
+    root,
+    path,
+    text,
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW,
+  );
+}
+
 export async function appendTextNoFollowCreatingDirectories(
   root: string,
   path: string,

@@ -16,7 +16,7 @@ except ImportError as error:
     sys.exit(
         "Missing validation dependency: "
         f"{error.name}. Install with: "
-        "python3 -m pip install --target /tmp/harness-schema-validation "
+        'python3 -m pip install --target "${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" '
         "-r examples/fixtures/requirements.txt"
     )
 

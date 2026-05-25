@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 
 import { validateAdapterScopeAgainstMatrix } from '../../src/lib/adapter-scope.ts';
 import { loadDocument } from '../../src/lib/files.ts';
@@ -18,6 +18,7 @@ interface Manifest {
   readonly invalid: readonly InvalidFixture[];
   readonly custom_valid?: readonly CustomValidFixture[];
   readonly custom_invalid?: readonly CustomInvalidFixture[];
+  readonly referenced_evidence?: readonly ReferencedEvidenceFixture[];
   readonly failure_taxonomy_required_codes: readonly string[];
   readonly plugin_capability_matrix_invariants: MatrixInvariantRules;
 }
@@ -44,6 +45,11 @@ interface InvalidFixture {
   readonly expected_keyword: string;
   readonly expected_path: readonly (string | number)[];
   readonly expected_message_contains?: string;
+}
+
+interface ReferencedEvidenceFixture {
+  readonly path: string;
+  readonly reason: string;
 }
 
 interface CustomInvalidFixture {
@@ -99,6 +105,13 @@ test('schema-valid fixtures pass their declared schemas', async () => {
     const document = await loadDocument(fixture.path);
     const schemaName = schemaNameFromPath(fixture.schema);
     expect(schemas.validate(schemaName, document)).toEqual([]);
+  }
+});
+
+test('referenced evidence artifacts exist', async () => {
+  const manifest = await loadManifest();
+  for (const fixture of manifest.referenced_evidence ?? []) {
+    await access(fixture.path);
   }
 });
 

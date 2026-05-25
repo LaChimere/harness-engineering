@@ -17,6 +17,18 @@
       "schema": "schemas/harness.schema.json"
     },
     {
+      "path": "examples/fixtures/gc/broken-reference-harness.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
+      "path": "examples/fixtures/gc/stale-schema-version-harness.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
+      "path": "examples/fixtures/gc/duplicate-doctor-id-harness.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
       "path": "examples/policies/approval-policy.yaml",
       "schema": "schemas/approval-policy.schema.json"
     },

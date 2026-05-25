@@ -355,7 +355,7 @@ Stage 2 should define the minimum viable shapes, not only file names.
 | Module | Responsibility |
 |---|---|
 | Harness substrate | Owns `harness.yaml`, schemas, examples, artifact conventions, and versioning |
-| Harness CLI | Owns deterministic local operations: init, validate, migrate, run, doctor, eval run, trace validate/import, verify, GC audit, report |
+| Harness CLI | Owns deterministic local operations: init, validate, migrate, adapter validate, assess, loop validate, run, doctor, eval run, trace validate/import, verify, GC audit/validate, report |
 | CI adapters | Run CLI checks in stages and publish objective results |
 | Agent/CLI marketplace plugins | Provide the best interactive UX by visualizing and acting on substrate artifacts when the full-plugin tier is proven; first target must be validated against agent/CLI marketplace distribution and host APIs |
 | Native agent adapters | Optional portable agent UX over substrate evidence; added only after CLI/schema contracts exist |

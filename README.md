@@ -30,6 +30,7 @@ node dist/index.js loop validate --file examples/harness.yaml --continuity examp
 node dist/index.js doctor --file examples/harness.yaml
 node dist/index.js health --file examples/harness.yaml --accept-unsandboxed-execution
 node dist/index.js run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
+node dist/index.js runner readiness --file examples/harness.yaml
 node dist/index.js eval validate --file examples/harness.yaml
 node dist/index.js eval run --file examples/harness.yaml
 node dist/index.js trace validate --file examples/harness.yaml
@@ -47,7 +48,7 @@ The npm package metadata and `harness` binary mapping exist, but the package has
 | Tier | Surface | Responsibility |
 |---|---|---|
 | 0 | Harness-as-code substrate | `harness.yaml`, schemas, examples, artifact conventions, and versioning. |
-| 1 | Deterministic CLI | Current `init`, `adapter validate`, `assess`, `gc`, `loop validate`, `validate`, `migrate`, `run`, `doctor`, `health`, `eval`, `trace`, `verify`, and `report`. |
+| 1 | Deterministic CLI | Current `init`, `adapter validate`, `assess`, `gc`, `loop validate`, `validate`, `migrate`, `run`, `runner readiness`, `doctor`, `health`, `eval`, `trace`, `verify`, and `report`. |
 | 2 | Agent/CLI marketplace adapters | Rich guided UX only where a supported full-plugin host and runtime APIs exist; otherwise limited commands/hooks/MCP/skills over the CLI when proven feasible. |
 | 3 | Portable skills | Agent-facing adapters that consume substrate artifacts. |
 | 4 | Optional CI adapters | Objective enforcement or advisory checks for teams that opt in. |

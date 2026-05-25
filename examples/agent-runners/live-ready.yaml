@@ -1,6 +1,6 @@
 schema_version: "0.1.0"
-runner_id: deterministic-stub
-model_profile: examples/model-profiles/stub.yaml
+runner_id: env-live-ready
+model_profile: examples/model-profiles/live-ready.yaml
 prompt_adapter:
   kind: raw
   template: examples/prompts/stub-task.md
@@ -8,7 +8,7 @@ tool_adapter:
   kind: none
   policy: examples/policies/approval-policy.yaml
 task_input: examples/evals/harness-self-test/v1.0.0/task.yaml
-sandbox: examples/policies/sandbox-policy.yaml
+sandbox: examples/policies/live-sandbox-policy.yaml
 approval_policy: examples/policies/approval-policy.yaml
 trace_output: .harness/traces
 trace_redaction:
@@ -17,21 +17,28 @@ trace_redaction:
     - session_id
     - inputs
     - environment_snapshot
+    - started_at
+    - completed_at
+    - duration_ms
+    - exit_code
     - credential_reference
+    - budgets
+    - usage
     - actions
+    - logs
     - artifact_links
   credential_env_vars:
-    - deterministic-stub
+    - HARNESS_LIVE_API_KEY
   refuse_credential_env_references: true
 credential_reference:
-  source: stub
-  name: deterministic-stub
-  purpose: CI-safe recorded response fixture
+  source: env
+  name: HARNESS_LIVE_API_KEY
+  purpose: Future live runner API key reference for readiness only
   scope: per-run
 budgets:
-  max_cost_usd: 0
-  max_total_tokens: 1024
-  max_requests: 1
+  max_cost_usd: 1
+  max_total_tokens: 2048
+  max_requests: 2
   enforcement: hard
   scope: per-run
 timeout_seconds: 300

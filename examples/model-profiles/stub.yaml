@@ -1,4 +1,5 @@
 schema_version: "0.1.0"
+kind: stub
 profile_id: deterministic-stub
 provider: harness-fixture
 model_id: stub-v1

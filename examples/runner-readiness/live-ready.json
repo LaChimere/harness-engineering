@@ -1,0 +1,95 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "runner-readiness-live-ready",
+  "harness_version": "0.1.0",
+  "runner": "examples/agent-runners/live-ready.yaml",
+  "mode": "live",
+  "status": "passed",
+  "live_ready": true,
+  "checks": [
+    {
+      "id": "runner-schema",
+      "status": "passed",
+      "summary": "Runner schema validation passed.",
+      "evidence": [
+        {
+          "path": "examples/agent-runners/live-ready.yaml",
+          "media_type": "application/yaml",
+          "description": "Agent runner artifact."
+        }
+      ]
+    },
+    {
+      "id": "credential-reference",
+      "status": "passed",
+      "summary": "Live runner declares supported environment credential reference HARNESS_LIVE_API_KEY.",
+      "evidence": []
+    },
+    {
+      "id": "budgets",
+      "status": "passed",
+      "summary": "Runner declares hard cost, request, and token budgets.",
+      "evidence": []
+    },
+    {
+      "id": "approval-policy",
+      "status": "passed",
+      "summary": "Runner approval policy reference is present and schema-valid.",
+      "evidence": [
+        {
+          "path": "examples/policies/approval-policy.yaml",
+          "media_type": "application/yaml",
+          "description": "Approval policy."
+        }
+      ]
+    },
+    {
+      "id": "sandbox",
+      "status": "passed",
+      "summary": "Live runner declares container sandbox policy with exact env-only credential scope.",
+      "evidence": [
+        {
+          "path": "examples/policies/live-sandbox-policy.yaml",
+          "media_type": "application/yaml",
+          "description": "Sandbox policy."
+        }
+      ]
+    },
+    {
+      "id": "trace-output",
+      "status": "passed",
+      "summary": "Runner declares trace output path .harness/traces.",
+      "evidence": [
+        {
+          "path": ".harness/traces",
+          "media_type": "application/json",
+          "description": "Trace output path."
+        }
+      ]
+    },
+    {
+      "id": "trace-redaction",
+      "status": "passed",
+      "summary": "Trace redaction policy declares a supported field allowlist and credential env-var refusal.",
+      "evidence": []
+    },
+    {
+      "id": "model-profile",
+      "status": "passed",
+      "summary": "Runner declares live model profile provider example-live-provider.",
+      "evidence": [
+        {
+          "path": "examples/model-profiles/live-ready.yaml",
+          "media_type": "application/yaml",
+          "description": "Model profile."
+        }
+      ]
+    },
+    {
+      "id": "execution-boundary",
+      "status": "passed",
+      "summary": "Readiness checks are non-executing; no model call was made.",
+      "evidence": []
+    }
+  ]
+}

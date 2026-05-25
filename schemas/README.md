@@ -47,6 +47,8 @@ Scoreboards summarize agent-run ledgers by optimization/holdout split and total 
 
 `health-result.schema.json` records local project health checks executed by `harness health`. Health checks are declared in the optional `health` block of `harness.yaml` and reuse the shared `trustRequirements` shape plus the harness's approval and sandbox policy artifacts. The current health runner is declaration-gated and records `sandbox_enforcement: declarative` plus `runtime_enforced: false`; it refuses network, secret, host-file, missing artifact, and unsafe declarations rather than pretending to enforce a stronger runtime sandbox. `harness assess` consumes health-result evidence through scorecard version `0.2.0` as a distinct `project-health` dimension, separate from structural doctor evidence.
 
+`runner-readiness.schema.json` records non-executing readiness checks for agent runners. `harness runner readiness` preserves the deterministic stub path while validating that a future live runner has an explicit environment credential reference, hard cost/token/request budgets, approval and sandbox policy artifacts, a live model profile, repo-local trace output, exact env-only credential scoping, and a schema-defined trace-redaction allowlist that refuses credential environment variable references.
+
 ## Judge policy and inferential review
 
 `judge-policy.schema.json` defines the calibration contract for LLM-mediated review. A policy must include a rubric, labeled sample minimum, agreement metric, numeric blocking threshold, uncertainty notes, stale-calibration window, and below-threshold consequence. The starter policy uses `percent_agreement`; `4 / 5 = 0.8` meets its blocking threshold, while `3 / 5 = 0.6` is below threshold and therefore advisory-only.

@@ -613,23 +613,25 @@ Evidence: Stage 17 adds `harness health` as the executable local project health-
 
 ## Stage 18: Real runner readiness
 
-- [ ] Define the minimum contract for non-stub model/agent runner execution.
-- [ ] Require explicit credential references, cost/token/request budgets, approval policy, sandbox requirements, trace output, and trace redaction/scoping.
-- [ ] Define the supported credential-reference shape for this slice.
-- [ ] Define a field-level trace allowlist and refuse trace fields that reference credential environment variables.
-- [ ] Add refusal cases for trace-redaction or trace-scope violations.
-- [ ] Preserve deterministic stub/recorded runners as CI-safe defaults.
-- [ ] Add refusal cases for missing credentials, missing budgets, unsupported sandbox, and unbounded live execution.
-- [ ] Add readiness docs explaining what is supported now versus what remains planned.
-- [ ] Add tests or fixtures for refusal behavior.
-- [ ] Run `git diff --check`.
+- [x] Define the minimum contract for non-stub model/agent runner execution.
+- [x] Require explicit credential references, cost/token/request budgets, approval policy, sandbox requirements, trace output, and trace redaction/scoping.
+- [x] Define the supported credential-reference shape for this slice.
+- [x] Define a field-level trace allowlist and refuse trace fields that reference credential environment variables.
+- [x] Add refusal cases for trace-redaction or trace-scope violations.
+- [x] Preserve deterministic stub/recorded runners as CI-safe defaults.
+- [x] Add refusal cases for missing credentials, missing budgets, unsupported sandbox, and unbounded live execution.
+- [x] Add readiness docs explaining what is supported now versus what remains planned.
+- [x] Add tests or fixtures for refusal behavior.
+- [x] Run `git diff --check`.
+
+Evidence: Stage 18 adds `harness runner readiness` as a non-executing readiness check for future live runners. The deterministic stub runner remains CI-safe and reports `mode: stub`, `live_ready: false` without requiring live credentials. Explicit live readiness currently supports `credential_reference.source: env`, hard cost/token/request budgets, schema-valid approval policy, container/VM sandbox policy with concrete enforcement, none/restricted network mode, exact env-only credential scope, live model profile, repo-local trace output, and `trace_redaction` with a schema-defined field allowlist, one credential env-var, and `refuse_credential_env_references: true`. Readiness emits `schemas/runner-readiness.schema.json` evidence and refuses unsupported credentials, missing budgets, weak sandbox policy, missing trace output, missing trace redaction, or stub model profile without making a model call. The example live readiness fixture `examples/agent-runners/live-ready.yaml` passes readiness, while tests cover unsupported sandbox and missing trace-redaction refusal. `bun run check`, unit tests, e2e tests, build, fixture validation, and `git diff --check` passed.
 
 ### Stage 18 acceptance criteria
 
-- [ ] No live runner path can execute without explicit credentials, budgets, and trace capture.
-- [ ] Live-runner traces cannot capture secrets or unsupported sensitive data without an explicit redaction/scoping policy.
-- [ ] The product can explain exactly what must be configured before real execution is allowed.
-- [ ] CI-safe validation does not require live credentials.
+- [x] No live runner path can execute without explicit credentials, budgets, and trace capture.
+- [x] Live-runner traces cannot capture secrets or unsupported sensitive data without an explicit redaction/scoping policy.
+- [x] The product can explain exactly what must be configured before real execution is allowed.
+- [x] CI-safe validation does not require live credentials.
 
 ## Stage 19: Recurring maintenance profile substrate and MVP
 

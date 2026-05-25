@@ -45,6 +45,10 @@
       "schema": "schemas/sandbox-policy.schema.json"
     },
     {
+      "path": "examples/policies/live-sandbox-policy.yaml",
+      "schema": "schemas/sandbox-policy.schema.json"
+    },
+    {
       "path": "examples/environments/local.yaml",
       "schema": "schemas/environment.schema.json"
     },
@@ -57,12 +61,24 @@
       "schema": "schemas/model-profile.schema.json"
     },
     {
+      "path": "examples/model-profiles/live-ready.yaml",
+      "schema": "schemas/model-profile.schema.json"
+    },
+    {
       "path": "examples/failure-taxonomy.yaml",
       "schema": "schemas/failure-taxonomy.schema.json"
     },
     {
       "path": "examples/agent-runners/stub.yaml",
       "schema": "schemas/agent-runner.schema.json"
+    },
+    {
+      "path": "examples/agent-runners/live-ready.yaml",
+      "schema": "schemas/agent-runner.schema.json"
+    },
+    {
+      "path": "examples/runner-readiness/live-ready.json",
+      "schema": "schemas/runner-readiness.schema.json"
     },
     {
       "path": "examples/evals/harness-self-test/v1.0.0/task.yaml",
@@ -382,6 +398,20 @@
       "expected_message_contains": "'session_id'"
     },
     {
+      "path": "examples/fixtures/invalid/runner-readiness-live-ready-stub-mode.json",
+      "schema": "schemas/runner-readiness.schema.json",
+      "reason": "Runner readiness evidence must not claim live readiness for stub mode.",
+      "expected_keyword": "const",
+      "expected_path": ["mode"]
+    },
+    {
+      "path": "examples/fixtures/invalid/runner-readiness-live-passed-not-ready.json",
+      "schema": "schemas/runner-readiness.schema.json",
+      "reason": "Passed live runner readiness evidence must mark live_ready true.",
+      "expected_keyword": "const",
+      "expected_path": ["live_ready"]
+    },
+    {
       "path": "examples/fixtures/invalid/repair-action-missing-trust.yaml",
       "schema": "schemas/repair-action.schema.json",
       "reason": "Repair actions must declare trust and sandbox requirements.",
@@ -642,6 +672,7 @@
     "credential-missing",
     "agent-failure",
     "model-failure",
+    "model-profile-stub",
     "sandbox-violation",
     "approval-denied"
   ],

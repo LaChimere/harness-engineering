@@ -17,6 +17,7 @@ engines:
     health-result: ">=0.1 <0.2"
     eval-task: ">=0.1 <0.2"
     agent-runner: ">=0.1 <0.2"
+    runner-readiness: ">=0.1 <0.2"
     trace: ">=0.1 <0.2"
     run-result: ">=0.1 <0.2"
     scoreboard: ">=0.1 <0.2"

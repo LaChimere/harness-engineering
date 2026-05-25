@@ -5,6 +5,7 @@
   "type": "object",
   "required": [
     "schema_version",
+    "kind",
     "profile_id",
     "provider",
     "model_id",
@@ -19,6 +20,10 @@
   "properties": {
     "schema_version": {
       "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["stub", "live"]
     },
     "profile_id": {
       "$ref": "common.schema.json#/$defs/nonEmptyString"

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/runner-readiness.schema.json",
+  "title": "Runner readiness",
+  "description": "Readiness evidence for non-stub runner execution without performing live model calls.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "harness_version",
+    "runner",
+    "mode",
+    "status",
+    "live_ready",
+    "checks"
+  ],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "runner": {
+      "$ref": "common.schema.json#/$defs/artifactRef"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["stub", "live"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed"]
+    },
+    "live_ready": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "summary", "evidence"],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed"]
+          },
+          "failure_code": {
+            "$ref": "common.schema.json#/$defs/failureCode"
+          },
+          "summary": {
+            "$ref": "common.schema.json#/$defs/nonEmptyString"
+          },
+          "evidence": {
+            "$ref": "common.schema.json#/$defs/evidenceLinks"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "failed"
+                }
+              },
+              "required": ["status"]
+            },
+            "then": {
+              "required": ["failure_code"]
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "live_ready": {
+            "const": true
+          }
+        },
+        "required": ["live_ready"]
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "const": "live"
+          },
+          "status": {
+            "const": "passed"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "live"
+          },
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": ["mode", "status"]
+      },
+      "then": {
+        "properties": {
+          "live_ready": {
+            "const": true
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

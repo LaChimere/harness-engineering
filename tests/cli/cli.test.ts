@@ -1667,6 +1667,172 @@ test('health rejects symlinked harness before output preflight reads it', async 
   expect(result.stderr).toContain('Refusing to read through symlink');
 });
 
+test('runner readiness reports stub and live readiness without executing models', async () => {
+  const stub = await run([
+    'runner',
+    'readiness',
+    '--file',
+    'examples/harness.yaml',
+    '--format',
+    'json',
+  ]);
+  expect(stub.code).toBe(ExitCode.ok);
+  const stubReadiness = JSON.parse(stub.stdout);
+  expect(getString(stubReadiness, 'mode')).toBe('stub');
+  expect(getBoolean(stubReadiness, 'live_ready')).toBe(false);
+  expect(
+    getString(
+      objectWithString(
+        jsonObjects(getArray(stubReadiness, 'checks')),
+        'id',
+        'execution-boundary',
+      ) ?? {},
+      'status',
+    ),
+  ).toBe('passed');
+
+  const live = await run([
+    'runner',
+    'readiness',
+    '--file',
+    'examples/harness.yaml',
+    '--runner',
+    'examples/agent-runners/live-ready.yaml',
+    '--format',
+    'json',
+  ]);
+  expect(live.code).toBe(ExitCode.ok);
+  const liveReadiness = JSON.parse(live.stdout);
+  expect(getString(liveReadiness, 'mode')).toBe('live');
+  expect(getBoolean(liveReadiness, 'live_ready')).toBe(true);
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('runner-readiness', liveReadiness)).toEqual([]);
+});
+
+test('runner readiness refuses unsupported live prerequisites', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(
+    join(root, 'examples/model-profiles/live-ready.yaml'),
+    await readFile('examples/model-profiles/live-ready.yaml', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'examples/policies/live-sandbox-policy.yaml'),
+    await readFile('examples/policies/live-sandbox-policy.yaml', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'examples/agent-runners/live-missing-redaction.yaml'),
+    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
+      .replace(
+        'sandbox: examples/policies/live-sandbox-policy.yaml',
+        'sandbox: examples/policies/sandbox-policy.yaml',
+      )
+      .replace(/trace_redaction:\n(?: {2}.+\n)+credential_reference:/, 'credential_reference:'),
+  );
+  const result = await run(
+    [
+      'runner',
+      'readiness',
+      '--runner',
+      'examples/agent-runners/live-missing-redaction.yaml',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.validationError);
+  const readiness = JSON.parse(result.stdout);
+  expect(getString(readiness, 'status')).toBe('failed');
+  expect(
+    getString(
+      objectWithString(jsonObjects(getArray(readiness, 'checks')), 'id', 'sandbox') ?? {},
+      'failure_code',
+    ),
+  ).toBe('sandbox-violation');
+  expect(
+    getString(
+      objectWithString(jsonObjects(getArray(readiness, 'checks')), 'id', 'trace-redaction') ?? {},
+      'failure_code',
+    ),
+  ).toBe('trace-redaction-missing');
+
+  await writeFile(
+    join(root, 'examples/agent-runners/live-stub-model.yaml'),
+    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
+      .replace(
+        'model_profile: examples/model-profiles/live-ready.yaml',
+        'model_profile: examples/model-profiles/stub.yaml',
+      )
+      .replace('trace_output: .harness/traces', 'trace_output: ../../traces'),
+  );
+  const stubModel = await run(
+    [
+      'runner',
+      'readiness',
+      '--runner',
+      'examples/agent-runners/live-stub-model.yaml',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(stubModel.code).toBe(ExitCode.validationError);
+  const stubModelReadiness = JSON.parse(stubModel.stdout);
+  expect(
+    getString(
+      objectWithString(
+        jsonObjects(getArray(stubModelReadiness, 'checks')),
+        'id',
+        'model-profile',
+      ) ?? {},
+      'failure_code',
+    ),
+  ).toBe('model-profile-stub');
+  expect(
+    getString(
+      objectWithString(jsonObjects(getArray(stubModelReadiness, 'checks')), 'id', 'trace-output') ??
+        {},
+      'failure_code',
+    ),
+  ).toBe('trace-output-invalid');
+
+  await writeFile(
+    join(root, 'examples/policies/live-sandbox-policy-extra-secret.yaml'),
+    (await readFile('examples/policies/live-sandbox-policy.yaml', 'utf8'))
+      .replace('    - HARNESS_LIVE_API_KEY', '    - HARNESS_LIVE_API_KEY\n    - EXTRA_API_KEY')
+      .replace('  allowed_secret_refs: []', '  allowed_secret_refs:\n    - vault://extra'),
+  );
+  await writeFile(
+    join(root, 'examples/agent-runners/live-extra-secret.yaml'),
+    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8')).replace(
+      'sandbox: examples/policies/live-sandbox-policy.yaml',
+      'sandbox: examples/policies/live-sandbox-policy-extra-secret.yaml',
+    ),
+  );
+  const extraSecret = await run(
+    [
+      'runner',
+      'readiness',
+      '--runner',
+      'examples/agent-runners/live-extra-secret.yaml',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(extraSecret.code).toBe(ExitCode.validationError);
+  expect(
+    getString(
+      objectWithString(
+        jsonObjects(getArray(JSON.parse(extraSecret.stdout), 'checks')),
+        'id',
+        'sandbox',
+      ) ?? {},
+      'failure_code',
+    ),
+  ).toBe('sandbox-violation');
+});
+
 test('gc audit emits schema-valid JSON for a healthy harness', async () => {
   const result = await run([
     'gc',

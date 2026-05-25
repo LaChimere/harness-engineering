@@ -1,0 +1,17 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "runner-readiness-invalid-live-passed-not-ready",
+  "harness_version": "0.1.0",
+  "runner": "examples/agent-runners/live-ready.yaml",
+  "mode": "live",
+  "status": "passed",
+  "live_ready": false,
+  "checks": [
+    {
+      "id": "runner-schema",
+      "status": "passed",
+      "summary": "Contradictory readiness fixture used to prove passed live mode must be live-ready.",
+      "evidence": []
+    }
+  ]
+}

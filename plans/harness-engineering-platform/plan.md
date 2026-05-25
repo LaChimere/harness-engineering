@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 10 and Stages 12 through 17 are complete. Stage 11 optional CI adapters are deferred by user request. Stage 17 added local project health checks through `harness health` and project-health assessment evidence. The next productization target is Stage 18: real-runner readiness.
+Stages 1 through 10 and Stages 12 through 18 are complete. Stage 11 optional CI adapters are deferred by user request. Stage 18 added non-executing runner readiness checks for future live runners while preserving the deterministic stub path. The next productization target is Stage 19: recurring maintenance profile substrate and entropy-auditor MVP.
 
 ## Goals
 

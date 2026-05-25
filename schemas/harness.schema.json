@@ -62,6 +62,7 @@
             "health-result",
             "eval-task",
             "agent-runner",
+            "runner-readiness",
             "trace",
             "run-result",
             "scoreboard",

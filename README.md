@@ -6,15 +6,15 @@ The product goal is a versioned harness substrate that makes agent work reproduc
 
 ## Current status
 
-This repository has completed the agent-practice mining slice. It has not shipped an installable adapter package, CI adapter, native skill package, or live agent runtime.
+This repository has completed the CLI-first harness substrate through recurring-profile evidence loops. It has not shipped an installable adapter package, CI adapter, native skill package, scheduler daemon, or live agent runtime.
 
-The roadmap is approved in `plans/harness-engineering-platform/`. The initial schemas and examples are available under `schemas/` and `examples/`, and the initial `harness` CLI is implemented in `src/`. GitHub Copilot CLI is the first **limited adapter** target, not a full-plugin target. The repo includes an adapter-scope manifest and `harness adapter validate`, execution-loop validation over continuity and self-verification evidence, declared local project health checks through `harness health`, `harness assess` as the read-only native agent-facing assessment adapter, deterministic and evidence-driven `harness gc audit/validate`, and `plans/harness-engineering-platform/capability-ledger.yaml` for harness-native capability candidates mined from external workflow skill source material. No installable host package, CI adapter, native skill adapter, or live model runner is available from this repository today.
+The roadmap is approved in `plans/harness-engineering-platform/`. The schemas and examples are available under `schemas/` and `examples/`, and the `harness` CLI is implemented in `src/` with a Node-compatible bundle under `dist/` after `bun run build`. GitHub Copilot CLI is the first **limited adapter** target, not a full-plugin target. The repo includes an adapter-scope manifest and `harness adapter validate`, execution-loop validation over continuity and self-verification evidence, declared local project health checks through `harness health`, `harness assess` as the read-only native agent-facing assessment adapter, deterministic and evidence-driven `harness gc audit/validate`, deterministic recurring profile runs through `harness profile validate/run`, and `plans/harness-engineering-platform/capability-ledger.yaml` for harness-native capability candidates mined from external workflow skill source material. No installable host package, CI adapter, native skill adapter, scheduler daemon, or live model runner is available from this repository today.
 
 ## Entrypoint matrix
 
 | Entrypoint | Status now | Intended role | Current concreteness |
 |---|---|---|---|
-| CLI plus `harness.yaml` | The local CLI includes `init`, `adapter validate`, `assess`, `gc audit/validate`, `loop validate`, `validate`, `migrate`, `doctor`, `health`, deterministic stub `run`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is not yet a published npm package and does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, project health checks, evals, traces, verification, execution-loop evidence gates, deterministic and evidence-driven GC evidence, adapter-scope checks, native assessment, and reports. | Available locally in this checkout. |
+| CLI plus `harness.yaml` | The local CLI includes `init`, `adapter validate`, `assess`, `gc audit/validate`, `profile validate/run`, `loop validate`, `validate`, `migrate`, `doctor`, `health`, deterministic stub `run`, external-candidate import, `runner readiness`, `eval validate`, deterministic `eval run`, `trace validate/import`, `verify`, `report`, and offline judge policy/result validation. It is package-shaped but not yet published to a registry, and it does not call live models. | Host-agnostic substrate for init, validation, migration, runs, doctor checks, project health checks, evals, traces, verification, execution-loop evidence gates, deterministic and evidence-driven GC evidence, recurring profile handoffs, adapter-scope checks, native assessment, and reports. | Available locally in this checkout and package dry-run smoke. |
 | Agent/CLI marketplace adapter or plugin | A GitHub Copilot CLI limited-adapter scope manifest and validator exist. No installable host package is shipped yet, so users cannot enable an adapter runtime from this repository today. | Guided setup, dashboards, repairs, annotations, trace/eval navigation, and CLI management inside supported coding-agent or CLI hosts. Limited adapters may expose only commands, hooks, MCP tools, or skills over the CLI. | Feasibility is recorded; runtime packaging is not shipped. |
 | External workflow skill source material | External skills are learning material only; they are not a product surface, dependency, or default quickstart. | Mine useful practices into harness-native capability decisions without creating an `agent-coding` namespace or compatibility package. | Captured in the capability ledger. |
 | CI adapters | Planned optional enforcement only. No CI contract exists yet. | Blocking or advisory checks for teams that want objective harness gates. | Planned. |
@@ -33,6 +33,8 @@ node dist/index.js run examples/evals/harness-self-test/v1.0.0/task.yaml --file 
 node dist/index.js runner readiness --file examples/harness.yaml
 node dist/index.js eval validate --file examples/harness.yaml
 node dist/index.js eval run --file examples/harness.yaml
+node dist/index.js profile validate examples/profiles/gc-stability.yaml
+node dist/index.js profile run examples/profiles/gc-stability.yaml --gc-evidence examples/gc/evidence.json --health-result examples/health/results/pass.json
 node dist/index.js trace validate --file examples/harness.yaml
 node dist/index.js verify --spec examples/verification/stage3-self-verification.yaml
 node dist/index.js report --file examples/harness.yaml --doctor-result examples/doctor/results/pass.json
@@ -41,7 +43,23 @@ node dist/index.js report --file examples/harness.yaml --judge-result examples/j
 
 Use `node dist/index.js init` from a downstream target repository to create a starter `harness.yaml`; the source checkout keeps its canonical starter under `examples/harness.yaml`.
 
-The npm package metadata and `harness` binary mapping exist, but the package has not been published.
+The npm package metadata, package file list, and `harness` binary mapping exist and are covered by a package dry-run smoke test, but the package has not been published.
+
+## CLI-first downstream quickstart
+
+Until the package is published, use a local checkout for the fastest adoption smoke test:
+
+```bash
+bun run build
+node dist/index.js init
+node dist/index.js validate
+node dist/index.js health --accept-unsandboxed-execution --format json --output .harness/health/quickstart-health.json
+node dist/index.js assess --format json --health-result .harness/health/quickstart-health.json
+```
+
+For a package-shaped smoke test, run `bun pm pack --ignore-scripts`, unpack the tarball in a scratch directory, and invoke the bundled `dist/index.js` from that unpacked package. The e2e suite exercises this packed-content path; it does not claim that the package has been published to a registry.
+
+The starter writes `harness.yaml`, schema-backed `examples/`, and `.harness/` artifact directories. The safe default path uses local validation, declared health checks, deterministic stub runs, GC evidence, and recurring profile handoffs. Live model execution, scheduler daemons, CI enforcement, and host plugins are planned or optional paths only.
 
 ## Product layers
 

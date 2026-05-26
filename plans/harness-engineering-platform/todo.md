@@ -665,7 +665,7 @@ Evidence: The pre-slice GC audit produced `findings: []`. Stage 18.5 adds `harne
 - [x] Promote Stage 13 capability candidates owned by recurring profiles only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
 - [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
 - [x] Run profile tests/evals where available.
-- [ ] Run `git diff --check`.
+- [x] Run `git diff --check`.
 
 Evidence: The pre-slice project GC audit produced `findings: []`, and the capability ledger still has no adopted/superseded or cleanup-eligible entries. Stage 19 adds `schemas/recurring-profile.schema.json` and `schemas/profile-run.schema.json`, plus `harness profile validate` and `harness profile run` as deterministic single-run profile commands. The MVP `examples/profiles/gc-stability.yaml` consumes GC evidence and health-result evidence, evaluates structured trigger and stop-condition thresholds, emits hashed evidence inputs and a profile-run handoff artifact, and records deterministic summary actions only. The profile does not run GC, schedule itself, execute cleanup, mutate repository files, call models, or write capability-ledger adoption state. Tests cover clean stop behavior, dirty not-met behavior, and previous-run clean streak continuity. `bun run check`, unit tests, e2e tests, build, fixture validation, and `git diff --check` passed.
 
@@ -679,24 +679,26 @@ Evidence: The pre-slice project GC audit produced `findings: []`, and the capabi
 
 ## Stage 20: Delivery surface and adoption packaging
 
-- [ ] Harden package contents for external users.
-- [ ] Document the CLI-first quickstart from install/invoke through first health check and evidence review.
-- [ ] Verify schema distribution and examples are included in the deliverable package.
-- [ ] Add a sandboxed downstream adoption smoke test that runs install/invoke -> init -> health -> evidence inspection -> assessment with health evidence.
-- [ ] Require the downstream smoke test to reach at least 8/10 on the scorecard version that adds `project-health`, improving on the Stage 13 downstream baseline of 5/9 without reinterpreting the old denominator.
-- [ ] Ensure the downstream smoke test has no critical gaps for initialization, local health evidence, and basic assessment/report output.
-- [ ] Document unsupported paths clearly: full plugin, CI enforcement, and live runners remain optional or planned until proven.
-- [ ] Ensure adapter and CI guidance remain projections over CLI/schema artifacts.
-- [ ] Run package/build validation.
-- [ ] Run `git diff --check`.
+- [x] Harden package contents for external users.
+- [x] Document the CLI-first quickstart from install/invoke through first health check and evidence review.
+- [x] Verify schema distribution and examples are included in the deliverable package.
+- [x] Add a sandboxed downstream adoption smoke test that runs install/invoke -> init -> health -> evidence inspection -> assessment with health evidence.
+- [x] Require the downstream smoke test to reach at least 8/10 on the scorecard version that adds `project-health`, improving on the Stage 13 downstream baseline of 5/9 without reinterpreting the old denominator.
+- [x] Ensure the downstream smoke test has no critical gaps for initialization, local health evidence, and basic assessment/report output.
+- [x] Document unsupported paths clearly: full plugin, CI enforcement, and live runners remain optional or planned until proven.
+- [x] Ensure adapter and CI guidance remain projections over CLI/schema artifacts.
+- [x] Run package/build validation.
+- [x] Run `git diff --check`.
+
+Evidence: The pre-slice project GC audit produced `findings: []`, and the capability ledger still has no adopted/superseded or cleanup-eligible entries. Stage 20 adds package dry-run coverage that verifies delivery artifacts such as `dist/index.js`, schemas, examples, docs, and README are included, plus a packed-content smoke that unpacks the tarball and initializes a downstream project from the packaged CLI bundle. The downstream e2e smoke now initializes a project, validates it, runs health checks, generates GC/profile evidence, inspects health evidence through `harness assess`, and asserts the scorecard version with `project-health` reaches at least `8/10`. README and CLI docs now include the CLI-first quickstart, package dry-run/packed-content status, generated artifact expectations, and explicit unsupported paths for host plugins, CI enforcement, scheduler daemons, and provider-backed live model execution. `bun run check`, unit tests, e2e tests, build, fixture validation, and `git diff --check` passed.
 
 ### Stage 20 acceptance criteria
 
-- [ ] A downstream user can install or invoke the CLI and initialize a harness without repo-author handholding.
-- [ ] Quickstart explains generated artifacts, safe defaults, and next health-check command.
-- [ ] The downstream smoke test reaches at least 8/10 on the scorecard version that adds `project-health`.
-- [ ] Package contents include dist, schemas, examples, docs, and no implementation-only assumptions.
-- [ ] Public docs distinguish current product support from planned adapters, CI, and live-runner paths.
+- [x] A downstream user can install or invoke the CLI and initialize a harness without repo-author handholding.
+- [x] Quickstart explains generated artifacts, safe defaults, and next health-check command.
+- [x] The downstream smoke test reaches at least 8/10 on the scorecard version that adds `project-health`.
+- [x] Package contents include dist, schemas, examples, docs, and no implementation-only assumptions.
+- [x] Public docs distinguish current product support from planned adapters, CI, and live-runner paths.
 
 ## Cross-cutting checks before each stage
 

@@ -29,6 +29,114 @@ const fixtureRoot = join(testDirectory, 'projects/minimal-consumer');
 const commandTimeoutMs = 10_000;
 const e2eTestTimeoutMs = 120_000;
 const fallbackExitCode = 70;
+const runtimePath = process.execPath;
+
+test(
+  'package dry run includes CLI delivery artifacts',
+  async () => {
+    await assertCliBuilt();
+    const packageJson = await readJsonObject(join(repoRoot, 'package.json'));
+    expect(getString(getObject(packageJson, 'bin') ?? {}, 'harness')).toBe('./dist/index.js');
+    expect(getArray(packageJson, 'files')).toEqual([
+      'dist',
+      'schemas',
+      'examples',
+      'docs',
+      'README.md',
+      'LICENSE',
+    ]);
+
+    const pack = await runProcess(repoRoot, runtimePath, [
+      'pm',
+      'pack',
+      '--dry-run',
+      '--ignore-scripts',
+    ]);
+    expectSuccess(pack, ['bun', 'pm', 'pack', '--dry-run']);
+    const packedPaths = packedFilePaths(pack.stdout);
+    for (const expected of [
+      'package.json',
+      'LICENSE',
+      'dist/index.js',
+      'schemas/harness.schema.json',
+      'schemas/profile-run.schema.json',
+      'examples/harness.yaml',
+      'examples/profiles/gc-stability.yaml',
+      'docs/cli.md',
+      'README.md',
+    ]) {
+      expect(packedPaths.has(expected)).toBe(true);
+    }
+    for (const packedPath of packedPaths) {
+      expect(packedPath.startsWith('src/')).toBe(false);
+      expect(packedPath.startsWith('tests/')).toBe(false);
+      expect(packedPath.startsWith('plans/')).toBe(false);
+      expect(packedPath.startsWith('.harness/')).toBe(false);
+    }
+  },
+  e2eTestTimeoutMs,
+);
+
+test(
+  'packed CLI contents initialize a downstream project',
+  async () => {
+    await assertCliBuilt();
+    const parent = await mkdtemp(join(await realpath(tmpdir()), 'harness-pack-e2e-'));
+    try {
+      const pack = await runProcess(repoRoot, runtimePath, [
+        'pm',
+        'pack',
+        '--filename',
+        join(parent, 'harness-engineering.tgz'),
+        '--ignore-scripts',
+        '--quiet',
+      ]);
+      expectSuccess(pack, ['bun', 'pm', 'pack']);
+      const extractDir = join(parent, 'extract');
+      await mkdir(extractDir);
+      expectSuccess(
+        await runProcess(extractDir, 'tar', ['-xzf', join(parent, 'harness-engineering.tgz')]),
+        ['tar', '-xzf'],
+      );
+      const packageRoot = join(extractDir, 'package');
+      const downstreamRoot = join(parent, 'downstream');
+      await mkdir(downstreamRoot);
+      const packedCli = join(packageRoot, 'dist/index.js');
+      const packageJson = await readJsonObject(join(packageRoot, 'package.json'));
+      expect(getString(getObject(packageJson, 'bin') ?? {}, 'harness')).toBe('./dist/index.js');
+      await expectFile(packageRoot, 'schemas/harness.schema.json');
+      await expectFile(packageRoot, 'examples/harness.yaml');
+      expectSuccess(await runProcess(downstreamRoot, runtimePath, [packedCli, 'version']), [
+        'packed harness version',
+      ]);
+      expectSuccess(await runProcess(downstreamRoot, runtimePath, [packedCli, 'init']), [
+        'packed harness init',
+      ]);
+      expectSuccess(await runProcess(downstreamRoot, runtimePath, [packedCli, 'validate']), [
+        'packed harness validate',
+      ]);
+      const healthPath = '.harness/health/packed-health.json';
+      expectSuccess(
+        await runProcess(downstreamRoot, runtimePath, [
+          packedCli,
+          'health',
+          '--accept-unsandboxed-execution',
+          '--format',
+          'json',
+          '--output',
+          healthPath,
+        ]),
+        ['packed harness health'],
+      );
+      expect(getString(await readJsonObject(join(downstreamRoot, healthPath)), 'status')).toBe(
+        'passed',
+      );
+    } finally {
+      await rm(parent, { recursive: true, force: true });
+    }
+  },
+  e2eTestTimeoutMs,
+);
 
 test(
   'built CLI initializes and exercises a downstream project end to end',
@@ -82,6 +190,44 @@ test(
         ['health'],
       );
       expect(getString(await readJsonObject(join(root, healthPath)), 'status')).toBe('passed');
+
+      const gcPath = '.harness/gc/e2e-gc.json';
+      expectSuccess(
+        await runHarness(root, [
+          'gc',
+          'audit',
+          '--format',
+          'json',
+          '--output',
+          gcPath,
+          '--audit-id',
+          'e2e-gc-clean',
+          '--generated-at',
+          '2026-05-26T00:00:00Z',
+        ]),
+        ['gc', 'audit'],
+      );
+      const profilePath = '.harness/profiles/e2e-profile.json';
+      expectSuccess(
+        await runHarness(root, [
+          'profile',
+          'run',
+          'examples/profiles/gc-stability.yaml',
+          '--gc-evidence',
+          gcPath,
+          '--health-result',
+          healthPath,
+          '--output',
+          profilePath,
+          '--run-id',
+          'e2e-profile',
+          '--format',
+          'json',
+        ]),
+        ['profile', 'run'],
+      );
+      const profileRun = await readJsonObject(join(root, profilePath));
+      expect(getString(getObject(profileRun, 'handoff') ?? {}, 'status')).toBe('met');
 
       expectSuccess(
         await runHarness(root, [
@@ -214,6 +360,12 @@ test(
           'status',
         ),
       ).toBe('partial');
+      const mixedProjectHealth = objectWithString(
+        jsonObjects(getArray(mixedLedgerAssessment, 'scorecard')),
+        'id',
+        'project-health',
+      );
+      expect(getString(mixedProjectHealth ?? {}, 'status')).toBe('present');
 
       const assessmentRunResultPath = '.harness/e2e-assessment-run-result.json';
       await writeFile(
@@ -238,6 +390,15 @@ test(
         '.harness/reports/e2e-report.md',
       ]);
       expect(getString(assessment, 'status')).toBe('ready');
+      const maturity = getObject(assessment, 'maturity') ?? {};
+      expect(getNumber(maturity, 'score')).toBeGreaterThanOrEqual(8);
+      expect(getNumber(maturity, 'max_score')).toBe(10);
+      const projectHealth = objectWithString(
+        jsonObjects(getArray(assessment, 'scorecard')),
+        'id',
+        'project-health',
+      );
+      expect(getString(projectHealth ?? {}, 'status')).toBe('present');
       expect(
         getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route'),
       ).toBe('execution-loop');
@@ -576,18 +737,23 @@ async function runAndParseJson(root: string, args: readonly string[]): Promise<J
 }
 
 async function runHarness(cwd: string, args: readonly string[]): Promise<CliResult> {
-  return await runProcess(cwd, 'node', ['--no-warnings', cliPath, ...args]);
+  return await runProcess(cwd, runtimePath, [cliPath, ...args], {
+    commandLabel: [runtimePath, cliPath, ...args].join(' '),
+  });
 }
 
 async function runHarnessBin(cwd: string, args: readonly string[]): Promise<CliResult> {
-  if (process.platform === 'win32') {
-    return await runHarness(cwd, args);
+  const binPath = await packageHarnessBinPath();
+  if (process.platform !== 'win32' && (await commandExists('node'))) {
+    return await runProcess(cwd, binPath, args, { commandLabel: ['harness', ...args].join(' ') });
   }
-  return await runProcess(cwd, await packageHarnessBinPath(), args);
+  return await runProcess(cwd, runtimePath, [binPath, ...args], {
+    commandLabel: [runtimePath, binPath, ...args].join(' '),
+  });
 }
 
 async function runProjectTest(cwd: string): Promise<CliResult> {
-  return await runProcess(cwd, process.execPath, ['run', 'test'], { commandLabel: 'bun run test' });
+  return await runProcess(cwd, runtimePath, ['run', 'test'], { commandLabel: 'bun run test' });
 }
 
 async function runProcess(
@@ -714,6 +880,14 @@ function killWindowsProcessTree(
   killer.on('error', onError);
 }
 
+async function commandExists(command: string): Promise<boolean> {
+  const checker =
+    process.platform === 'win32'
+      ? await runProcess(repoRoot, 'where', [command])
+      : await runProcess(repoRoot, '/bin/sh', ['-c', `command -v ${command}`]);
+  return checker.code === exitCode.ok;
+}
+
 function e2eEnvironment(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { NO_COLOR: '1' };
   for (const key of [
@@ -760,6 +934,17 @@ async function packageHarnessBinPath(): Promise<string> {
     throw new Error('package.json must declare a bin object.');
   }
   return join(repoRoot, requiredString(bin, 'harness'));
+}
+
+function packedFilePaths(stdout: string): ReadonlySet<string> {
+  const paths = new Set<string>();
+  for (const line of stdout.split(/\r?\n/)) {
+    const match = /^packed\s+\S+\s+(.+)$/.exec(line.trim());
+    if (match?.[1] !== undefined) {
+      paths.add(match[1]);
+    }
+  }
+  return paths;
 }
 
 function expectSuccess(result: CliResult, args: readonly string[]): void {
@@ -857,6 +1042,11 @@ function requiredString(object: JsonObject, key: string): string {
 function getString(object: JsonObject, key: string): string | undefined {
   const value = object[key];
   return typeof value === 'string' ? value : undefined;
+}
+
+function getNumber(object: JsonObject, key: string): number {
+  const value = object[key];
+  return typeof value === 'number' ? value : 0;
 }
 
 function getObject(object: JsonObject, key: string): JsonObject | undefined {

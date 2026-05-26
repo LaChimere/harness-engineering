@@ -17,6 +17,8 @@ harness gc audit --file examples/harness.yaml
 harness gc validate examples/gc/evidence.json
 harness run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
 harness runner readiness --file examples/harness.yaml
+harness profile validate examples/profiles/gc-stability.yaml
+harness profile run examples/profiles/gc-stability.yaml --gc-evidence examples/gc/evidence.json --health-result examples/health/results/pass.json
 harness eval validate --file examples/harness.yaml
 harness eval run --file examples/harness.yaml
 harness trace validate --file examples/harness.yaml
@@ -91,6 +93,12 @@ Eval validation emits Markdown by default or JSON with `--format json`. `--outpu
 `harness runner readiness` validates runner readiness without executing a model call. The default runner remains the deterministic stub runner and reports `mode: stub`, `live_ready: false`. Explicit live-runner readiness currently supports `credential_reference.source: env`, hard cost/token/request budgets, a schema-valid live model profile, a container or VM sandbox policy with concrete enforcement, none/restricted network mode, and an exact env-only credential scope, local trace output, and `trace_redaction` with a schema-defined field allowlist, one credential env-var, and `refuse_credential_env_references: true`. Missing credentials, budgets, supported sandbox, trace output, trace redaction, or live model profile are reported as failed readiness checks; live readiness does not require live credentials to be present and never calls a model.
 
 `harness profile validate <profile>` validates a recurring-profile contract, and `harness profile run <profile>` executes one deterministic profile run against explicit evidence inputs. Stage 19 ships `examples/profiles/gc-stability.yaml`, which consumes GC evidence and health-result evidence, evaluates structured trigger and stop-condition thresholds, and emits `schemas/profile-run.schema.json` handoff evidence. Profile runs are single CLI invocations: no scheduler, daemon, cleanup mutation, capability-ledger adoption, repository writes beyond the requested profile-run output, model call, or narrative generation is performed. The MVP action is a deterministic `summary` projection over evidence fields.
+
+## Packaging and downstream adoption
+
+The package metadata exposes the Node-compatible `harness` binary at `dist/index.js` and includes `dist`, `schemas`, `examples`, `docs`, `README.md`, and `LICENSE`. The package is not published yet, but package dry-run and packed-content smoke tests verify those delivery artifacts are present and can initialize a downstream project. A downstream project can initialize a harness, validate it, run health checks, inspect health evidence through `harness assess`, and run the GC stability profile without repo-author handholding.
+
+Current unsupported delivery paths remain explicit: no installable host plugin, no CI enforcement adapter, no scheduler daemon, and no provider-backed live model execution ships in this package slice.
 
 `harness eval run` discovers configured eval task files and runs the runner-bound task's deterministic stub cases end-to-end. The current runner supports exactly one configured eval task for the selected runner; multi-task runner mapping is a future capability. The harness self-test runs both oracle and broken-twin cases without live credentials, records agent-run results in `.harness/run-results.jsonl`, writes traces under the runner's `trace_output`, writes verifier results under `.harness/verifier-results/`, writes agent outputs under `.harness/agent-outputs/`, and writes a scoreboard under `.harness/scoreboards/`. Re-running the same `--run-id` replaces prior ledger entries for that run id. Scoreboards summarize optimization/holdout splits and separate agent/model, harness, verifier, budget, credential, and verification failure buckets. The broken-twin case is intentionally counted as an `agent-failure` run-result while the overall eval run passes when that expected failure is observed.
 

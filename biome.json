@@ -20,6 +20,55 @@
       "recommended": true,
       "correctness": {
         "useSingleJsDocAsterisk": "error"
+      },
+      "style": {
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["kebab-case"]
+          }
+        },
+        "useNamingConvention": {
+          "level": "error",
+          "options": {
+            "conventions": [
+              {
+                "selector": {
+                  "kind": "interface"
+                },
+                "match": "I(.+)",
+                "formats": ["PascalCase"]
+              },
+              {
+                "selector": {
+                  "kind": "typeParameter"
+                },
+                "match": "T(.+)",
+                "formats": ["PascalCase"]
+              },
+              {
+                "selector": {
+                  "kind": "enum"
+                },
+                "formats": ["PascalCase"]
+              },
+              {
+                "selector": {
+                  "kind": "enumMember"
+                },
+                "formats": ["PascalCase"]
+              },
+              {
+                "selector": {
+                  "kind": "classMember",
+                  "modifiers": ["private"]
+                },
+                "match": "_(.+)",
+                "formats": ["camelCase"]
+              }
+            ]
+          }
+        }
       }
     }
   },

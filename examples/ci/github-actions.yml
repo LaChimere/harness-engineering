@@ -25,7 +25,7 @@ jobs:
         run: bun run build
 
       - name: Prepare evidence directories
-        run: mkdir -p .harness/doctor .harness/health .harness/gc .harness/verifier-results .harness/reports
+        run: mkdir -p .harness/doctor .harness/health .harness/gc .harness/reports
 
       - name: Validate harness configuration
         run: node dist/index.js validate --file examples/harness.yaml
@@ -40,7 +40,7 @@ jobs:
         run: node dist/index.js gc audit --file examples/harness.yaml --format json --output .harness/gc/ci-gc.json
 
       - name: Validate deterministic eval fixtures
-        run: node dist/index.js eval validate --file examples/harness.yaml --output .harness/verifier-results/ci-eval-validate.jsonl
+        run: node dist/index.js eval validate --file examples/harness.yaml --output .harness/run-results.jsonl
 
       - name: Validate trace fixtures
         run: node dist/index.js trace validate --file examples/harness.yaml --format json > .harness/reports/ci-trace-validation.json

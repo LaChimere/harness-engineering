@@ -30,6 +30,6 @@ artifacts:
     description: Node-compatible CLI entrypoint.
 unresolved_risks: []
 evidence_links:
-  - path: docs/cli.md
+  - path: docs/guides/cli.md
     media_type: text/markdown
     description: CLI command and exit semantics documentation.

@@ -564,7 +564,7 @@ test('assess requires harness-generated report text for scoreboard/report maturi
     '--scoreboard',
     'examples/scoreboards/self-test.json',
     '--report',
-    'docs/cli.md',
+    'docs/guides/cli.md',
   ]);
   expect(result.code).toBe(ExitCode.ok);
   const assessment = JSON.parse(result.stdout);

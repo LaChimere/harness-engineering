@@ -62,7 +62,7 @@ test(
       'schemas/profile-run.schema.json',
       'examples/harness.yaml',
       'examples/profiles/gc-stability.yaml',
-      'docs/cli.md',
+      'docs/guides/cli.md',
       'README.md',
     ]) {
       expect(packedPaths.has(expected)).toBe(true);

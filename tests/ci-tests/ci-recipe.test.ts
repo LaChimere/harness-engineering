@@ -27,7 +27,7 @@ test('GitHub Actions CI recipe stays CLI-first and evidence-backed', async () =>
     'node dist/index.js doctor --file examples/harness.yaml --format json --output .harness/doctor/ci-doctor.json',
     'node dist/index.js health --file examples/harness.yaml --accept-unsandboxed-execution --format json --output .harness/health/ci-health.json',
     'node dist/index.js gc audit --file examples/harness.yaml --format json --output .harness/gc/ci-gc.json',
-    'node dist/index.js eval validate --file examples/harness.yaml --output .harness/verifier-results/ci-eval-validate.jsonl',
+    'node dist/index.js eval validate --file examples/harness.yaml --output .harness/run-results.jsonl',
     'node dist/index.js trace validate --file examples/harness.yaml --format json > .harness/reports/ci-trace-validation.json',
   ]) {
     expect(commands).toContain(expected);

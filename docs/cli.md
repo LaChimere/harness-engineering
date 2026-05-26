@@ -8,7 +8,7 @@ The deterministic `harness` CLI includes schema validation, Harness doctor check
 harness init
 harness adapter validate
 harness assess --file examples/harness.yaml --format json
-harness loop validate --file examples/harness.yaml --continuity examples/continuity/stage10-loop-state.yaml --verification examples/verification/stage10-completion.yaml
+harness loop validate --file examples/harness.yaml --continuity examples/continuity/execution-loop-state.yaml --verification examples/verification/execution-loop-completion.yaml
 harness validate
 harness migrate
 harness doctor --file examples/harness.yaml
@@ -22,7 +22,7 @@ harness profile run examples/profiles/gc-stability.yaml --gc-evidence examples/g
 harness eval validate --file examples/harness.yaml
 harness eval run --file examples/harness.yaml
 harness trace validate --file examples/harness.yaml
-harness verify --spec examples/verification/stage3-self-verification.yaml
+harness verify --spec examples/verification/schema-self-verification.yaml
 harness report --file examples/harness.yaml --judge-result examples/judges/results/advisory-only.json
 ```
 
@@ -38,7 +38,7 @@ harness report --file examples/harness.yaml --judge-result examples/judges/resul
 
 It does not run doctor checks, eval verifiers, agents, or migrations.
 
-`harness adapter validate` validates the adapter-scope manifest against `schemas/adapter-scope.schema.json`, validates the capability matrix against `schemas/plugin-capability-matrix.schema.json`, then runs semantic subset checks. By default it validates `examples/adapters/github-copilot-cli/adapter-scope.json` against `examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json`; pass `--scope`, `--matrix`, or `--root` to inspect different artifacts inside a selected root. The command proves schema validity and capability-matrix subset conformance only: the selected limited-adapter scope does not overclaim matrix evidence, unsupported CLI management modes, authoritative local state, or preview-backed writes without proven repair UI support. It does not prove that the selected host can install, bootstrap, distribute, or execute this adapter. It does not install a host plugin, run a host marketplace package, reimplement doctor/eval logic, or execute write actions.
+`harness adapter validate` validates the adapter-scope manifest against `schemas/adapter-scope.schema.json`, validates the capability matrix against `schemas/plugin-capability-matrix.schema.json`, then runs semantic subset checks. By default it validates `examples/adapters/github-copilot-cli/adapter-scope.json` against `examples/plugin-capabilities/agent-cli-capability-matrix.json`; pass `--scope`, `--matrix`, or `--root` to inspect different artifacts inside a selected root. The command proves schema validity and capability-matrix subset conformance only: the selected limited-adapter scope does not overclaim matrix evidence, unsupported CLI management modes, authoritative local state, or preview-backed writes without proven repair UI support. It does not prove that the selected host can install, bootstrap, distribute, or execute this adapter. It does not install a host plugin, run a host marketplace package, reimplement doctor/eval logic, or execute write actions.
 
 `harness assess` is the native agent-facing adapter path. It emits a provisional schema-backed assessment as Markdown by default or JSON with `--format json`, using `schemas/assessment.schema.json`. The JSON form is the machine-readable surface for agents, plugins, skills, and CI adapters; `skills/harness-engineering/` remains intentionally deferred so the repository does not introduce a skill-only source of truth. The approved plan records external workflow skills only as source material for harness-native capability candidates.
 
@@ -92,7 +92,7 @@ Eval validation emits Markdown by default or JSON with `--format json`. `--outpu
 
 `harness runner readiness` validates runner readiness without executing a model call. The default runner remains the deterministic stub runner and reports `mode: stub`, `live_ready: false`. Explicit live-runner readiness currently supports `credential_reference.source: env`, hard cost/token/request budgets, a schema-valid live model profile, a container or VM sandbox policy with concrete enforcement, none/restricted network mode, and an exact env-only credential scope, local trace output, and `trace_redaction` with a schema-defined field allowlist, one credential env-var, and `refuse_credential_env_references: true`. Missing credentials, budgets, supported sandbox, trace output, trace redaction, or live model profile are reported as failed readiness checks; live readiness does not require live credentials to be present and never calls a model.
 
-`harness profile validate <profile>` validates a recurring-profile contract, and `harness profile run <profile>` executes one deterministic profile run against explicit evidence inputs. Stage 19 ships `examples/profiles/gc-stability.yaml`, which consumes GC evidence and health-result evidence, evaluates structured trigger and stop-condition thresholds, and emits `schemas/profile-run.schema.json` handoff evidence. Profile runs are single CLI invocations: no scheduler, daemon, cleanup mutation, capability-ledger adoption, repository writes beyond the requested profile-run output, model call, or narrative generation is performed. The MVP action is a deterministic `summary` projection over evidence fields.
+`harness profile validate <profile>` validates a recurring-profile contract, and `harness profile run <profile>` executes one deterministic profile run against explicit evidence inputs. The current profile example is `examples/profiles/gc-stability.yaml`, which consumes GC evidence and health-result evidence, evaluates structured trigger and stop-condition thresholds, and emits `schemas/profile-run.schema.json` handoff evidence. Profile runs are single CLI invocations: no scheduler, daemon, cleanup mutation, capability-ledger adoption, repository writes beyond the requested profile-run output, model call, or narrative generation is performed. The MVP action is a deterministic `summary` projection over evidence fields.
 
 ## Packaging and downstream adoption
 
@@ -184,10 +184,10 @@ Example:
 
 ```yaml
 schema_version: "0.1.0"
-verification_id: stage3-cli-skeleton
-spec_ref: plans/harness-engineering-platform/plan.md#stage-3-cli-skeleton
+verification_id: cli-skeleton
+spec_ref: plans/harness-engineering-platform/plan.md
 spec_reread:
-  ref: plans/harness-engineering-platform/plan.md#stage-3-cli-skeleton
+  ref: plans/harness-engineering-platform/plan.md
   timestamp: "2026-05-21T00:00:00Z"
   digest: sha256:d4bafe7d022d54172884fafc7e9c5696e2a3aa17b685228a900f407e245e6e53
   status: matched
@@ -202,4 +202,4 @@ unresolved_risks: []
 evidence_links: []
 ```
 
-The repository copy lives at `examples/verification/stage3-self-verification.yaml`.
+The repository copy lives at `examples/verification/schema-self-verification.yaml`.

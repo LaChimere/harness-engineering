@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1.0",
   "result_id": "judge-blocking-below-threshold",
-  "run_id": "stage7-invalid-run",
+  "run_id": "judge-policy-invalid-run",
   "policy_ref": "examples/judges/policy.yaml",
   "policy_digest": "sha256:16c624712971179282d2178dba74cf1be6946127b25d31677230f67e43d829f1",
   "policy_id": "harness-self-test-judge-policy",

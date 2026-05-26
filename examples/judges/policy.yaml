@@ -42,6 +42,6 @@ calibration_examples:
     human_label: supported
     judge_label: supported
 evidence:
-  - path: plans/harness-engineering-platform/design.md#stage-7-llm-judge-and-inferential-review-policy
+  - path: plans/harness-engineering-platform/design.md
     media_type: text/markdown
     description: Approved judge policy requirements.

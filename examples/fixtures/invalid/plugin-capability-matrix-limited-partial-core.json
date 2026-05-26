@@ -92,8 +92,8 @@
           "note": "Fixture evidence."
         }
       ],
-      "stage9_consequence": "proceed-limited-adapter",
-      "stage9_scope_summary": "Fixture."
+      "tier_consequence": "proceed-limited-adapter",
+      "adapter_selection_scope_summary": "Fixture."
     }
   ],
   "schema_revalidation": {
@@ -116,7 +116,7 @@
   "decision": {
     "selected_host_id": "partial-core-host",
     "selected_tier": "limited-adapter",
-    "stage9_consequence": "proceed-limited-adapter",
+    "tier_consequence": "proceed-limited-adapter",
     "rationale": "Fixture deliberately marks a partial core capability as limited-adapter."
   }
 }

@@ -63,7 +63,7 @@ export async function loadRecurringProfile(input: {
   const capabilityId = getValue(document, 'declared_capability_id');
   if (capabilityId !== undefined && capabilityId !== null) {
     throw new CliError(
-      'Stage 19 MVP profiles must not declare capability adoption. Leave declared_capability_id null until a separately approved capability adoption exists.',
+      'Recurring profile MVPs must not declare capability adoption. Leave declared_capability_id null until a separately approved capability adoption exists.',
       ExitCode.validationError,
     );
   }
@@ -293,7 +293,7 @@ function validatePreviousRun(profile: JsonObject, previousRun: JsonObject): void
   }
   if (getValue(previousRun, 'declared_capability_id') !== null) {
     throw new CliError(
-      'previous profile run declared_capability_id must be null for the Stage 19 MVP.',
+      'previous profile run declared_capability_id must be null for the recurring profile MVP.',
       ExitCode.validationError,
     );
   }

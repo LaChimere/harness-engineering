@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
-verification_id: stage10-completion
-spec_ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+verification_id: execution-loop-completion
+spec_ref: plans/harness-engineering-platform/plan.md
 spec_reread:
-  ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+  ref: plans/harness-engineering-platform/plan.md
   timestamp: "2026-05-21T00:20:00Z"
   digest: sha256:b9dd75047643888cf9a1a8cef4ed62c1c62c518d98dd086d7a2dd291b8397f08
   status: matched
@@ -25,7 +25,7 @@ acceptance_checks:
     status: passed
   - id: startup-verification-recorded
     expected: Startup verification runs before work begins and is recorded in continuity state.
-    actual: examples/continuity/stage10-loop-state.yaml records the passed startup self-verification as the first progress event.
+    actual: examples/continuity/execution-loop-state.yaml records the passed startup self-verification as the first progress event.
     status: passed
   - id: handoff-artifact-ready
     expected: Long-running work has a handoff artifact before completion is claimed.
@@ -55,7 +55,7 @@ artifacts:
   - path: src/lib/execution-loop.ts
     media_type: text/typescript
     description: Native execution-loop semantic gate implementation.
-  - path: examples/continuity/stage10-loop-state.yaml
+  - path: examples/continuity/execution-loop-state.yaml
     media_type: application/yaml
     description: Continuity state consumed by the loop validator.
 unresolved_risks: []
@@ -66,12 +66,12 @@ evidence_links:
   - path: examples/policies/sandbox-policy.yaml
     media_type: application/yaml
     description: Sandbox policy read before completion.
-  - path: examples/verification/stage10-startup.yaml
+  - path: examples/verification/execution-loop-startup.yaml
     media_type: application/yaml
     description: Startup self-verification evidence consumed by continuity state.
-  - path: examples/continuity/stage10-loop-state.yaml
+  - path: examples/continuity/execution-loop-state.yaml
     media_type: application/yaml
     description: Continuity state with startup and completion progress evidence.
-  - path: plans/harness-engineering-platform/todo.md#stage-10-native-execution-loop-and-continuity-adapter
+  - path: plans/harness-engineering-platform/todo.md
     media_type: text/markdown
     description: Execution-loop checklist.

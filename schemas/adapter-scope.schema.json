@@ -11,7 +11,7 @@
     "matrix_ref",
     "selected_host_id",
     "capability_tier",
-    "stage9_consequence",
+    "tier_consequence",
     "surface_kind",
     "distribution_surface",
     "cli_management_modes",
@@ -42,8 +42,8 @@
     "capability_tier": {
       "$ref": "plugin-capability.schema.json#/$defs/capabilityTier"
     },
-    "stage9_consequence": {
-      "$ref": "plugin-capability.schema.json#/$defs/stage9Consequence"
+    "tier_consequence": {
+      "$ref": "plugin-capability.schema.json#/$defs/adapterSelectionConsequence"
     },
     "surface_kind": {
       "$ref": "plugin-capability.schema.json#/$defs/surfaceKind"

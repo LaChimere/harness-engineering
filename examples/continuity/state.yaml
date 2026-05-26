@@ -1,5 +1,5 @@
 schema_version: "0.1.0"
-session_id: harness-stage2-example
+session_id: harness-schema-substrate-example
 feature_list:
   - id: schema-substrate
     title: Define the schema substrate.

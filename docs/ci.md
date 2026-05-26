@@ -33,7 +33,7 @@ node dist/index.js assess --file examples/harness.yaml --format json --doctor-re
 
 ## Out of scope
 
-The Stage 11 recipe does not:
+The The CI recipe does not:
 
 - install or enable a host plugin;
 - provide CI-specific schemas or rule engines;

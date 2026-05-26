@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
 verification_id: unexecuted-check
-spec_ref: plans/harness-engineering-platform/plan.md#stage-3-cli-skeleton
+spec_ref: plans/harness-engineering-platform/plan.md
 spec_reread:
-  ref: plans/harness-engineering-platform/plan.md#stage-3-cli-skeleton
+  ref: plans/harness-engineering-platform/plan.md
   timestamp: "2026-05-21T00:00:00Z"
   digest: sha256:d4bafe7d022d54172884fafc7e9c5696e2a3aa17b685228a900f407e245e6e53
   status: matched

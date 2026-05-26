@@ -1,8 +1,8 @@
 schema_version: "0.1.0"
-verification_id: stage10-completion-wrapped-command
-spec_ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+verification_id: execution-loop-completion-wrapped-command
+spec_ref: plans/harness-engineering-platform/plan.md
 spec_reread:
-  ref: plans/harness-engineering-platform/plan.md#stage-10-native-execution-loop-and-continuity-adapter
+  ref: plans/harness-engineering-platform/plan.md
   timestamp: "2026-05-21T00:20:00Z"
   digest: sha256:b9dd75047643888cf9a1a8cef4ed62c1c62c518d98dd086d7a2dd291b8397f08
   status: matched
@@ -25,7 +25,7 @@ acceptance_checks:
     status: passed
   - id: startup-verification-recorded
     expected: Startup verification runs before work begins and is recorded in continuity state.
-    actual: examples/continuity/stage10-loop-state.yaml records startup verification.
+    actual: examples/continuity/execution-loop-state.yaml records startup verification.
     status: passed
   - id: handoff-artifact-ready
     expected: Long-running work has a handoff artifact before completion is claimed.
@@ -53,6 +53,6 @@ evidence_links:
   - path: examples/policies/sandbox-policy.yaml
     media_type: application/yaml
     description: Sandbox policy read before completion.
-  - path: examples/continuity/stage10-loop-state.yaml
+  - path: examples/continuity/execution-loop-state.yaml
     media_type: application/yaml
     description: Continuity state consumed by the loop validator.

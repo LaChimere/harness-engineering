@@ -179,7 +179,7 @@ export async function buildAssessment(request: AssessmentRequest): Promise<JsonO
     scorecard_version: '0.2.0',
     scorecard,
     missing_primitives: missingPrimitives,
-    rollout_stage_plan: rolloutStagePlan(scorecard),
+    rollout_plan: rolloutPlan(scorecard),
     recommendations,
     implementation_routing: implementationRouting,
     artifacts_read: sortedArtifactsRead,
@@ -221,11 +221,11 @@ export function renderAssessmentMarkdown(assessment: JsonObject): string {
     }
   }
   lines.push('');
-  lines.push('## Rollout stage plan');
+  lines.push('## Rollout plan');
   lines.push('');
-  for (const stage of jsonObjects(getArray(assessment, 'rollout_stage_plan') ?? [])) {
+  for (const step of jsonObjects(getArray(assessment, 'rollout_plan') ?? [])) {
     lines.push(
-      `- ${markdownText(getString(stage, 'stage') ?? 'stage')} (${markdownText(getString(stage, 'status') ?? 'unknown')}): ${markdownText(getString(stage, 'title') ?? '')}`,
+      `- ${markdownText(getString(step, 'step') ?? 'step')} (${markdownText(getString(step, 'status') ?? 'unknown')}): ${markdownText(getString(step, 'title') ?? '')}`,
     );
   }
   lines.push('');
@@ -1194,19 +1194,19 @@ function recommendationsFor(input: {
   return recommendations;
 }
 
-function rolloutStagePlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
+function rolloutPlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
   const present = new Set(
     scorecard.filter((item) => item.status === 'present').map((item) => item.id),
   );
-  const stages = [
+  const steps = [
     {
-      stage: 'stage-0',
+      step: 'bootstrap',
       title: 'Bootstrap harness source and schema validation.',
       required: ['harness-source'],
       actions: ['Run harness init if harness.yaml is missing.', 'Run harness validate.'],
     },
     {
-      stage: 'stage-1',
+      step: 'policy-and-doctor',
       title: 'Add policy, sandbox, and structural doctor checks.',
       required: ['policy-sandbox', 'doctor-evidence'],
       actions: [
@@ -1215,7 +1215,7 @@ function rolloutStagePlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
       ],
     },
     {
-      stage: 'stage-2',
+      step: 'behavioral-evidence',
       title: 'Exercise eval, run, trace, and scoreboard evidence.',
       required: ['eval-plans', 'run-results', 'trace-evidence', 'scoreboard-report'],
       actions: [
@@ -1225,7 +1225,7 @@ function rolloutStagePlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
       ],
     },
     {
-      stage: 'stage-3',
+      step: 'continuity-gates',
       title: 'Gate long-running work with continuity and self-verification.',
       required: ['continuity-loop'],
       actions: [
@@ -1234,24 +1234,24 @@ function rolloutStagePlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
       ],
     },
     {
-      stage: 'stage-4',
+      step: 'repair-routing',
       title: 'Route agent implementation through reviewed repair or fallback paths.',
       required: ['repair-routing'],
       actions: ['Add repair-action artifacts or document CLI fallback approval flow.'],
     },
   ];
   let foundNext = false;
-  return stages.map((stage) => {
-    const done = stage.required.every((id) => present.has(id));
+  return steps.map((step) => {
+    const done = step.required.every((id) => present.has(id));
     const status = done ? 'done' : foundNext ? 'later' : 'next';
     if (!done && !foundNext) {
       foundNext = true;
     }
     return {
-      stage: stage.stage,
-      title: stage.title,
+      step: step.step,
+      title: step.title,
       status,
-      actions: stage.actions,
+      actions: step.actions,
     };
   });
 }

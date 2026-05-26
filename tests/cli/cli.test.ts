@@ -180,8 +180,8 @@ test('adapter validate rejects scope that overclaims partial matrix capabilities
   await mkdir(join(root, 'examples/adapters/github-copilot-cli'), { recursive: true });
   await mkdir(join(root, 'examples/plugin-capabilities'), { recursive: true });
   await writeFile(
-    join(root, 'examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json'),
-    await readFile('examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json', 'utf8'),
+    join(root, 'examples/plugin-capabilities/agent-cli-capability-matrix.json'),
+    await readFile('examples/plugin-capabilities/agent-cli-capability-matrix.json', 'utf8'),
   );
   const scope = await loadDocument('examples/adapters/github-copilot-cli/adapter-scope.json');
   if (!isObject(scope)) {
@@ -219,8 +219,8 @@ test('adapter validate rejects resolution order modes absent from scope manageme
   await mkdir(join(root, 'examples/adapters/github-copilot-cli'), { recursive: true });
   await mkdir(join(root, 'examples/plugin-capabilities'), { recursive: true });
   await writeFile(
-    join(root, 'examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json'),
-    await readFile('examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json', 'utf8'),
+    join(root, 'examples/plugin-capabilities/agent-cli-capability-matrix.json'),
+    await readFile('examples/plugin-capabilities/agent-cli-capability-matrix.json', 'utf8'),
   );
   const scope = await loadDocument('examples/adapters/github-copilot-cli/adapter-scope.json');
   if (!isObject(scope)) {
@@ -945,7 +945,7 @@ test('loop validate accepts start and complete gates', async () => {
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
   ]);
   expect(startResult.code).toBe(ExitCode.ok);
   expect(startResult.stdout).toContain('harness loop validate ok');
@@ -958,9 +958,9 @@ test('loop validate accepts start and complete gates', async () => {
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
     '--verification',
-    'examples/verification/stage10-completion.yaml',
+    'examples/verification/execution-loop-completion.yaml',
   ]);
   expect(completeResult.code).toBe(ExitCode.ok);
   expect(completeResult.stdout).toContain('phase: complete');
@@ -974,13 +974,13 @@ test('loop validate accepts start and complete gates', async () => {
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
     '--verification',
-    join(process.cwd(), 'examples/verification/stage10-completion.yaml'),
+    join(process.cwd(), 'examples/verification/execution-loop-completion.yaml'),
   ]);
   expect(absoluteVerificationResult.code).toBe(ExitCode.ok);
   expect(absoluteVerificationResult.stdout).toContain(
-    'completion verification: examples/verification/stage10-completion.yaml',
+    'completion verification: examples/verification/execution-loop-completion.yaml',
   );
 });
 
@@ -1094,7 +1094,7 @@ test('loop validate refuses completion when acceptance evidence fails', async ()
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
     '--verification',
     'examples/fixtures/execution-loop/completion-failed-acceptance.yaml',
   ]);
@@ -1109,7 +1109,7 @@ test('loop validate refuses completion when required check evidence fails', asyn
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
     '--verification',
     'examples/fixtures/execution-loop/completion-failed-check.yaml',
   ]);
@@ -1124,7 +1124,7 @@ test('loop validate refuses completion without required doctor evidence', async 
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
     '--verification',
     'examples/fixtures/execution-loop/completion-missing-doctor.yaml',
   ]);
@@ -1140,7 +1140,7 @@ test('loop validate refuses wrapped command strings as required check evidence',
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
     '--verification',
     'examples/fixtures/execution-loop/completion-wrapped-command.yaml',
   ]);
@@ -1157,7 +1157,7 @@ test('loop validate refuses completion without policy and sandbox artifact evide
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
     '--verification',
     'examples/fixtures/execution-loop/completion-missing-policy-evidence.yaml',
   ]);
@@ -1176,7 +1176,7 @@ test('loop validate refuses completion without handoff artifacts', async () => {
     '--continuity',
     'examples/fixtures/execution-loop/completion-missing-handoff-state.yaml',
     '--verification',
-    'examples/verification/stage10-completion.yaml',
+    'examples/verification/execution-loop-completion.yaml',
   ]);
   expect(result.code).toBe(ExitCode.validationError);
   expect(result.stdout).toContain('LOOP_HANDOFF_MISSING');
@@ -1191,7 +1191,7 @@ test('loop validate refuses completion when continuity does not link completion 
     '--continuity',
     'examples/fixtures/execution-loop/completion-unlinked-state.yaml',
     '--verification',
-    'examples/verification/stage10-completion.yaml',
+    'examples/verification/execution-loop-completion.yaml',
   ]);
   expect(result.code).toBe(ExitCode.validationError);
   expect(result.stdout).toContain('LOOP_COMPLETION_PROGRESS_MISSING');
@@ -1204,7 +1204,7 @@ test('loop validate requires completion verification evidence for complete phase
     '--file',
     'examples/harness.yaml',
     '--continuity',
-    'examples/continuity/stage10-loop-state.yaml',
+    'examples/continuity/execution-loop-state.yaml',
   ]);
   expect(result.code).toBe(ExitCode.usageError);
   expect(result.stderr).toContain('requires --verification');
@@ -1217,7 +1217,7 @@ test('loop validate rejects continuity and verification paths that escape root',
   await run(['init'], root);
   await writeFile(
     join(parent, 'continuity.yaml'),
-    await readFile('examples/continuity/stage10-loop-state.yaml', 'utf8'),
+    await readFile('examples/continuity/execution-loop-state.yaml', 'utf8'),
   );
 
   const continuityEscape = await run(
@@ -1230,14 +1230,14 @@ test('loop validate rejects continuity and verification paths that escape root',
   await copyStage10LoopArtifacts(root);
   await writeFile(
     join(parent, 'completion.yaml'),
-    await readFile('examples/verification/stage10-completion.yaml', 'utf8'),
+    await readFile('examples/verification/execution-loop-completion.yaml', 'utf8'),
   );
   const verificationEscape = await run(
     [
       'loop',
       'validate',
       '--continuity',
-      'examples/continuity/stage10-loop-state.yaml',
+      'examples/continuity/execution-loop-state.yaml',
       '--verification',
       '../completion.yaml',
     ],
@@ -1257,11 +1257,11 @@ test('loop validate rejects symlinked continuity and verification inputs', async
   await copyStage10LoopArtifacts(root);
   await writeFile(
     join(outside, 'continuity.yaml'),
-    await readFile('examples/continuity/stage10-loop-state.yaml', 'utf8'),
+    await readFile('examples/continuity/execution-loop-state.yaml', 'utf8'),
   );
   await writeFile(
     join(outside, 'completion.yaml'),
-    await readFile('examples/verification/stage10-completion.yaml', 'utf8'),
+    await readFile('examples/verification/execution-loop-completion.yaml', 'utf8'),
   );
   await symlink(join(outside, 'continuity.yaml'), join(root, 'continuity-link.yaml'));
   await symlink(join(outside, 'completion.yaml'), join(root, 'completion-link.yaml'));
@@ -1278,7 +1278,7 @@ test('loop validate rejects symlinked continuity and verification inputs', async
       'loop',
       'validate',
       '--continuity',
-      'examples/continuity/stage10-loop-state.yaml',
+      'examples/continuity/execution-loop-state.yaml',
       '--verification',
       'completion-link.yaml',
     ],
@@ -2814,7 +2814,7 @@ test('report rejects judge results that try to block without satisfied policy', 
   ]);
   expect(mismatchedRunResult.code).toBe(ExitCode.validationError);
   expect(mismatchedRunResult.stderr).toContain(
-    'run_id stage7-example-run does not match run result run-schema-smoke-001',
+    'run_id judge-policy-example-run does not match run result run-schema-smoke-001',
   );
   expect(mismatchedRunResult.stderr).toContain('is not linked from run result judge_results');
 });
@@ -2844,7 +2844,7 @@ test('report validates judge results linked from run-result artifacts', async ()
     JSON.stringify(
       {
         schema_version: '0.1.0',
-        run_id: 'stage7-semantic-invalid-run',
+        run_id: 'judge-policy-semantic-invalid-run',
         kind: 'eval',
         suite_id: 'harness-self-test',
         task_id: 'schema-smoke',
@@ -3263,9 +3263,9 @@ test('run executes a deterministic stub task and writes agent artifacts', async 
       'run',
       'examples/evals/harness-self-test/v1.0.0/task.yaml',
       '--run-id',
-      'stage6-single',
+      'stub-single',
       '--session-id',
-      'session-stage6',
+      'session-stub',
       '--format',
       'json',
     ],
@@ -3295,7 +3295,7 @@ test('run executes a deterministic stub task and writes agent artifacts', async 
 
   const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
   expect(schemas.validate('trace', trace)).toEqual([]);
-  expect(getString(trace, 'session_id')).toBe('session-stage6');
+  expect(getString(trace, 'session_id')).toBe('session-stub');
   expect(getString(getObject(trace, 'credential_reference') ?? {}, 'source')).toBe('stub');
   expect(getNumberForTest(getObject(trace, 'budgets') ?? {}, 'max_requests')).toBe(1);
   expect(getString(getObject(trace, 'usage') ?? {}, 'source')).toBe('stub');
@@ -3324,9 +3324,9 @@ test('run imports an external candidate and writes external-import artifacts', a
       '--external-model-id',
       'copilot-cli',
       '--run-id',
-      'stage18-5-import',
+      'external-import-import',
       '--session-id',
-      'session-stage18-5',
+      'session-external-import',
       '--format',
       'json',
     ],
@@ -3408,7 +3408,7 @@ test('run imports an external candidate and writes external-import artifacts', a
       '--external-model-id',
       'copilot-cli',
       '--run-id',
-      'stage18-5-live-runner-import',
+      'external-import-live-runner-import',
       '--format',
       'json',
     ],
@@ -3417,7 +3417,7 @@ test('run imports an external candidate and writes external-import artifacts', a
   expect(liveRunnerImport.code).toBe(ExitCode.ok);
   const liveRunnerRunResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
   const liveRunnerRunResult = liveRunnerRunResults.find((entry) =>
-    requiredStringForTest(entry, 'run_id').startsWith('stage18-5-live-runner-import'),
+    requiredStringForTest(entry, 'run_id').startsWith('external-import-live-runner-import'),
   );
   expect(liveRunnerRunResult).toBeDefined();
   expect(getString(liveRunnerRunResult ?? {}, 'kind')).toBe('external-import');
@@ -3428,7 +3428,7 @@ test('run refuses to replace agent-run evidence with external-import evidence', 
   const root = await tempRoot();
   await run(['init'], root);
   await writeFile(join(root, 'candidate.txt'), 'schema-smoke passes\nexternal replacement\n');
-  const baseRunId = 'stage18-5-ledger-kind';
+  const baseRunId = 'external-import-ledger-kind';
 
   const agentRun = await run(['run', '--run-id', baseRunId, '--format', 'json'], root);
   expect(agentRun.code).toBe(ExitCode.ok);
@@ -3454,7 +3454,7 @@ test('eval run refuses to replace external-import evidence before writing artifa
   const root = await tempRoot();
   await run(['init'], root);
   await writeFile(join(root, 'candidate.txt'), 'schema-smoke passes\nexternal import remains\n');
-  const baseRunId = 'stage18-5-eval-ledger-kind';
+  const baseRunId = 'external-import-eval-ledger-kind';
 
   const externalImport = await run(
     ['run', '--external-candidate', 'candidate.txt', '--run-id', baseRunId, '--format', 'json'],
@@ -3485,7 +3485,7 @@ test('run refuses unsafe external candidates and records verifier failures hones
   await writeFile(join(parent, 'outside.txt'), 'schema-smoke passes outside root.\n');
 
   const escaped = await run(
-    ['run', '--external-candidate', '../outside.txt', '--run-id', 'stage18-5-escape'],
+    ['run', '--external-candidate', '../outside.txt', '--run-id', 'external-import-escape'],
     root,
   );
   expect(escaped.code).toBe(ExitCode.usageError);
@@ -3498,7 +3498,7 @@ test('run refuses unsafe external candidates and records verifier failures hones
       '--external-candidate',
       'bad-candidate.txt',
       '--run-id',
-      'stage18-5-failed',
+      'external-import-failed',
       '--format',
       'json',
     ],
@@ -3525,9 +3525,9 @@ test('run preserves explicit session association across separate runs', async ()
     [
       'run',
       '--run-id',
-      'stage6-session-a',
+      'stub-session-a',
       '--session-id',
-      'shared-stage6-session',
+      'shared-stub-session',
       '--format',
       'json',
     ],
@@ -3537,9 +3537,9 @@ test('run preserves explicit session association across separate runs', async ()
     [
       'run',
       '--run-id',
-      'stage6-session-b',
+      'stub-session-b',
       '--session-id',
-      'shared-stage6-session',
+      'shared-stub-session',
       '--format',
       'json',
     ],
@@ -3554,8 +3554,8 @@ test('run preserves explicit session association across separate runs', async ()
   const secondTrace = JSON.parse(
     await readFile(join(root, requiredStringForTest(JSON.parse(second.stdout), 'trace')), 'utf8'),
   );
-  expect(getString(firstTrace, 'session_id')).toBe('shared-stage6-session');
-  expect(getString(secondTrace, 'session_id')).toBe('shared-stage6-session');
+  expect(getString(firstTrace, 'session_id')).toBe('shared-stub-session');
+  expect(getString(secondTrace, 'session_id')).toBe('shared-stub-session');
 });
 
 test('run replaces duplicate agent-run ledger entries for the same run id', async () => {
@@ -3565,9 +3565,9 @@ test('run replaces duplicate agent-run ledger entries for the same run id', asyn
   const args = [
     'run',
     '--run-id',
-    'stage6-repeat',
+    'stub-repeat',
     '--session-id',
-    'session-stage6-repeat',
+    'session-stub-repeat',
     '--format',
     'json',
   ];
@@ -3578,7 +3578,7 @@ test('run replaces duplicate agent-run ledger entries for the same run id', asyn
 
   const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
   expect(runResults.length).toBe(1);
-  expect(requiredStringForTest(runResults[0] ?? {}, 'run_id')).toContain('stage6-repeat');
+  expect(requiredStringForTest(runResults[0] ?? {}, 'run_id')).toContain('stub-repeat');
 });
 
 test('run rejects empty session ids and symlinked stub outputs', async () => {
@@ -3622,7 +3622,7 @@ test('run rejects deterministic runners without explicit budgets', async () => {
     '--runner',
     'examples/fixtures/invalid/agent-runner-missing-budgets.yaml',
     '--run-id',
-    'stage6-missing-budgets',
+    'stub-missing-budgets',
     '--format',
     'json',
   ]);
@@ -3638,7 +3638,7 @@ test('run rejects non-stub credential sources', async () => {
   const runner = await readFile(runnerPath, 'utf8');
   await writeFile(runnerPath, runner.replace('source: stub', 'source: env'));
 
-  const result = await run(['run', '--run-id', 'stage6-env-credential', '--format', 'json'], root);
+  const result = await run(['run', '--run-id', 'stub-env-credential', '--format', 'json'], root);
   expect(result.code).toBe(ExitCode.validationError);
   expect(result.stderr).toContain(
     'deterministic runner requires credential_reference.source: stub',
@@ -3654,9 +3654,9 @@ test('eval run emits agent-run results, traces, and a failure-bucket scoreboard'
       'eval',
       'run',
       '--run-id',
-      'stage6-suite',
+      'agent-runner-suite',
       '--session-id',
-      'session-stage6-suite',
+      'session-stub-suite',
       '--format',
       'json',
     ],
@@ -3665,7 +3665,7 @@ test('eval run emits agent-run results, traces, and a failure-bucket scoreboard'
   expect(result.code).toBe(ExitCode.ok);
   const evalRun = JSON.parse(result.stdout);
   expect(getString(evalRun, 'status')).toBe('passed');
-  expect(getString(evalRun, 'session_id')).toBe('session-stage6-suite');
+  expect(getString(evalRun, 'session_id')).toBe('session-stub-suite');
 
   const schemas = await loadSchemaRegistry(process.cwd());
   const runResults = jsonObjects(getArray(evalRun, 'run_results'));
@@ -3690,7 +3690,7 @@ test('eval run emits agent-run results, traces, and a failure-bucket scoreboard'
     const verifierResultPath = requiredStringForTest(runResult, 'verifier_result');
     const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
     expect(schemas.validate('trace', trace)).toEqual([]);
-    expect(getString(trace, 'session_id')).toBe('session-stage6-suite');
+    expect(getString(trace, 'session_id')).toBe('session-stub-suite');
     expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(1);
     const modelActions = jsonObjects(getArray(trace, 'actions')).filter(
       (action) => getString(action, 'type') === 'model',
@@ -3733,7 +3733,10 @@ test('eval run maps harness refusals into scoreboard failure buckets', async () 
   const task = await readFile(taskPath, 'utf8');
   await writeFile(taskPath, task.replace('network_access: false', 'network_access: true'));
 
-  const result = await run(['eval', 'run', '--run-id', 'stage6-sandbox', '--format', 'json'], root);
+  const result = await run(
+    ['eval', 'run', '--run-id', 'agent-runner-sandbox', '--format', 'json'],
+    root,
+  );
   expect(result.code).toBe(ExitCode.validationError);
   const evalRun = JSON.parse(result.stdout);
   expect(getString(evalRun, 'status')).toBe('error');
@@ -3782,7 +3785,7 @@ test('eval run maps verifier command errors into scoreboard failure buckets', as
   );
 
   const result = await run(
-    ['eval', 'run', '--run-id', 'stage6-verifier-error', '--format', 'json'],
+    ['eval', 'run', '--run-id', 'agent-runner-verifier-error', '--format', 'json'],
     root,
   );
   expect(result.code).toBe(ExitCode.validationError);
@@ -3917,12 +3920,12 @@ async function copyStage10LoopArtifacts(root: string): Promise<void> {
   await mkdir(join(root, 'examples/continuity'), { recursive: true });
   await mkdir(join(root, 'examples/verification'), { recursive: true });
   await writeFile(
-    join(root, 'examples/continuity/stage10-loop-state.yaml'),
-    await readFile('examples/continuity/stage10-loop-state.yaml', 'utf8'),
+    join(root, 'examples/continuity/execution-loop-state.yaml'),
+    await readFile('examples/continuity/execution-loop-state.yaml', 'utf8'),
   );
   await writeFile(
-    join(root, 'examples/verification/stage10-startup.yaml'),
-    await readFile('examples/verification/stage10-startup.yaml', 'utf8'),
+    join(root, 'examples/verification/execution-loop-startup.yaml'),
+    await readFile('examples/verification/execution-loop-startup.yaml', 'utf8'),
   );
 }
 

@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1.0",
   "result_id": "judge-uri-policy-ref-001",
-  "run_id": "stage7-example-run",
+  "run_id": "judge-policy-example-run",
   "policy_ref": "https://example.invalid/judge-policy.yaml",
   "policy_digest": "sha256:16c624712971179282d2178dba74cf1be6946127b25d31677230f67e43d829f1",
   "policy_id": "harness-self-test-judge-policy",

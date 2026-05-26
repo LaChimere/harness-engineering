@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0",
-  "run_id": "stage7-example-run",
+  "run_id": "judge-policy-example-run",
   "kind": "eval",
   "suite_id": "harness-self-test",
   "task_id": "schema-smoke",

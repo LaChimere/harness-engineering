@@ -18,7 +18,7 @@ codes:
     description: Required task, plan, or repository context was missing or stale.
   - code: routing-miss
     category: routing
-    description: Work was routed to the wrong adapter, agent, tool, or stage.
+    description: Work was routed to the wrong adapter, agent, tool, or workflow phase.
   - code: premature-completion
     category: progress
     description: The run claimed completion before required evidence existed.

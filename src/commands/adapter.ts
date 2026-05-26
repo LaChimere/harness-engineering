@@ -12,7 +12,7 @@ import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registr
 import type { CommandContext } from './init.ts';
 
 const defaultScopePath = 'examples/adapters/github-copilot-cli/adapter-scope.json';
-const defaultMatrixPath = 'examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json';
+const defaultMatrixPath = 'examples/plugin-capabilities/agent-cli-capability-matrix.json';
 const validateValueOptions = new Set(['root', 'scope', 'matrix']);
 const validateFlagOptions = new Set<string>();
 

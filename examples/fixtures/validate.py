@@ -337,7 +337,7 @@ def validate_host_tier(
 ) -> None:
     tier = host.get("tier")
     candidate_status = host.get("candidate_status")
-    stage9_consequence = host.get("stage9_consequence")
+    tier_consequence = host.get("tier_consequence")
     surface_kind = host.get("surface_kind")
     distribution_surface = host.get("distribution_surface")
     capabilities = host.get("capabilities")
@@ -366,8 +366,8 @@ def validate_host_tier(
             )
         )
 
-    expected_consequence = rules["tier_stage9_consequences"].get(tier)
-    if expected_consequence is not None and stage9_consequence != expected_consequence:
+    expected_consequence = rules["tier_consequences"].get(tier)
+    if expected_consequence is not None and tier_consequence != expected_consequence:
         errors.append(
             matrix_error(
                 "PCM_TIER_CONSEQUENCE",
@@ -391,7 +391,7 @@ def validate_host_tier(
                     f"{host_id} future evidence must use future-adapter-evidence tier",
                 )
             )
-        if stage9_consequence != "future-evidence-only":
+        if tier_consequence != "future-evidence-only":
             errors.append(
                 matrix_error(
                     "PCM_FUTURE_CANDIDATE_CONSEQUENCE",
@@ -476,10 +476,10 @@ def validate_matrix_decision(
                     "matrix without selected_host_id must use cli-first-fallback or none tier",
                 )
             )
-        expected_consequence = rules["null_decision_stage9_consequences"].get(
+        expected_consequence = rules["null_decision_consequences"].get(
             decision.get("selected_tier")
         )
-        if expected_consequence is not None and decision.get("stage9_consequence") != expected_consequence:
+        if expected_consequence is not None and decision.get("tier_consequence") != expected_consequence:
             errors.append(
                 matrix_error(
                     "PCM_DECISION_NULL_CONSEQUENCE",
@@ -531,13 +531,13 @@ def validate_matrix_decision(
             )
         )
 
-    host_consequence = selected_host.get("stage9_consequence")
-    if decision.get("stage9_consequence") != host_consequence:
+    host_consequence = selected_host.get("tier_consequence")
+    if decision.get("tier_consequence") != host_consequence:
         errors.append(
             matrix_error(
                 "PCM_DECISION_CONSEQUENCE_MISMATCH",
-                "matrix decision stage9_consequence must match selected host "
-                f"stage9_consequence: {host_consequence}",
+                "matrix decision tier_consequence must match selected host "
+                f"tier_consequence: {host_consequence}",
             )
         )
 
@@ -646,7 +646,7 @@ def validate_adapter_selected_host_fields(
         )
     for scope_field, host_field in [
         ("capability_tier", "tier"),
-        ("stage9_consequence", "stage9_consequence"),
+        ("tier_consequence", "tier_consequence"),
         ("surface_kind", "surface_kind"),
         ("distribution_surface", "distribution_surface"),
     ]:

@@ -92,8 +92,8 @@
           "note": "Fixture evidence."
         }
       ],
-      "stage9_consequence": "defer-stage9-cli-first",
-      "stage9_scope_summary": "Fixture deliberately labels supported core capabilities as CLI-first fallback."
+      "tier_consequence": "defer-cli-first",
+      "adapter_selection_scope_summary": "Fixture deliberately labels supported core capabilities as CLI-first fallback."
     }
   ],
   "schema_revalidation": {
@@ -116,7 +116,7 @@
   "decision": {
     "selected_host_id": null,
     "selected_tier": "cli-first-fallback",
-    "stage9_consequence": "defer-stage9-cli-first",
+    "tier_consequence": "defer-cli-first",
     "rationale": "Fixture keeps selection null while the host itself underclaims its tier."
   }
 }

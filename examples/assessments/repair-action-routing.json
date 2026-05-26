@@ -190,15 +190,15 @@
       "recommendation": "Configure continuity state and validate completion evidence with harness loop validate."
     }
   ],
-  "rollout_stage_plan": [
+  "rollout_plan": [
     {
-      "stage": "stage-0",
+      "step": "bootstrap",
       "title": "Bootstrap harness source and schema validation.",
       "status": "next",
       "actions": ["Run harness init if harness.yaml is missing.", "Run harness validate."]
     },
     {
-      "stage": "stage-1",
+      "step": "policy-and-doctor",
       "title": "Add policy, sandbox, and structural doctor checks.",
       "status": "later",
       "actions": [
@@ -207,7 +207,7 @@
       ]
     },
     {
-      "stage": "stage-2",
+      "step": "behavioral-evidence",
       "title": "Exercise eval, run, trace, and scoreboard evidence.",
       "status": "later",
       "actions": [
@@ -217,7 +217,7 @@
       ]
     },
     {
-      "stage": "stage-3",
+      "step": "continuity-gates",
       "title": "Gate long-running work with continuity and self-verification.",
       "status": "later",
       "actions": [
@@ -226,7 +226,7 @@
       ]
     },
     {
-      "stage": "stage-4",
+      "step": "repair-routing",
       "title": "Route agent implementation through reviewed repair or fallback paths.",
       "status": "done",
       "actions": ["Add repair-action artifacts or document CLI fallback approval flow."]

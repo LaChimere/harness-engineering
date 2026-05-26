@@ -97,7 +97,7 @@
       "schema": "schemas/continuity-state.schema.json"
     },
     {
-      "path": "examples/continuity/stage10-loop-state.yaml",
+      "path": "examples/continuity/execution-loop-state.yaml",
       "schema": "schemas/continuity-state.schema.json"
     },
     {
@@ -141,15 +141,15 @@
       "schema": "schemas/self-verification.schema.json"
     },
     {
-      "path": "examples/verification/stage3-self-verification.yaml",
+      "path": "examples/verification/schema-self-verification.yaml",
       "schema": "schemas/self-verification.schema.json"
     },
     {
-      "path": "examples/verification/stage10-startup.yaml",
+      "path": "examples/verification/execution-loop-startup.yaml",
       "schema": "schemas/self-verification.schema.json"
     },
     {
-      "path": "examples/verification/stage10-completion.yaml",
+      "path": "examples/verification/execution-loop-completion.yaml",
       "schema": "schemas/self-verification.schema.json"
     },
     {
@@ -305,7 +305,7 @@
       "schema": "schemas/plugin-capability.schema.json"
     },
     {
-      "path": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "path": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "schema": "schemas/plugin-capability-matrix.schema.json"
     },
     {
@@ -457,21 +457,21 @@
     {
       "path": "examples/fixtures/invalid/recurring-profile-cleanup-action.yaml",
       "schema": "schemas/recurring-profile.schema.json",
-      "reason": "Stage 19 recurring profiles may only take deterministic summary actions.",
+      "reason": "Recurring profiles may only take deterministic summary actions.",
       "expected_keyword": "enum",
       "expected_path": ["allowed_actions", 0]
     },
     {
       "path": "examples/fixtures/invalid/recurring-profile-declares-capability.yaml",
       "schema": "schemas/recurring-profile.schema.json",
-      "reason": "Stage 19 profiles must not declare capability adoption.",
+      "reason": "Recurring profiles must not declare capability adoption.",
       "expected_keyword": "type",
       "expected_path": ["declared_capability_id"]
     },
     {
       "path": "examples/fixtures/invalid/profile-run-declares-capability.json",
       "schema": "schemas/profile-run.schema.json",
-      "reason": "Stage 19 profile-run evidence must not declare capability adoption.",
+      "reason": "Profile-run evidence must not declare capability adoption.",
       "expected_keyword": "type",
       "expected_path": ["declared_capability_id"]
     },
@@ -703,14 +703,14 @@
       "schema": "schemas/plugin-capability-matrix.schema.json",
       "reason": "Capability tier must imply a matching adapter consequence.",
       "expected_keyword": "const",
-      "expected_path": ["hosts", 0, "stage9_consequence"]
+      "expected_path": ["hosts", 0, "tier_consequence"]
     },
     {
       "path": "examples/fixtures/invalid/plugin-capability-matrix-null-consequence.json",
       "schema": "schemas/plugin-capability-matrix.schema.json",
       "reason": "A null matrix decision must not claim plugin or adapter implementation.",
       "expected_keyword": "const",
-      "expected_path": ["decision", "stage9_consequence"]
+      "expected_path": ["decision", "tier_consequence"]
     },
     {
       "path": "examples/fixtures/invalid/plugin-capability-matrix-ide-in-scope.json",
@@ -767,14 +767,14 @@
     ],
     "out_of_scope_surface_kinds": ["ide-extension", "ci-adapter", "hosted-checks"],
     "out_of_scope_distribution_surfaces": ["ide-extension-store", "ci-platform"],
-    "tier_stage9_consequences": {
+    "tier_consequences": {
       "full-plugin": "proceed-full-plugin",
       "limited-adapter": "proceed-limited-adapter",
-      "cli-first-fallback": "defer-stage9-cli-first",
+      "cli-first-fallback": "defer-cli-first",
       "future-adapter-evidence": "future-evidence-only"
     },
-    "null_decision_stage9_consequences": {
-      "cli-first-fallback": "defer-stage9-cli-first",
+    "null_decision_consequences": {
+      "cli-first-fallback": "defer-cli-first",
       "none": "future-evidence-only"
     },
     "selectable_tiers": ["full-plugin", "limited-adapter"]
@@ -852,7 +852,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-overclaims-annotation.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter scope must not promote partial annotation support to implemented support.",
       "expected_error_code": "ASM_CAPABILITY_OVERCLAIM",
       "expected_message_contains": "annotation_apis cannot be implemented"
@@ -860,7 +860,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-unknown-evidence.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter scope evidence ids must be selected-host matrix evidence ids.",
       "expected_error_code": "ASM_EVIDENCE_DANGLING",
       "expected_message_contains": "references missing selected-host evidence_id"
@@ -868,7 +868,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-wrong-host.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter scope must target the selected host.",
       "expected_error_code": "ASM_SELECTED_HOST_MISMATCH",
       "expected_message_contains": "must match matrix decision"
@@ -876,7 +876,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-unsupported-cli-mode.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter CLI management modes must be a subset of the selected host matrix modes.",
       "expected_error_code": "ASM_CLI_MODE_UNSUPPORTED",
       "expected_message_contains": "not proven for github-copilot-cli"
@@ -884,7 +884,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-preview-backed-unproven.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Preview-backed write classes require selected-host repair preview support.",
       "expected_error_code": "ASM_WRITE_MODE_OVERCLAIM",
       "expected_message_contains": "repair cannot be preview-backed"
@@ -892,7 +892,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-duplicate-capability.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter scope must not declare a capability dimension more than once.",
       "expected_error_code": "ASM_CAPABILITY_DUPLICATE",
       "expected_message_contains": "cli_invocation is declared more than once"
@@ -900,7 +900,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-missing-dimension.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter scope must classify every capability-matrix dimension.",
       "expected_error_code": "ASM_CAPABILITY_COVERAGE",
       "expected_message_contains": "adapter scope must classify cli_bundling_bootstrap"
@@ -908,7 +908,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-core-unavailable.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Limited-adapter scopes must implement all required core capabilities.",
       "expected_error_code": "ASM_REQUIRED_CAPABILITY_UNAVAILABLE",
       "expected_message_contains": "limited adapter scope requires implemented capability cli_invocation"
@@ -916,7 +916,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-fallback-overclaim.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter fallbacks must not be less conservative than the selected host matrix fallback.",
       "expected_error_code": "ASM_FALLBACK_OVERCLAIM",
       "expected_message_contains": "annotation_apis fallback supported is less conservative"
@@ -924,7 +924,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-evidence-wrong-capability.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter evidence ids must belong to the declared matrix capability.",
       "expected_error_code": "ASM_EVIDENCE_NOT_CAPABILITY",
       "expected_message_contains": "outside the matrix capability evidence"
@@ -932,7 +932,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-host-cli-mismatch.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter host CLI compatibility metadata must match the selected host.",
       "expected_error_code": "ASM_HOST_CLI_MISMATCH",
       "expected_message_contains": "must match selected host"
@@ -940,7 +940,7 @@
     {
       "path": "examples/fixtures/invalid/adapter-scope-resolution-order-unmapped.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter CLI resolution order must use only modes declared in cli_management_modes.",
       "expected_error_code": "ASM_RESOLUTION_ORDER_UNMAPPED",
       "expected_message_contains": "not declared in cli_management_modes"
@@ -953,14 +953,14 @@
       "reason": "Canonical failure taxonomy must include every required starter code."
     },
     {
-      "path": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "path": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "check": "plugin_capability_matrix_invariants",
       "reason": "Capability matrix must satisfy custom evidence and tier invariants."
     },
     {
       "path": "examples/adapters/github-copilot-cli/adapter-scope.json",
       "check": "adapter_scope_matrix_subset",
-      "matrix": "examples/plugin-capabilities/stage8-agent-cli-capability-matrix.json",
+      "matrix": "examples/plugin-capabilities/agent-cli-capability-matrix.json",
       "reason": "Adapter scope must be a subset of the selected limited-adapter matrix evidence."
     }
   ]

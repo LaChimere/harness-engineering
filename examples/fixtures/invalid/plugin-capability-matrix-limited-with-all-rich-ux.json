@@ -96,8 +96,8 @@
           "note": "Fixture evidence."
         }
       ],
-      "stage9_consequence": "proceed-limited-adapter",
-      "stage9_scope_summary": "Fixture."
+      "tier_consequence": "proceed-limited-adapter",
+      "adapter_selection_scope_summary": "Fixture."
     }
   ],
   "schema_revalidation": {
@@ -120,7 +120,7 @@
   "decision": {
     "selected_host_id": "too-rich-limited-host",
     "selected_tier": "limited-adapter",
-    "stage9_consequence": "proceed-limited-adapter",
+    "tier_consequence": "proceed-limited-adapter",
     "rationale": "Fixture deliberately labels a full-rich-UX host as limited."
   }
 }

@@ -29,8 +29,8 @@ interface MatrixInvariantRules {
   readonly rich_ux_capabilities: readonly string[];
   readonly out_of_scope_surface_kinds: readonly string[];
   readonly out_of_scope_distribution_surfaces: readonly string[];
-  readonly tier_stage9_consequences: Readonly<Record<string, string>>;
-  readonly null_decision_stage9_consequences: Readonly<Record<string, string>>;
+  readonly tier_consequences: Readonly<Record<string, string>>;
+  readonly null_decision_consequences: Readonly<Record<string, string>>;
   readonly selectable_tiers: readonly string[];
 }
 
@@ -365,7 +365,7 @@ function validateHostTier(
 ): void {
   const tier = getString(host, 'tier');
   const candidateStatus = getString(host, 'candidate_status');
-  const stage9Consequence = getString(host, 'stage9_consequence');
+  const adapterSelectionConsequence = getString(host, 'tier_consequence');
   const surfaceKind = getString(host, 'surface_kind');
   const distributionSurface = getString(host, 'distribution_surface');
   const capabilities = getObject(host, 'capabilities');
@@ -399,8 +399,8 @@ function validateHostTier(
     );
   }
 
-  const expectedConsequence = tier === undefined ? undefined : rules.tier_stage9_consequences[tier];
-  if (expectedConsequence !== undefined && stage9Consequence !== expectedConsequence) {
+  const expectedConsequence = tier === undefined ? undefined : rules.tier_consequences[tier];
+  if (expectedConsequence !== undefined && adapterSelectionConsequence !== expectedConsequence) {
     errors.push(
       matrixError(
         'PCM_TIER_CONSEQUENCE',
@@ -427,7 +427,7 @@ function validateHostTier(
         ),
       );
     }
-    if (stage9Consequence !== 'future-evidence-only') {
+    if (adapterSelectionConsequence !== 'future-evidence-only') {
       errors.push(
         matrixError(
           'PCM_FUTURE_CANDIDATE_CONSEQUENCE',
@@ -532,12 +532,10 @@ function validateMatrixDecision(
       );
     }
     const expectedConsequence =
-      selectedTier === undefined
-        ? undefined
-        : rules.null_decision_stage9_consequences[selectedTier];
+      selectedTier === undefined ? undefined : rules.null_decision_consequences[selectedTier];
     if (
       expectedConsequence !== undefined &&
-      getString(decision, 'stage9_consequence') !== expectedConsequence
+      getString(decision, 'tier_consequence') !== expectedConsequence
     ) {
       errors.push(
         matrixError(
@@ -596,12 +594,12 @@ function validateMatrixDecision(
     );
   }
 
-  const hostConsequence = getString(selectedHost, 'stage9_consequence');
-  if (getString(decision, 'stage9_consequence') !== hostConsequence) {
+  const hostConsequence = getString(selectedHost, 'tier_consequence');
+  if (getString(decision, 'tier_consequence') !== hostConsequence) {
     errors.push(
       matrixError(
         'PCM_DECISION_CONSEQUENCE_MISMATCH',
-        `matrix decision stage9_consequence must match selected host stage9_consequence: ${hostConsequence}`,
+        `matrix decision tier_consequence must match selected host tier_consequence: ${hostConsequence}`,
       ),
     );
   }

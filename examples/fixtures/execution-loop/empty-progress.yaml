@@ -8,8 +8,8 @@ startup_verification:
     command: harness validate
     timeout_seconds: 300
   evidence:
-    - path: examples/verification/stage10-startup.yaml
-  self_verification_ref: examples/verification/stage10-startup.yaml
+    - path: examples/verification/execution-loop-startup.yaml
+  self_verification_ref: examples/verification/execution-loop-startup.yaml
 git_checkpoint_sha: abc1234
 handoff_artifacts: []
 unresolved_risks: []

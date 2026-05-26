@@ -26,7 +26,7 @@ bun run build
 node dist/index.js validate examples/harness.yaml
 node dist/index.js adapter validate
 node dist/index.js assess --file examples/harness.yaml --format json
-node dist/index.js loop validate --file examples/harness.yaml --continuity examples/continuity/stage10-loop-state.yaml --verification examples/verification/stage10-completion.yaml
+node dist/index.js loop validate --file examples/harness.yaml --continuity examples/continuity/execution-loop-state.yaml --verification examples/verification/execution-loop-completion.yaml
 node dist/index.js doctor --file examples/harness.yaml
 node dist/index.js health --file examples/harness.yaml --accept-unsandboxed-execution
 node dist/index.js run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
@@ -36,7 +36,7 @@ node dist/index.js eval run --file examples/harness.yaml
 node dist/index.js profile validate examples/profiles/gc-stability.yaml
 node dist/index.js profile run examples/profiles/gc-stability.yaml --gc-evidence examples/gc/evidence.json --health-result examples/health/results/pass.json
 node dist/index.js trace validate --file examples/harness.yaml
-node dist/index.js verify --spec examples/verification/stage3-self-verification.yaml
+node dist/index.js verify --spec examples/verification/schema-self-verification.yaml
 node dist/index.js report --file examples/harness.yaml --doctor-result examples/doctor/results/pass.json
 node dist/index.js report --file examples/harness.yaml --judge-result examples/judges/results/advisory-only.json
 ```

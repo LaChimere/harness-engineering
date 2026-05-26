@@ -1,5 +1,5 @@
 schema_version: "0.1.0"
-session_id: harness-stage10-startup-self-verification-failed
+session_id: harness-execution-loop-startup-self-verification-failed
 feature_list:
   - id: native-execution-loop
     title: Define the native execution-loop validation contract.

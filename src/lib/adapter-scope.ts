@@ -159,7 +159,7 @@ function validateSelectedHostFields(
   }
 
   compareField(scope, host, 'capability_tier', 'tier', hostId, errors);
-  compareField(scope, host, 'stage9_consequence', 'stage9_consequence', hostId, errors);
+  compareField(scope, host, 'tier_consequence', 'tier_consequence', hostId, errors);
   compareField(scope, host, 'surface_kind', 'surface_kind', hostId, errors);
   compareField(scope, host, 'distribution_surface', 'distribution_surface', hostId, errors);
 

@@ -1,5 +1,5 @@
 schema_version: "0.1.0"
-session_id: harness-stage10-startup-command-not-run
+session_id: harness-execution-loop-startup-command-not-run
 feature_list:
   - id: native-execution-loop
     title: Define the native execution-loop validation contract.

@@ -16,61 +16,61 @@
     "agent_cli_install_distribution": {
       "status": "unknown",
       "fallback": "cli-redirect",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "No agent/CLI install or discovery surface has been verified for this placeholder host."
     },
     "cli_bundling_bootstrap": {
       "status": "unknown",
       "fallback": "cli-redirect",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "Use CLI-first setup until a host-specific bootstrap path is proven."
     },
     "filesystem_access": {
       "status": "unknown",
       "fallback": "cli-redirect",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "No repository workspace access path has been verified for this placeholder host."
     },
     "cli_invocation": {
       "status": "unknown",
       "fallback": "cli-redirect",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "No host-mediated CLI invocation path has been verified for this placeholder host."
     },
     "cli_report_rendering": {
       "status": "unknown",
       "fallback": "cli-redirect",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "Reports remain CLI artifacts until a host rendering surface is proven."
     },
     "annotation_apis": {
       "status": "unknown",
       "fallback": "hide",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "No annotation or session-feedback API has been verified."
     },
     "background_runs": {
       "status": "unknown",
       "fallback": "hide",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "No background-run affordance has been verified."
     },
     "repair_action_ui": {
       "status": "unknown",
       "fallback": "cli-redirect",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "Repair actions remain CLI-backed until preview and approval affordances are proven."
     },
     "trace_deep_links": {
       "status": "unknown",
       "fallback": "cli-redirect",
-      "evidence_ids": ["unknown-host-stage8-required"],
+      "evidence_ids": ["unknown-host-capability-matrix-required"],
       "note": "Trace links remain artifact paths until host deep links are proven."
     }
   },
   "evidence": [
     {
-      "evidence_id": "unknown-host-stage8-required",
+      "evidence_id": "unknown-host-capability-matrix-required",
       "source": "plans/harness-engineering-platform/todo.md",
       "accessed_date": "2026-05-22",
       "source_type": "local-reproduction",
@@ -78,6 +78,6 @@
       "note": "A named agent/CLI host must be proven before any adapter path can be selected."
     }
   ],
-  "stage9_consequence": "defer-stage9-cli-first",
-  "stage9_scope_summary": "Placeholder host keeps public guidance CLI-first until positive capability evidence is recorded."
+  "tier_consequence": "defer-cli-first",
+  "adapter_selection_scope_summary": "Placeholder host keeps public guidance CLI-first until positive capability evidence is recorded."
 }

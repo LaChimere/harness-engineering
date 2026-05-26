@@ -16,8 +16,8 @@
     "cli_management_modes",
     "capabilities",
     "evidence",
-    "stage9_consequence",
-    "stage9_scope_summary"
+    "tier_consequence",
+    "adapter_selection_scope_summary"
   ],
   "properties": {
     "schema_version": {
@@ -75,10 +75,10 @@
         "$ref": "#/$defs/evidenceEntry"
       }
     },
-    "stage9_consequence": {
-      "$ref": "#/$defs/stage9Consequence"
+    "tier_consequence": {
+      "$ref": "#/$defs/adapterSelectionConsequence"
     },
-    "stage9_scope_summary": {
+    "adapter_selection_scope_summary": {
       "$ref": "common.schema.json#/$defs/nonEmptyString"
     }
   },
@@ -97,7 +97,7 @@
           "tier": {
             "const": "future-adapter-evidence"
           },
-          "stage9_consequence": {
+          "tier_consequence": {
             "const": "future-evidence-only"
           }
         }
@@ -117,7 +117,7 @@
           "candidate_status": {
             "const": "out-of-scope-future-evidence"
           },
-          "stage9_consequence": {
+          "tier_consequence": {
             "const": "future-evidence-only"
           }
         }
@@ -134,7 +134,7 @@
       },
       "then": {
         "properties": {
-          "stage9_consequence": {
+          "tier_consequence": {
             "const": "proceed-full-plugin"
           }
         }
@@ -151,7 +151,7 @@
       },
       "then": {
         "properties": {
-          "stage9_consequence": {
+          "tier_consequence": {
             "const": "proceed-limited-adapter"
           }
         }
@@ -168,8 +168,8 @@
       },
       "then": {
         "properties": {
-          "stage9_consequence": {
-            "const": "defer-stage9-cli-first"
+          "tier_consequence": {
+            "const": "defer-cli-first"
           }
         }
       }
@@ -376,12 +376,12 @@
       },
       "additionalProperties": false
     },
-    "stage9Consequence": {
+    "adapterSelectionConsequence": {
       "type": "string",
       "enum": [
         "proceed-full-plugin",
         "proceed-limited-adapter",
-        "defer-stage9-cli-first",
+        "defer-cli-first",
         "future-evidence-only"
       ]
     }

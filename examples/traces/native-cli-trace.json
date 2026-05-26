@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0",
-  "session_id": "harness-stage2-example",
+  "session_id": "harness-schema-substrate-example",
   "run_id": "run-schema-smoke-001-oracle-81e3b51b6501",
   "harness_version": "0.1.0",
   "inputs": {

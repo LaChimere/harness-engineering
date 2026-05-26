@@ -67,7 +67,7 @@
     "decision": {
       "type": "object",
       "$comment": "JSON Schema constrains null decisions structurally. Non-null selected_host_id consistency with hosts[].host.id, selected tier, candidate status, and adapter consequence is enforced by the required plugin_capability_matrix_invariants custom check.",
-      "required": ["selected_host_id", "selected_tier", "stage9_consequence", "rationale"],
+      "required": ["selected_host_id", "selected_tier", "tier_consequence", "rationale"],
       "properties": {
         "selected_host_id": {
           "type": ["string", "null"],
@@ -77,8 +77,8 @@
           "type": "string",
           "enum": ["full-plugin", "limited-adapter", "cli-first-fallback", "none"]
         },
-        "stage9_consequence": {
-          "$ref": "plugin-capability.schema.json#/$defs/stage9Consequence"
+        "tier_consequence": {
+          "$ref": "plugin-capability.schema.json#/$defs/adapterSelectionConsequence"
         },
         "rationale": {
           "$ref": "common.schema.json#/$defs/nonEmptyString"
@@ -117,8 +117,8 @@
           },
           "then": {
             "properties": {
-              "stage9_consequence": {
-                "const": "defer-stage9-cli-first"
+              "tier_consequence": {
+                "const": "defer-cli-first"
               }
             }
           }
@@ -137,7 +137,7 @@
           },
           "then": {
             "properties": {
-              "stage9_consequence": {
+              "tier_consequence": {
                 "const": "future-evidence-only"
               }
             }
@@ -172,7 +172,11 @@
       "properties": {
         "conclusion": {
           "type": "string",
-          "enum": ["sufficient-for-stage9", "extend-before-stage9", "not-applicable"]
+          "enum": [
+            "sufficient-for-adapter-selection",
+            "extend-before-adapter-selection",
+            "not-applicable"
+          ]
         },
         "required_changes": {
           "type": "array",

@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.0",
-  "session_id": "harness-stage6-import",
+  "session_id": "harness-agent-runner-import",
   "run_id": "imported-trace-001",
   "harness_version": "0.1.0",
   "inputs": {

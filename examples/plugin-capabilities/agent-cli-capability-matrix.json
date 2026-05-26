@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1.0",
   "x-stability": "provisional",
-  "matrix_id": "stage8-agent-cli-capability-matrix",
+  "matrix_id": "capability-matrix-agent-cli-capability-matrix",
   "review_date": "2026-05-22",
   "candidate_boundary": "In-scope candidates are named coding-agent or CLI host surfaces with install or discovery mechanisms, agent-facing extension points, repository workspace access, and a CLI invocation or bootstrap path. IDE-only, CI-only, and hosted review surfaces are future evidence only and cannot be selected adapter targets in this slug.",
   "capability_dimensions": [
@@ -19,7 +19,7 @@
     {
       "schema_version": "0.1.0",
       "x-stability": "provisional",
-      "capability_id": "github-copilot-cli-stage8",
+      "capability_id": "github-copilot-cli-capability-matrix",
       "host": {
         "id": "github-copilot-cli",
         "name": "GitHub Copilot CLI",
@@ -162,13 +162,13 @@
           "note": "Share URLs exist for transcripts, but formal item-level trace deep links are not documented."
         }
       ],
-      "stage9_consequence": "proceed-limited-adapter",
-      "stage9_scope_summary": "Proceed with a limited GitHub Copilot CLI adapter over plugin commands/hooks/MCP/skills; label annotation and trace deep-link UX as advisory or unavailable until formal APIs exist."
+      "tier_consequence": "proceed-limited-adapter",
+      "adapter_selection_scope_summary": "Proceed with a limited GitHub Copilot CLI adapter over plugin commands/hooks/MCP/skills; label annotation and trace deep-link UX as advisory or unavailable until formal APIs exist."
     },
     {
       "schema_version": "0.1.0",
       "x-stability": "provisional",
-      "capability_id": "openai-codex-cli-stage8",
+      "capability_id": "openai-codex-cli-capability-matrix",
       "host": {
         "id": "openai-codex-cli",
         "name": "OpenAI Codex CLI",
@@ -318,13 +318,13 @@
           "note": "Thread IDs and resume IDs exist, but no item-level local deep link is documented."
         }
       ],
-      "stage9_consequence": "proceed-limited-adapter",
-      "stage9_scope_summary": "Proceed with a limited Codex CLI adapter if chosen; keep annotation and trace links advisory and do not claim full plugin UX."
+      "tier_consequence": "proceed-limited-adapter",
+      "adapter_selection_scope_summary": "Proceed with a limited Codex CLI adapter if chosen; keep annotation and trace links advisory and do not claim full plugin UX."
     },
     {
       "schema_version": "0.1.0",
       "x-stability": "provisional",
-      "capability_id": "claude-code-stage8",
+      "capability_id": "claude-code-capability-matrix",
       "host": {
         "id": "claude-code",
         "name": "Claude Code",
@@ -465,13 +465,13 @@
           "note": "Session UUIDs and JSONL transcripts are available, but no portable shareable CLI trace URL is documented."
         }
       ],
-      "stage9_consequence": "proceed-limited-adapter",
-      "stage9_scope_summary": "Proceed with a limited Claude Code adapter if chosen; keep diff-preview repairs and trace links advisory unless host APIs improve."
+      "tier_consequence": "proceed-limited-adapter",
+      "adapter_selection_scope_summary": "Proceed with a limited Claude Code adapter if chosen; keep diff-preview repairs and trace links advisory unless host APIs improve."
     },
     {
       "schema_version": "0.1.0",
       "x-stability": "provisional",
-      "capability_id": "gemini-cli-stage8",
+      "capability_id": "gemini-cli-capability-matrix",
       "host": {
         "id": "gemini-cli",
         "name": "Gemini CLI",
@@ -614,23 +614,23 @@
           "note": "Telemetry docs cover OpenTelemetry export and session correlation but not in-CLI deep-link navigation."
         }
       ],
-      "stage9_consequence": "defer-stage9-cli-first",
-      "stage9_scope_summary": "Keep Gemini CLI as CLI-first fallback evidence until bootstrap and background-agent capabilities are proven enough for a limited adapter."
+      "tier_consequence": "defer-cli-first",
+      "adapter_selection_scope_summary": "Keep Gemini CLI as CLI-first fallback evidence until bootstrap and background-agent capabilities are proven enough for a limited adapter."
     }
   ],
   "schema_revalidation": {
     "plugin_capability": {
-      "conclusion": "sufficient-for-stage9",
+      "conclusion": "sufficient-for-adapter-selection",
       "required_changes": ["tier", "surface-kind", "evidence-id", "evidence-link", "fallback"],
       "note": "plugin-capability is the per-host row type for the capability matrix with tiers, surface kind, stable evidence ids, evidence entries, and fallback behavior."
     },
     "repair_action": {
-      "conclusion": "extend-before-stage9",
+      "conclusion": "extend-before-adapter-selection",
       "required_changes": ["advisory-repair-mode"],
       "note": "Current repair-action shape supports preview-backed repair proposals, but limited adapters without host preview and approval affordances need an advisory-only repair mode before writes are exposed through an adapter."
     },
     "adapter_scope_metadata": {
-      "conclusion": "extend-before-stage9",
+      "conclusion": "extend-before-adapter-selection",
       "required_changes": ["adapter-scope-metadata"],
       "note": "Adapter implementations must add a schema-backed adapter scope manifest or equivalent revalidated plugin-capability metadata to prove implemented scope is a subset of capability-matrix evidence."
     }
@@ -638,7 +638,7 @@
   "decision": {
     "selected_host_id": "github-copilot-cli",
     "selected_tier": "limited-adapter",
-    "stage9_consequence": "proceed-limited-adapter",
+    "tier_consequence": "proceed-limited-adapter",
     "rationale": "Codex CLI, Claude Code, and GitHub Copilot CLI are in-scope limited-adapter candidates; Gemini CLI remains CLI-first fallback because bootstrap and background-agent support are only partial. GitHub Copilot CLI has the strongest first-target evidence for marketplace/plugin distribution, CLI bootstrap, hooks, MCP/skills, background runs, and repair approval, while annotation and trace deep-link UX must remain advisory or unavailable."
   }
 }

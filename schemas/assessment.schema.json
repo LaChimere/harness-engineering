@@ -15,7 +15,7 @@
     "scorecard_version",
     "scorecard",
     "missing_primitives",
-    "rollout_stage_plan",
+    "rollout_plan",
     "recommendations",
     "implementation_routing",
     "artifacts_read"
@@ -147,14 +147,14 @@
         "additionalProperties": false
       }
     },
-    "rollout_stage_plan": {
+    "rollout_plan": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["stage", "title", "status", "actions"],
+        "required": ["step", "title", "status", "actions"],
         "properties": {
-          "stage": {
+          "step": {
             "$ref": "common.schema.json#/$defs/nonEmptyString"
           },
           "title": {

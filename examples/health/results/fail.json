@@ -38,7 +38,7 @@
         "secret_access": false,
         "host_file_access": false,
         "allowed_inputs": [],
-        "allowed_outputs": [".harness/health"]
+        "allowed_outputs": [".harness/outputs/health"]
       }
     }
   ]

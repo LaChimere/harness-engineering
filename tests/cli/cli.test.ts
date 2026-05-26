@@ -29,6 +29,7 @@ test('init creates a baseline that validate accepts without plugin or CI keys', 
   const initResult = await run(['init'], root);
   expect(initResult.code).toBe(ExitCode.ok);
   expect(initResult.stdout).toContain('harness init ok');
+  expect(initResult.stdout).toContain('commit harness.yaml and editable .harness support files');
 
   const validateResult = await run(['validate'], root);
   expect(validateResult.code).toBe(ExitCode.ok);
@@ -37,6 +38,40 @@ test('init creates a baseline that validate accepts without plugin or CI keys', 
   const harness = await readFile(join(root, 'harness.yaml'), 'utf8');
   expect(harness).not.toContain('plugins:');
   expect(harness).not.toContain('ci:');
+  expect(harness).toContain('approval_policy: .harness/policies/approval-policy.yaml');
+  expect(harness).toContain('run_results: .harness/outputs/run-results.jsonl');
+  expect(await pathExistsForTest(join(root, 'examples'))).toBe(false);
+  expect(await pathExistsForTest(join(root, '.harness/policies/sandbox-policy.yaml'))).toBe(true);
+  expect(
+    await pathExistsForTest(join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml')),
+  ).toBe(true);
+  expect(await pathExistsForTest(join(root, '.harness/outputs/run-results.jsonl'))).toBe(true);
+  const harnessGitignore = await readFile(join(root, '.harness/.gitignore'), 'utf8');
+  expect(harnessGitignore).toContain('/outputs/');
+  expect(await readFile(join(root, '.harness/judges/policy.yaml'), 'utf8')).not.toContain(
+    'examples/',
+  );
+  const profile = await readFile(join(root, '.harness/profiles/gc-stability.yaml'), 'utf8');
+  expect(profile).toContain('destination_hint: .harness/outputs/profile-runs/gc-stability.json');
+  expect(profile).not.toContain('destination_hint: .harness/profiles/gc-stability.json');
+});
+
+test('init warns when root gitignore ignores harness support files wholesale', async () => {
+  for (const pattern of [
+    '.harness/',
+    '.harness/*',
+    '.harness/**',
+    '.harness*',
+    '**/.harness/',
+    '.*',
+  ]) {
+    const root = await tempRoot();
+    await writeFile(join(root, '.gitignore'), `${pattern} # existing broad ignore\n`);
+
+    const result = await run(['init'], root);
+    expect(result.code).toBe(ExitCode.ok);
+    expect(result.stdout).toContain('warning: root .gitignore appears to ignore .harness/');
+  }
 });
 
 test('init rejects root paths that escape the current working directory', async () => {
@@ -74,7 +109,7 @@ test('init force refuses to write through symlinked starter paths', async () => 
   const sensitive = join(parent, 'sensitive');
   await mkdir(root);
   await mkdir(sensitive);
-  await symlink(sensitive, join(root, 'examples'), 'dir');
+  await symlink(sensitive, join(root, '.harness'), 'dir');
 
   const result = await run(['init', '--force'], root);
   expect(result.code).toBe(ExitCode.usageError);
@@ -153,7 +188,7 @@ test('validate rejects composed references that escape root', async () => {
   await writeFile(
     harnessPath,
     harness.replace(
-      'environment: examples/environments/local.yaml',
+      'environment: .harness/environments/local.yaml',
       'environment: ../outside.yaml',
     ),
   );
@@ -1377,7 +1412,7 @@ test('doctor emits schema-valid JSON for a healthy harness', async () => {
     secret_access: false,
     host_file_access: false,
     allowed_inputs: ['README.md', 'AGENTS.md'],
-    allowed_outputs: ['.harness/doctor/doc-links.json'],
+    allowed_outputs: ['.harness/outputs/doctor/doc-links.json'],
   });
 
   const schemas = await loadSchemaRegistry(process.cwd());
@@ -1409,7 +1444,7 @@ test('health emits schema-valid JSON and can feed assess', async () => {
       '        - path: AGENTS.md\n          media_type: text/markdown\n          description: Agent instruction file.\n        - path: https://example.invalid/health-reference\n          media_type: text/plain\n          description: External health reference that does not require allowed_inputs.',
     ),
   );
-  const healthPath = '.harness/health/result.json';
+  const healthPath = '.harness/outputs/health/result.json';
   const health = await run(
     ['health', '--accept-unsandboxed-execution', '--format', 'json', '--output', healthPath],
     root,
@@ -1444,7 +1479,7 @@ test('health emits schema-valid JSON and can feed assess', async () => {
   ).toBe('present');
   expect(schemas.validate('assessment', assessmentJson)).toEqual([]);
 
-  const staleHealthPath = '.harness/health/stale-result.json';
+  const staleHealthPath = '.harness/outputs/health/stale-result.json';
   await writeFile(
     join(root, staleHealthPath),
     JSON.stringify(
@@ -1560,7 +1595,7 @@ test('health refuses unsafe and policy-mismatched declarations', async () => {
 
   const root = await tempRoot();
   await run(['init'], root);
-  const sandboxPath = join(root, 'examples/policies/sandbox-policy.yaml');
+  const sandboxPath = join(root, '.harness/policies/sandbox-policy.yaml');
   const sandbox = await readFile(sandboxPath, 'utf8');
   await writeFile(sandboxPath, sandbox.replace('allow_spawn: true', 'allow_spawn: false'));
   const result = await run(['health', '--accept-unsandboxed-execution', '--format', 'json'], root);
@@ -1597,8 +1632,8 @@ test('health refuses missing declared artifacts and symlinked output', async () 
     harnessPath,
     harness
       .replace(
-        '        allowed_inputs:\n          - README.md\n          - AGENTS.md\n        allowed_outputs:\n          - .harness/health',
-        '        allowed_inputs:\n          - missing-health-artifact.md\n          - AGENTS.md\n        allowed_outputs:\n          - .harness/health',
+        '        allowed_inputs:\n          - README.md\n          - AGENTS.md\n        allowed_outputs:\n          - .harness/outputs/health',
+        '        allowed_inputs:\n          - missing-health-artifact.md\n          - AGENTS.md\n        allowed_outputs:\n          - .harness/outputs/health',
       )
       .replace(
         '        - path: README.md\n          media_type: text/markdown\n          description: User-facing project README.',
@@ -1613,16 +1648,16 @@ test('health refuses missing declared artifacts and symlinked output', async () 
   const missingCheck = jsonObjects(getArray(JSON.parse(missingArtifact.stdout), 'checks'))[0] ?? {};
   expect(getString(missingCheck, 'failure_code')).toBe('missing-artifact');
 
-  await symlink('../../harness.yaml', join(root, '.harness/health/link.json'));
+  await symlink('../../harness.yaml', join(root, '.harness/outputs/health/link.json'));
   const beforeSymlinkedOutput = await run(
-    ['health', '--output', '.harness/health/link.json'],
+    ['health', '--output', '.harness/outputs/health/link.json'],
     root,
   );
   expect(beforeSymlinkedOutput.code).toBe(ExitCode.usageError);
   expect(beforeSymlinkedOutput.stderr).toContain('Refusing to write through symlink');
 
   const symlinkedOutput = await run(
-    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/link.json'],
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/outputs/health/link.json'],
     root,
   );
   expect(symlinkedOutput.code).toBe(ExitCode.usageError);
@@ -1636,19 +1671,24 @@ test('health refuses missing declared artifacts and symlinked output', async () 
   expect(outsideOutput.stderr).toContain('health --output must be inside health.output_dir');
 
   const traversalOutput = await run(
-    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/../../harness.yaml'],
+    [
+      'health',
+      '--accept-unsandboxed-execution',
+      '--output',
+      '.harness/outputs/health/../../harness.yaml',
+    ],
     root,
   );
   expect(traversalOutput.code).toBe(ExitCode.usageError);
   expect(traversalOutput.stderr).toContain('health --output must be inside health.output_dir');
 
   const uniqueOutput = await run(
-    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/result.json'],
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/outputs/health/result.json'],
     root,
   );
   expect(uniqueOutput.code).toBe(ExitCode.validationError);
   const duplicateOutput = await run(
-    ['health', '--accept-unsandboxed-execution', '--output', '.harness/health/result.json'],
+    ['health', '--accept-unsandboxed-execution', '--output', '.harness/outputs/health/result.json'],
     root,
   );
   expect(duplicateOutput.code).toBe(ExitCode.usageError);
@@ -1660,7 +1700,13 @@ test('health rejects symlinked harness before output preflight reads it', async 
   await run(['init'], root);
   await symlink('harness.yaml', join(root, 'harness-link.yaml'));
   const result = await run(
-    ['health', '--file', 'harness-link.yaml', '--output', '.harness/health/symlink-harness.json'],
+    [
+      'health',
+      '--file',
+      'harness-link.yaml',
+      '--output',
+      '.harness/outputs/health/symlink-harness.json',
+    ],
     root,
   );
   expect(result.code).toBe(ExitCode.usageError);
@@ -1712,6 +1758,9 @@ test('runner readiness reports stub and live readiness without executing models'
 test('runner readiness refuses unsupported live prerequisites', async () => {
   const root = await tempRoot();
   await run(['init'], root);
+  await mkdir(join(root, 'examples/model-profiles'), { recursive: true });
+  await mkdir(join(root, 'examples/policies'), { recursive: true });
+  await mkdir(join(root, 'examples/agent-runners'), { recursive: true });
   await writeFile(
     join(root, 'examples/model-profiles/live-ready.yaml'),
     await readFile('examples/model-profiles/live-ready.yaml', 'utf8'),
@@ -1723,10 +1772,20 @@ test('runner readiness refuses unsupported live prerequisites', async () => {
   await writeFile(
     join(root, 'examples/agent-runners/live-missing-redaction.yaml'),
     (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
+      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
+      .replaceAll(
+        'examples/policies/approval-policy.yaml',
+        '.harness/policies/approval-policy.yaml',
+      )
+      .replaceAll(
+        'examples/evals/harness-self-test/v1.0.0/task.yaml',
+        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
+      )
       .replace(
         'sandbox: examples/policies/live-sandbox-policy.yaml',
-        'sandbox: examples/policies/sandbox-policy.yaml',
+        'sandbox: .harness/policies/sandbox-policy.yaml',
       )
+      .replace('trace_output: .harness/traces', 'trace_output: .harness/outputs/traces')
       .replace(/trace_redaction:\n(?: {2}.+\n)+credential_reference:/, 'credential_reference:'),
   );
   const result = await run(
@@ -1759,11 +1818,20 @@ test('runner readiness refuses unsupported live prerequisites', async () => {
   await writeFile(
     join(root, 'examples/agent-runners/live-stub-model.yaml'),
     (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
+      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
+      .replaceAll(
+        'examples/policies/approval-policy.yaml',
+        '.harness/policies/approval-policy.yaml',
+      )
+      .replaceAll(
+        'examples/evals/harness-self-test/v1.0.0/task.yaml',
+        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
+      )
       .replace(
         'model_profile: examples/model-profiles/live-ready.yaml',
-        'model_profile: examples/model-profiles/stub.yaml',
+        'model_profile: .harness/model-profiles/stub.yaml',
       )
-      .replace('trace_output: .harness/traces', 'trace_output: ../../traces'),
+      .replace('trace_output: .harness/outputs/traces', 'trace_output: ../../traces'),
   );
   const stubModel = await run(
     [
@@ -1804,10 +1872,21 @@ test('runner readiness refuses unsupported live prerequisites', async () => {
   );
   await writeFile(
     join(root, 'examples/agent-runners/live-extra-secret.yaml'),
-    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8')).replace(
-      'sandbox: examples/policies/live-sandbox-policy.yaml',
-      'sandbox: examples/policies/live-sandbox-policy-extra-secret.yaml',
-    ),
+    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
+      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
+      .replaceAll(
+        'examples/policies/approval-policy.yaml',
+        '.harness/policies/approval-policy.yaml',
+      )
+      .replaceAll(
+        'examples/evals/harness-self-test/v1.0.0/task.yaml',
+        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
+      )
+      .replace(
+        'sandbox: examples/policies/live-sandbox-policy.yaml',
+        'sandbox: examples/policies/live-sandbox-policy-extra-secret.yaml',
+      )
+      .replace('trace_output: .harness/traces', 'trace_output: .harness/outputs/traces'),
   );
   const extraSecret = await run(
     [
@@ -1836,9 +1915,9 @@ test('runner readiness refuses unsupported live prerequisites', async () => {
 test('profile validates and runs gc stability evidence', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  await mkdir(join(root, '.harness/gc'), { recursive: true });
+  await mkdir(join(root, '.harness/outputs/gc'), { recursive: true });
   await writeFile(
-    join(root, '.harness/gc/clean.json'),
+    join(root, '.harness/outputs/gc/clean.json'),
     JSON.stringify(
       {
         schema_version: '0.1.0',
@@ -1857,7 +1936,7 @@ test('profile validates and runs gc stability evidence', async () => {
       '--format',
       'json',
       '--output',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--run-id',
       'profile-health',
     ],
@@ -1865,20 +1944,20 @@ test('profile validates and runs gc stability evidence', async () => {
   );
   expect(health.code).toBe(ExitCode.ok);
 
-  const validate = await run(['profile', 'validate', 'examples/profiles/gc-stability.yaml'], root);
+  const validate = await run(['profile', 'validate', '.harness/profiles/gc-stability.yaml'], root);
   expect(validate.code).toBe(ExitCode.ok);
 
   const result = await run(
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
-      '.harness/gc/clean.json',
+      '.harness/outputs/gc/clean.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--output',
-      '.harness/profiles/gc-stability.json',
+      '.harness/outputs/profile-runs/gc-stability.json',
       '--run-id',
       'profile-clean',
       '--format',
@@ -1889,7 +1968,7 @@ test('profile validates and runs gc stability evidence', async () => {
   expect(result.code).toBe(ExitCode.ok);
   expect(result.stdout).toContain('harness profile run met');
   const profileRun = JSON.parse(
-    await readFile(join(root, '.harness/profiles/gc-stability.json'), 'utf8'),
+    await readFile(join(root, '.harness/outputs/profile-runs/gc-stability.json'), 'utf8'),
   );
   const schemas = await loadSchemaRegistry(process.cwd());
   expect(schemas.validate('profile-run', profileRun)).toEqual([]);
@@ -1904,13 +1983,13 @@ test('profile validates and runs gc stability evidence', async () => {
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
-      '.harness/gc/clean.json',
+      '.harness/outputs/gc/clean.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--previous-run',
-      '.harness/profiles/gc-stability.json',
+      '.harness/outputs/profile-runs/gc-stability.json',
       '--run-id',
       'profile-clean-repeat',
       '--format',
@@ -1925,20 +2004,20 @@ test('profile validates and runs gc stability evidence', async () => {
   ).toBe(2);
 
   await writeFile(
-    join(root, '.harness/profiles/foreign.json'),
+    join(root, '.harness/outputs/profile-runs/foreign.json'),
     JSON.stringify({ ...profileRun, profile_id: 'other-profile' }, null, 2),
   );
   const foreignPrevious = await run(
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
-      '.harness/gc/clean.json',
+      '.harness/outputs/gc/clean.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--previous-run',
-      '.harness/profiles/foreign.json',
+      '.harness/outputs/profile-runs/foreign.json',
       '--format',
       'json',
     ],
@@ -1950,31 +2029,31 @@ test('profile validates and runs gc stability evidence', async () => {
   );
 
   const profileWithoutPreviousInput = (
-    await readFile(join(root, 'examples/profiles/gc-stability.yaml'), 'utf8')
+    await readFile(join(root, '.harness/profiles/gc-stability.yaml'), 'utf8')
   ).replace(/ {2}- id: previous-gc-stability\n {4}kind: profile-run\n {4}required: false\n/, '');
   await writeFile(
-    join(root, 'examples/profiles/gc-stability-no-previous.yaml'),
+    join(root, '.harness/profiles/gc-stability-no-previous.yaml'),
     profileWithoutPreviousInput,
   );
   const harnessPath = join(root, 'harness.yaml');
   await writeFile(
     harnessPath,
     (await readFile(harnessPath, 'utf8')).replace(
-      '    - examples/profiles/gc-stability.yaml',
-      '    - examples/profiles/gc-stability.yaml\n    - examples/profiles/gc-stability-no-previous.yaml',
+      '    - .harness/profiles/gc-stability.yaml',
+      '    - .harness/profiles/gc-stability.yaml\n    - .harness/profiles/gc-stability-no-previous.yaml',
     ),
   );
   const undeclaredPrevious = await run(
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability-no-previous.yaml',
+      '.harness/profiles/gc-stability-no-previous.yaml',
       '--gc-evidence',
-      '.harness/gc/clean.json',
+      '.harness/outputs/gc/clean.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--previous-run',
-      '.harness/profiles/gc-stability.json',
+      '.harness/outputs/profile-runs/gc-stability.json',
       '--format',
       'json',
     ],
@@ -1987,9 +2066,9 @@ test('profile validates and runs gc stability evidence', async () => {
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--format',
       'json',
     ],
@@ -1999,19 +2078,19 @@ test('profile validates and runs gc stability evidence', async () => {
   expect(missingRequired.stderr).toContain('profile run requires --gc-evidence');
 
   await writeFile(
-    join(root, 'examples/profiles/unlisted.yaml'),
-    await readFile(join(root, 'examples/profiles/gc-stability.yaml'), 'utf8'),
+    join(root, '.harness/profiles/unlisted.yaml'),
+    await readFile(join(root, '.harness/profiles/gc-stability.yaml'), 'utf8'),
   );
   const unlisted = await run(
     [
       'profile',
       'run',
       '--profile',
-      'examples/profiles/unlisted.yaml',
+      '.harness/profiles/unlisted.yaml',
       '--gc-evidence',
-      '.harness/gc/clean.json',
+      '.harness/outputs/gc/clean.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--format',
       'json',
     ],
@@ -2024,11 +2103,11 @@ test('profile validates and runs gc stability evidence', async () => {
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
-      '.harness/gc/clean.json',
+      '.harness/outputs/gc/clean.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--output',
       'profile-outside.json',
     ],
@@ -2041,11 +2120,11 @@ test('profile validates and runs gc stability evidence', async () => {
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
       'gc-outside.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--format',
       'json',
     ],
@@ -2058,11 +2137,11 @@ test('profile validates and runs gc stability evidence', async () => {
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
-      '.harness/gc/../../harness.yaml',
+      '.harness/outputs/gc/../../../harness.yaml',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--format',
       'json',
     ],
@@ -2075,13 +2154,13 @@ test('profile validates and runs gc stability evidence', async () => {
     [
       'profile',
       'run',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
-      '.harness/gc/clean.json',
+      '.harness/outputs/gc/clean.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--output',
-      '.harness/profiles/../profile-outside.json',
+      '.harness/outputs/profile-runs/../profile-outside.json',
     ],
     root,
   );
@@ -2092,9 +2171,9 @@ test('profile validates and runs gc stability evidence', async () => {
 test('profile run reports not-met without cleanup for dirty gc evidence', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  await mkdir(join(root, '.harness/gc'), { recursive: true });
+  await mkdir(join(root, '.harness/outputs/gc'), { recursive: true });
   await writeFile(
-    join(root, '.harness/gc/dirty.json'),
+    join(root, '.harness/outputs/gc/dirty.json'),
     JSON.stringify(
       {
         schema_version: '0.1.0',
@@ -2135,7 +2214,7 @@ test('profile run reports not-met without cleanup for dirty gc evidence', async 
       '--format',
       'json',
       '--output',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
     ],
     root,
   );
@@ -2146,11 +2225,11 @@ test('profile run reports not-met without cleanup for dirty gc evidence', async 
       'profile',
       'run',
       '--profile',
-      'examples/profiles/gc-stability.yaml',
+      '.harness/profiles/gc-stability.yaml',
       '--gc-evidence',
-      '.harness/gc/dirty.json',
+      '.harness/outputs/gc/dirty.json',
       '--health-result',
-      '.harness/health/profile-health.json',
+      '.harness/outputs/health/profile-health.json',
       '--format',
       'json',
       '--run-id',
@@ -2491,13 +2570,13 @@ test('gc validate rejects symlinked local refs', async () => {
 test('gc audit writes append-only output', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const outputPath = '.harness/gc/test-gc.json';
+  const outputPath = '.harness/outputs/gc/test-gc.json';
   const first = await run(
     ['gc', 'audit', '--format', 'json', '--output', outputPath, '--audit-id', 'append-only-gc'],
     root,
   );
   expect(first.code).toBe(ExitCode.ok);
-  expect(first.stdout).toContain('wrote .harness/gc/test-gc.json');
+  expect(first.stdout).toContain('wrote .harness/outputs/gc/test-gc.json');
 
   const second = await run(['gc', 'audit', '--output', outputPath], root);
   expect(second.code).toBe(ExitCode.usageError);
@@ -2512,7 +2591,10 @@ test('gc audit rejects invalid previous-audit paths before producing evidence', 
   expect(escaped.code).toBe(ExitCode.usageError);
   expect(escaped.stderr).toContain('GC previous audit escapes root');
 
-  const missing = await run(['gc', 'audit', '--previous-audit', '.harness/gc/missing.json'], root);
+  const missing = await run(
+    ['gc', 'audit', '--previous-audit', '.harness/outputs/gc/missing.json'],
+    root,
+  );
   expect(missing.code).toBe(ExitCode.notFound);
   expect(missing.stderr).toContain('GC previous audit not found');
 });
@@ -2617,15 +2699,20 @@ test('doctor writes output inside root and report can summarize it', async () =>
   await run(['init'], root);
 
   const doctor = await run(
-    ['doctor', '--format', 'json', '--output', '.harness/doctor/result.json'],
+    ['doctor', '--format', 'json', '--output', '.harness/outputs/doctor/result.json'],
     root,
   );
   expect(doctor.code).toBe(ExitCode.ok);
-  expect(doctor.stdout).toContain('harness doctor passed: wrote .harness/doctor/result.json');
+  expect(doctor.stdout).toContain(
+    'harness doctor passed: wrote .harness/outputs/doctor/result.json',
+  );
 
-  const report = await run(['report', '--doctor-result', '.harness/doctor/result.json'], root);
+  const report = await run(
+    ['report', '--doctor-result', '.harness/outputs/doctor/result.json'],
+    root,
+  );
   expect(report.code).toBe(ExitCode.ok);
-  expect(report.stdout).toContain('- doctor result: .harness/doctor/result.json');
+  expect(report.stdout).toContain('- doctor result: .harness/outputs/doctor/result.json');
   expect(report.stdout).toContain('  status: passed');
 });
 
@@ -2836,6 +2923,10 @@ test('report validates judge results linked from run-result artifacts', async ()
   await run(['init'], root);
   await mkdir(join(root, 'examples/judges/results/policy-violations'), { recursive: true });
   await writeFile(
+    join(root, 'examples/judges/policy.yaml'),
+    await readFile('examples/judges/policy.yaml', 'utf8'),
+  );
+  await writeFile(
     join(root, 'examples/judges/results/policy-violations/blocking-low-agreement.json'),
     await readFile('examples/judges/results/policy-violations/blocking-low-agreement.json', 'utf8'),
   );
@@ -2993,16 +3084,21 @@ test('eval validate appends run results and writes verifier artifacts', async ()
   const root = await tempRoot();
   await run(['init'], root);
 
-  const result = await run(['eval', 'validate', '--output', '.harness/run-results.jsonl'], root);
+  const result = await run(
+    ['eval', 'validate', '--output', '.harness/outputs/run-results.jsonl'],
+    root,
+  );
   expect(result.code).toBe(ExitCode.ok);
-  expect(result.stdout).toContain('harness eval validate passed: wrote .harness/run-results.jsonl');
+  expect(result.stdout).toContain(
+    'harness eval validate passed: wrote .harness/outputs/run-results.jsonl',
+  );
   const secondResult = await run(
-    ['eval', 'validate', '--output', '.harness/run-results.jsonl'],
+    ['eval', 'validate', '--output', '.harness/outputs/run-results.jsonl'],
     root,
   );
   expect(secondResult.code).toBe(ExitCode.ok);
 
-  const lines = (await readFile(join(root, '.harness/run-results.jsonl'), 'utf8'))
+  const lines = (await readFile(join(root, '.harness/outputs/run-results.jsonl'), 'utf8'))
     .trim()
     .split('\n');
   expect(lines.length).toBe(4);
@@ -3034,31 +3130,34 @@ test('eval validate appends run results and writes verifier artifacts', async ()
 test('eval validate treats dot output declarations as root-contained allowlists', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(
     taskPath,
     task.replace(
-      `      - .harness/run-results.jsonl
-      - .harness/verifier-results`,
+      `      - .harness/outputs/run-results.jsonl
+      - .harness/outputs/verifier-results`,
       '      - .',
     ),
   );
 
-  const result = await run(['eval', 'validate', '--output', '.harness/run-results.jsonl'], root);
+  const result = await run(
+    ['eval', 'validate', '--output', '.harness/outputs/run-results.jsonl'],
+    root,
+  );
   expect(result.code).toBe(ExitCode.ok);
 });
 
 test('eval validate canonicalizes candidate paths for trust checks', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(
     taskPath,
     task.replace(
-      'artifact: examples/evals/harness-self-test/v1.0.0/oracle.txt',
-      'artifact: ./examples/evals/harness-self-test/v1.0.0/oracle.txt',
+      'artifact: .harness/evals/harness-self-test/v1.0.0/oracle.txt',
+      'artifact: ./.harness/evals/harness-self-test/v1.0.0/oracle.txt',
     ),
   );
 
@@ -3069,7 +3168,7 @@ test('eval validate canonicalizes candidate paths for trust checks', async () =>
 test('eval validate rejects stale dataset hashes before verifier execution', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(
     taskPath,
@@ -3079,7 +3178,7 @@ test('eval validate rejects stale dataset hashes before verifier execution', asy
     ),
   );
   await writeFile(
-    join(root, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'),
+    join(root, '.harness/evals/harness-self-test/v1.0.0/oracle.txt'),
     'schema-smoke passes after an unrecorded dataset edit.\n',
   );
 
@@ -3095,7 +3194,7 @@ test('eval validate rejects stale dataset hashes before verifier execution', asy
 test('eval validate refuses unsafe verifier trust declarations', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(
     taskPath,
@@ -3129,7 +3228,7 @@ test('eval validate fails when oracle fails or broken twin passes unexpectedly',
   const oracleRoot = await tempRoot();
   await run(['init'], oracleRoot);
   await writeFile(
-    join(oracleRoot, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'),
+    join(oracleRoot, '.harness/evals/harness-self-test/v1.0.0/oracle.txt'),
     'schema-smoke no longer has the passing marker.\n',
   );
   await refreshSelfTestDatasetHash(oracleRoot);
@@ -3148,7 +3247,7 @@ test('eval validate fails when oracle fails or broken twin passes unexpectedly',
   const brokenTwinRoot = await tempRoot();
   await run(['init'], brokenTwinRoot);
   await writeFile(
-    join(brokenTwinRoot, 'examples/evals/harness-self-test/v1.0.0/broken-twin.txt'),
+    join(brokenTwinRoot, '.harness/evals/harness-self-test/v1.0.0/broken-twin.txt'),
     'schema-smoke passes even though this is the broken twin.\n',
   );
   await refreshSelfTestDatasetHash(brokenTwinRoot);
@@ -3170,7 +3269,7 @@ test('eval validate rejects run ids that could escape verifier output paths', as
   await run(['init'], root);
 
   const result = await run(
-    ['eval', 'validate', '--output', '.harness/run-results.jsonl', '--run-id', '../escape'],
+    ['eval', 'validate', '--output', '.harness/outputs/run-results.jsonl', '--run-id', '../escape'],
     root,
   );
   expect(result.code).toBe(ExitCode.usageError);
@@ -3180,7 +3279,7 @@ test('eval validate rejects run ids that could escape verifier output paths', as
 test('eval validate distinguishes verifier command errors from verification failures', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(
     taskPath,
@@ -3210,7 +3309,7 @@ test('eval validate distinguishes verifier command errors from verification fail
 test('eval validate reports verifier command timeouts distinctly', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(
     taskPath,
@@ -3246,10 +3345,16 @@ test('eval validate refuses to write run results through symlinks', async () => 
   await mkdir(root);
   await mkdir(sensitive);
   await run(['init'], root);
-  await rm(join(root, '.harness/run-results.jsonl'));
-  await symlink(join(sensitive, 'run-results.jsonl'), join(root, '.harness/run-results.jsonl'));
+  await rm(join(root, '.harness/outputs/run-results.jsonl'));
+  await symlink(
+    join(sensitive, 'run-results.jsonl'),
+    join(root, '.harness/outputs/run-results.jsonl'),
+  );
 
-  const result = await run(['eval', 'validate', '--output', '.harness/run-results.jsonl'], root);
+  const result = await run(
+    ['eval', 'validate', '--output', '.harness/outputs/run-results.jsonl'],
+    root,
+  );
   expect(result.code).toBe(ExitCode.usageError);
   expect(result.stderr).toContain('Refusing to write through symlink');
 });
@@ -3261,7 +3366,7 @@ test('run executes a deterministic stub task and writes agent artifacts', async 
   const result = await run(
     [
       'run',
-      'examples/evals/harness-self-test/v1.0.0/task.yaml',
+      '.harness/evals/harness-self-test/v1.0.0/task.yaml',
       '--run-id',
       'stub-single',
       '--session-id',
@@ -3278,7 +3383,7 @@ test('run executes a deterministic stub task and writes agent artifacts', async 
 
   const tracePath = requiredStringForTest(summary, 'trace');
   const verifierResultPath = requiredStringForTest(summary, 'verifier_result');
-  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
   expect(runResults.length).toBe(1);
   const runResult = runResults[0] ?? {};
   const schemas = await loadSchemaRegistry(process.cwd());
@@ -3337,7 +3442,7 @@ test('run imports an external candidate and writes external-import artifacts', a
   expect(getString(summary, 'actual_status')).toBe('passed');
   expect(getString(summary, 'source_candidate')).toBe('candidate.txt');
 
-  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
   expect(runResults.length).toBe(1);
   const runResult = runResults[0] ?? {};
   const schemas = await loadSchemaRegistry(process.cwd());
@@ -3372,7 +3477,7 @@ test('run imports an external candidate and writes external-import artifacts', a
   expect(getString(verifierResult, 'status')).toBe('passed');
 
   const externalOnlyAssessment = await run(
-    ['assess', '--format', 'json', '--run-results', '.harness/run-results.jsonl'],
+    ['assess', '--format', 'json', '--run-results', '.harness/outputs/run-results.jsonl'],
     root,
   );
   expect(externalOnlyAssessment.code).toBe(ExitCode.ok);
@@ -3386,6 +3491,9 @@ test('run imports an external candidate and writes external-import artifacts', a
     'not counted as agent-run evidence',
   );
 
+  await mkdir(join(root, 'examples/model-profiles'), { recursive: true });
+  await mkdir(join(root, 'examples/policies'), { recursive: true });
+  await mkdir(join(root, 'examples/agent-runners'), { recursive: true });
   await writeFile(
     join(root, 'examples/model-profiles/live-ready.yaml'),
     await readFile('examples/model-profiles/live-ready.yaml', 'utf8'),
@@ -3396,7 +3504,17 @@ test('run imports an external candidate and writes external-import artifacts', a
   );
   await writeFile(
     join(root, 'examples/agent-runners/live-ready.yaml'),
-    await readFile('examples/agent-runners/live-ready.yaml', 'utf8'),
+    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
+      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
+      .replaceAll(
+        'examples/policies/approval-policy.yaml',
+        '.harness/policies/approval-policy.yaml',
+      )
+      .replaceAll(
+        'examples/evals/harness-self-test/v1.0.0/task.yaml',
+        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
+      )
+      .replace('trace_output: .harness/traces', 'trace_output: .harness/outputs/traces'),
   );
   const liveRunnerImport = await run(
     [
@@ -3415,7 +3533,9 @@ test('run imports an external candidate and writes external-import artifacts', a
     root,
   );
   expect(liveRunnerImport.code).toBe(ExitCode.ok);
-  const liveRunnerRunResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const liveRunnerRunResults = await readJsonLines(
+    join(root, '.harness/outputs/run-results.jsonl'),
+  );
   const liveRunnerRunResult = liveRunnerRunResults.find((entry) =>
     requiredStringForTest(entry, 'run_id').startsWith('external-import-live-runner-import'),
   );
@@ -3444,7 +3564,7 @@ test('run refuses to replace agent-run evidence with external-import evidence', 
   expect(externalImport.stderr).toContain('Refusing to replace run-result');
   expect(externalImport.stderr).toContain('eval/agent-run -> external-import/external-import');
 
-  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
   expect(runResults.length).toBe(1);
   expect(getString(runResults[0] ?? {}, 'kind')).toBe('eval');
   expect(await readFile(join(root, agentOutputPath), 'utf8')).toBe(originalAgentOutput);
@@ -3471,7 +3591,7 @@ test('eval run refuses to replace external-import evidence before writing artifa
   expect(evalRun.stderr).toContain('Refusing to replace run-result');
   expect(evalRun.stderr).toContain('external-import/external-import -> eval/agent-run');
 
-  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
   expect(runResults.length).toBe(1);
   expect(getString(runResults[0] ?? {}, 'kind')).toBe('external-import');
   expect(await readFile(join(root, agentOutputPath), 'utf8')).toBe(originalAgentOutput);
@@ -3505,7 +3625,7 @@ test('run refuses unsafe external candidates and records verifier failures hones
     root,
   );
   expect(failed.code).toBe(ExitCode.validationError);
-  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
   const runResult = runResults[0] ?? {};
   expect(getString(runResult, 'kind')).toBe('external-import');
   expect(getString(runResult, 'status')).toBe('failed');
@@ -3576,7 +3696,7 @@ test('run replaces duplicate agent-run ledger entries for the same run id', asyn
   expect(first.code).toBe(ExitCode.ok);
   expect(second.code).toBe(ExitCode.ok);
 
-  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
   expect(runResults.length).toBe(1);
   expect(requiredStringForTest(runResults[0] ?? {}, 'run_id')).toContain('stub-repeat');
 });
@@ -3602,10 +3722,10 @@ test('run rejects empty session ids and symlinked stub outputs', async () => {
   await mkdir(root);
   await run(['init'], root);
   await writeFile(join(parent, 'outside-oracle.txt'), 'schema-smoke passes outside root.\n');
-  await rm(join(root, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'));
+  await rm(join(root, '.harness/evals/harness-self-test/v1.0.0/oracle.txt'));
   await symlink(
     join(parent, 'outside-oracle.txt'),
-    join(root, 'examples/evals/harness-self-test/v1.0.0/oracle.txt'),
+    join(root, '.harness/evals/harness-self-test/v1.0.0/oracle.txt'),
   );
   await refreshSelfTestDatasetHash(root);
 
@@ -3634,7 +3754,7 @@ test('run rejects deterministic runners without explicit budgets', async () => {
 test('run rejects non-stub credential sources', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const runnerPath = join(root, 'examples/agent-runners/stub.yaml');
+  const runnerPath = join(root, '.harness/agent-runners/stub.yaml');
   const runner = await readFile(runnerPath, 'utf8');
   await writeFile(runnerPath, runner.replace('source: stub', 'source: env'));
 
@@ -3670,7 +3790,7 @@ test('eval run emits agent-run results, traces, and a failure-bucket scoreboard'
   const schemas = await loadSchemaRegistry(process.cwd());
   const runResults = jsonObjects(getArray(evalRun, 'run_results'));
   expect(runResults.length).toBe(2);
-  const ledgerRunResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const ledgerRunResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
   expect(ledgerRunResults.map((runResult) => getString(runResult, 'run_id')).sort()).toEqual(
     runResults.map((runResult) => getString(runResult, 'run_id')).sort(),
   );
@@ -3729,7 +3849,7 @@ test('eval run emits agent-run results, traces, and a failure-bucket scoreboard'
 test('eval run maps harness refusals into scoreboard failure buckets', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(taskPath, task.replace('network_access: false', 'network_access: true'));
 
@@ -3760,7 +3880,7 @@ test('eval run maps harness refusals into scoreboard failure buckets', async () 
   expect(
     jsonObjects(getArray(trace, 'actions')).map((action) => getString(action, 'type')),
   ).toEqual(['system']);
-  expect(await readdir(join(root, '.harness/agent-outputs'))).toEqual([]);
+  expect(await readdir(join(root, '.harness/outputs/agent-outputs'))).toEqual([]);
 
   const scoreboard = JSON.parse(
     await readFile(join(root, requiredStringForTest(evalRun, 'scoreboard')), 'utf8'),
@@ -3774,7 +3894,7 @@ test('eval run maps harness refusals into scoreboard failure buckets', async () 
 test('eval run maps verifier command errors into scoreboard failure buckets', async () => {
   const root = await tempRoot();
   await run(['init'], root);
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const task = await readFile(taskPath, 'utf8');
   await writeFile(
     taskPath,
@@ -3834,15 +3954,17 @@ test('trace validates configured examples and imports normalized traces', async 
       'trace',
       'import',
       '--input',
-      'examples/traces/external-import.json',
+      '.harness/traces/samples/external-import.json',
       '--output',
-      '.harness/traces/imported.json',
+      '.harness/outputs/traces/imported.json',
     ],
     root,
   );
   expect(imported.code).toBe(ExitCode.ok);
   expect(imported.stdout).toContain('harness trace import passed');
-  const trace = JSON.parse(await readFile(join(root, '.harness/traces/imported.json'), 'utf8'));
+  const trace = JSON.parse(
+    await readFile(join(root, '.harness/outputs/traces/imported.json'), 'utf8'),
+  );
   const schemas = await loadSchemaRegistry(process.cwd());
   expect(schemas.validate('trace', trace)).toEqual([]);
   expect(getString(trace, 'determinism_level')).toBe('external-import');
@@ -3851,15 +3973,18 @@ test('trace validates configured examples and imports normalized traces', async 
   const symlinkRoot = join(parent, 'repo');
   await mkdir(symlinkRoot);
   await run(['init'], symlinkRoot);
-  await symlink(join(parent, 'outside-trace.json'), join(symlinkRoot, '.harness/traces/link.json'));
+  await symlink(
+    join(parent, 'outside-trace.json'),
+    join(symlinkRoot, '.harness/outputs/traces/link.json'),
+  );
   const symlinkedOutput = await run(
     [
       'trace',
       'import',
       '--input',
-      'examples/traces/external-import.json',
+      '.harness/traces/samples/external-import.json',
       '--output',
-      '.harness/traces/link.json',
+      '.harness/outputs/traces/link.json',
     ],
     symlinkRoot,
   );
@@ -3872,13 +3997,16 @@ test('trace commands reject directory and symlink inputs', async () => {
   const root = join(parent, 'repo');
   await mkdir(root);
   await run(['init'], root);
-  await symlink(join(root, 'examples/traces/native-cli-trace.json'), join(root, 'trace-link.json'));
+  await symlink(
+    join(root, '.harness/traces/samples/native-cli-trace.json'),
+    join(root, 'trace-link.json'),
+  );
 
   const symlinkedInput = await run(['trace', 'validate', 'trace-link.json'], root);
   expect(symlinkedInput.code).toBe(ExitCode.usageError);
   expect(symlinkedInput.stderr).toContain('Refusing to write through symlink');
 
-  const directoryInput = await run(['trace', 'validate', 'examples/traces'], root);
+  const directoryInput = await run(['trace', 'validate', '.harness/traces'], root);
   expect(directoryInput.code).toBe(ExitCode.usageError);
   expect(directoryInput.stderr).toContain('Trace artifact must be a file');
 });
@@ -4033,7 +4161,7 @@ async function readJsonLines(path: string): Promise<JsonObject[]> {
 }
 
 async function refreshSelfTestDatasetHash(root: string): Promise<void> {
-  const taskPath = join(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
   const taskText = await readFile(taskPath, 'utf8');
   const task = await loadDocument(taskPath);
   if (!isObject(task)) {

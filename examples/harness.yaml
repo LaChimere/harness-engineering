@@ -40,7 +40,7 @@ model_profiles:
 agent_runners:
   default: examples/agent-runners/stub.yaml
 traces:
-  output_dir: .harness/traces
+  output_dir: .harness/outputs/traces
   examples:
     - examples/traces/native-cli-trace.json
     - examples/traces/external-import.json
@@ -49,8 +49,8 @@ evals:
     - id: harness-self-test
       version: "1.0.0"
       tasks: examples/evals/harness-self-test/v1.0.0/
-  run_results: .harness/run-results.jsonl
-  scoreboards: .harness/scoreboards
+  run_results: .harness/outputs/run-results.jsonl
+  scoreboards: .harness/outputs/scoreboards
 judges:
   policies:
     - examples/judges/policy.yaml
@@ -71,9 +71,9 @@ doctor:
           - README.md
           - AGENTS.md
         allowed_outputs:
-          - .harness/doctor/doc-links.json
+          - .harness/outputs/doctor/doc-links.json
 health:
-  output_dir: .harness/health
+  output_dir: .harness/outputs/health
   checks:
     - id: docs-present
       command:
@@ -89,7 +89,7 @@ health:
           - README.md
           - AGENTS.md
         allowed_outputs:
-          - .harness/health
+          - .harness/outputs/health
       artifacts:
         - path: README.md
           media_type: text/markdown
@@ -98,15 +98,15 @@ health:
           media_type: text/markdown
           description: Agent instruction file.
 continuity:
-  state_dir: .harness/continuity
+  state_dir: .harness/outputs/continuity
   startup_smoke_test:
     command: harness validate
     timeout_seconds: 300
-  handoff_dir: .harness/handoffs
+  handoff_dir: .harness/outputs/handoffs
   session_id_env: HARNESS_SESSION_ID
 gc:
-  evidence_dir: .harness/gc
+  evidence_dir: .harness/outputs/gc
 recurring_profiles:
-  output_dir: .harness/profiles
+  output_dir: .harness/outputs/profile-runs
   profiles:
     - examples/profiles/gc-stability.yaml

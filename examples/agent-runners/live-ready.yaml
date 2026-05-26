@@ -10,7 +10,7 @@ tool_adapter:
 task_input: examples/evals/harness-self-test/v1.0.0/task.yaml
 sandbox: examples/policies/live-sandbox-policy.yaml
 approval_policy: examples/policies/approval-policy.yaml
-trace_output: .harness/traces
+trace_output: .harness/outputs/traces
 trace_redaction:
   recorded_fields:
     - run_id

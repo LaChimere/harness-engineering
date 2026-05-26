@@ -24,11 +24,11 @@ test('GitHub Actions CI recipe stays CLI-first and evidence-backed', async () =>
 
   for (const expected of [
     'node dist/index.js validate --file examples/harness.yaml',
-    'node dist/index.js doctor --file examples/harness.yaml --format json --output .harness/doctor/ci-doctor.json',
-    'node dist/index.js health --file examples/harness.yaml --accept-unsandboxed-execution --format json --output .harness/health/ci-health.json',
-    'node dist/index.js gc audit --file examples/harness.yaml --format json --output .harness/gc/ci-gc.json',
-    'node dist/index.js eval validate --file examples/harness.yaml --output .harness/run-results.jsonl',
-    'node dist/index.js trace validate --file examples/harness.yaml --format json > .harness/reports/ci-trace-validation.json',
+    'node dist/index.js doctor --file examples/harness.yaml --format json --output .harness/outputs/doctor/ci-doctor.json',
+    'node dist/index.js health --file examples/harness.yaml --accept-unsandboxed-execution --format json --output .harness/outputs/health/ci-health.json',
+    'node dist/index.js gc audit --file examples/harness.yaml --format json --output .harness/outputs/gc/ci-gc.json',
+    'node dist/index.js eval validate --file examples/harness.yaml --output .harness/outputs/run-results.jsonl',
+    'node dist/index.js trace validate --file examples/harness.yaml --format json > .harness/outputs/reports/ci-trace-validation.json',
   ]) {
     expect(commands).toContain(expected);
   }
@@ -59,7 +59,7 @@ test('GitHub Actions CI recipe stays CLI-first and evidence-backed', async () =>
   const uploadStep = steps.find((step) => getString(step, 'uses') === 'actions/upload-artifact@v4');
   expect(uploadStep).toBeDefined();
   const withBlock = getObject(uploadStep ?? {}, 'with') ?? {};
-  expect(getString(withBlock, 'path')).toBe('.harness/**');
+  expect(getString(withBlock, 'path')).toBe('.harness/outputs/**');
 });
 
 function stringifyJson(value: JsonValue): string {

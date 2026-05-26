@@ -115,7 +115,7 @@ test(
       expectSuccess(await runProcess(downstreamRoot, runtimePath, [packedCli, 'validate']), [
         'packed harness validate',
       ]);
-      const healthPath = '.harness/health/packed-health.json';
+      const healthPath = '.harness/outputs/health/packed-health.json';
       expectSuccess(
         await runProcess(downstreamRoot, runtimePath, [
           packedCli,
@@ -156,13 +156,13 @@ test(
       expect(await pathExists(join(root, 'harness.yaml'))).toBe(true);
       expect(await readFile(join(root, 'README.md'), 'utf8')).toContain('Minimal Consumer');
       expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toContain('Agent Instructions');
-      await expectFile(root, 'examples/evals/harness-self-test/v1.0.0/task.yaml');
+      await expectFile(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
       await expectFile(root, 'src/greet.js');
       expectSuccess(await runProjectTest(root), ['bun', 'run', 'test']);
 
       expectSuccess(await runHarness(root, ['validate']), ['validate']);
 
-      const doctorPath = '.harness/doctor/e2e-doctor.json';
+      const doctorPath = '.harness/outputs/doctor/e2e-doctor.json';
       expectSuccess(
         await runHarness(root, [
           'doctor',
@@ -177,7 +177,7 @@ test(
       );
       expect(getString(await readJsonObject(join(root, doctorPath)), 'status')).toBe('passed');
 
-      const healthPath = '.harness/health/e2e-health.json';
+      const healthPath = '.harness/outputs/health/e2e-health.json';
       expectSuccess(
         await runHarness(root, [
           'health',
@@ -191,7 +191,7 @@ test(
       );
       expect(getString(await readJsonObject(join(root, healthPath)), 'status')).toBe('passed');
 
-      const gcPath = '.harness/gc/e2e-gc.json';
+      const gcPath = '.harness/outputs/gc/e2e-gc.json';
       expectSuccess(
         await runHarness(root, [
           'gc',
@@ -207,12 +207,12 @@ test(
         ]),
         ['gc', 'audit'],
       );
-      const profilePath = '.harness/profiles/e2e-profile.json';
+      const profilePath = '.harness/outputs/profile-runs/e2e-profile.json';
       expectSuccess(
         await runHarness(root, [
           'profile',
           'run',
-          'examples/profiles/gc-stability.yaml',
+          '.harness/profiles/gc-stability.yaml',
           '--gc-evidence',
           gcPath,
           '--health-result',
@@ -236,13 +236,11 @@ test(
           '--run-id',
           'e2e-eval-validate',
           '--output',
-          '.harness/verifier-results/e2e-eval-validate.jsonl',
+          '.harness/outputs/run-results.jsonl',
         ]),
         ['eval', 'validate'],
       );
-      const verifierResults = await readJsonLines(
-        join(root, '.harness/verifier-results/e2e-eval-validate.jsonl'),
-      );
+      const verifierResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
       expect(verifierResults.map((result) => getString(result, 'status')).sort()).toEqual([
         'failed',
         'passed',
@@ -290,7 +288,7 @@ test(
       await expectArtifactFileInsideRoot(root, scoreboardPath);
       expect(getString(await readJsonObject(join(root, scoreboardPath)), 'status')).toBe('passed');
 
-      const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+      const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
       const firstRunLedgerEntry = runResults.find(
         (runResult) => getString(runResult, 'run_id') === firstRunId,
       );
@@ -315,21 +313,54 @@ test(
       const report = await runHarness(root, [
         'report',
         '--trace',
-        'examples/traces/native-cli-trace.json',
+        '.harness/traces/samples/native-cli-trace.json',
         '--scoreboard',
         scoreboardPath,
         '--doctor-result',
         doctorPath,
       ]);
       expectSuccess(report, ['report']);
-      expect(report.stdout).toContain('- scoreboard: .harness/scoreboards/e2e-eval-run.json');
-      expect(report.stdout).toContain('- doctor result: .harness/doctor/e2e-doctor.json');
-      await mkdir(join(root, '.harness/reports'), { recursive: true });
-      await writeFile(join(root, '.harness/reports/e2e-report.md'), report.stdout);
-      await mkdir(join(root, 'examples/repair-actions'), { recursive: true });
+      expect(report.stdout).toContain(
+        '- scoreboard: .harness/outputs/scoreboards/e2e-eval-run.json',
+      );
+      expect(report.stdout).toContain('- doctor result: .harness/outputs/doctor/e2e-doctor.json');
+      await mkdir(join(root, '.harness/outputs/reports'), { recursive: true });
+      await writeFile(join(root, '.harness/outputs/reports/e2e-report.md'), report.stdout);
+      await mkdir(join(root, '.harness/repair-actions'), { recursive: true });
       await writeFile(
-        join(root, 'examples/repair-actions/approved-schema-fix.yaml'),
-        await readFile(join(repoRoot, 'examples/repair-actions/approved-schema-fix.yaml'), 'utf8'),
+        join(root, '.harness/repair-actions/approved-schema-fix.yaml'),
+        `schema_version: "0.1.0"
+x-stability: provisional
+action_id: approved-schema-fix
+target_files:
+  - harness.yaml
+risk_class: low
+repair_mode: preview-backed
+preview_diff: |
+  diff --git a/harness.yaml b/harness.yaml
+  --- a/harness.yaml
+  +++ b/harness.yaml
+equivalent_cli_command:
+  command: harness validate
+  timeout_seconds: 300
+approval_state: approved
+sandbox_requirement: worktree
+trust_requirements:
+  trust_level: sandboxed
+  sandbox_required: worktree
+  network_access: false
+  secret_access: false
+  host_file_access: false
+  allowed_inputs:
+    - harness.yaml
+  allowed_outputs:
+    - .harness/outputs/repairs/approved-schema-fix.patch
+rollback_notes: Delete generated repair preview artifacts if the proposal is rejected.
+evidence_links:
+  - path: harness.yaml
+    media_type: application/yaml
+    description: Initialized downstream harness file.
+`,
       );
 
       const mixedLedgerAssessment = await runAndParseJson(root, [
@@ -341,13 +372,13 @@ test(
         '--health-result',
         healthPath,
         '--run-results',
-        '.harness/run-results.jsonl',
+        '.harness/outputs/run-results.jsonl',
         '--trace',
         firstRunTrace,
         '--scoreboard',
         scoreboardPath,
         '--report',
-        '.harness/reports/e2e-report.md',
+        '.harness/outputs/reports/e2e-report.md',
       ]);
       expect(getString(mixedLedgerAssessment, 'status')).toBe('needs-work');
       expect(
@@ -367,7 +398,8 @@ test(
       );
       expect(getString(mixedProjectHealth ?? {}, 'status')).toBe('present');
 
-      const assessmentRunResultPath = '.harness/e2e-assessment-run-result.json';
+      const assessmentRunResultPath = '.harness/outputs/run-results/e2e-assessment-run-result.json';
+      await mkdir(join(root, '.harness/outputs/run-results'), { recursive: true });
       await writeFile(
         join(root, assessmentRunResultPath),
         JSON.stringify(firstRunLedgerEntry, null, 2),
@@ -387,7 +419,9 @@ test(
         '--scoreboard',
         scoreboardPath,
         '--report',
-        '.harness/reports/e2e-report.md',
+        '.harness/outputs/reports/e2e-report.md',
+        '--repair-actions-dir',
+        '.harness/repair-actions',
       ]);
       expect(getString(assessment, 'status')).toBe('ready');
       const maturity = getObject(assessment, 'maturity') ?? {};
@@ -424,14 +458,14 @@ test(
         '--phase',
         'start',
         '--continuity',
-        'examples/continuity/e2e-loop-state.yaml',
+        '.harness/outputs/continuity/e2e-loop-state.yaml',
       ]);
       expectSuccess(loopStart, ['loop', 'validate', '--phase', 'start']);
       expect(loopStart.stdout).toContain('phase: start');
 
       const absoluteCompletionVerificationPath = join(
         root,
-        'examples/verification/e2e-completion.yaml',
+        '.harness/outputs/verification/e2e-completion.yaml',
       );
       const loopComplete = await runHarness(root, [
         'loop',
@@ -439,7 +473,7 @@ test(
         '--phase',
         'complete',
         '--continuity',
-        'examples/continuity/e2e-loop-state.yaml',
+        '.harness/outputs/continuity/e2e-loop-state.yaml',
         '--verification',
         absoluteCompletionVerificationPath,
       ]);
@@ -457,27 +491,27 @@ test(
     await withFixtureProject(async (root) => {
       expectSuccess(await runHarness(root, ['init']), ['init']);
 
-      const tracePath = join(root, 'examples/traces/native-cli-trace.json');
+      const tracePath = join(root, '.harness/traces/samples/native-cli-trace.json');
       const originalTrace = await readFile(tracePath, 'utf8');
       await writeFile(tracePath, '{ "schema_version": "0.1.0" }\n');
       const traceResult = await runHarness(root, ['trace', 'validate', '--format', 'json']);
       expectValidationFailure(traceResult, ['trace', 'validate']);
       expect(traceResult.stderr).toContain('Trace discovery failed');
-      expect(traceResult.stderr).toContain('examples/traces/native-cli-trace.json');
+      expect(traceResult.stderr).toContain('.harness/traces/samples/native-cli-trace.json');
       await writeFile(tracePath, originalTrace);
 
-      const runResultsPath = join(root, '.harness/run-results.jsonl');
+      const runResultsPath = join(root, '.harness/outputs/run-results.jsonl');
       await writeFile(runResultsPath, '{ "schema_version": "0.1.0" }\n');
       const reportResult = await runHarness(root, [
         'report',
         '--run-result',
-        '.harness/run-results.jsonl',
+        '.harness/outputs/run-results.jsonl',
       ]);
       expectValidationFailure(reportResult, ['report', '--run-result']);
       expect(reportResult.stderr).toContain('run result artifact failed schema validation');
       await writeFile(runResultsPath, '');
 
-      const modelProfilePath = join(root, 'examples/model-profiles/stub.yaml');
+      const modelProfilePath = join(root, '.harness/model-profiles/stub.yaml');
       const modelProfile = await readFile(modelProfilePath, 'utf8');
       await writeFile(
         modelProfilePath,
@@ -507,15 +541,15 @@ test(
       await writeFile(
         harnessPath,
         harness.replace(
-          'environment: examples/environments/local.yaml',
-          'environment: examples/environments/missing.yaml',
+          'environment: .harness/environments/local.yaml',
+          'environment: .harness/environments/missing.yaml',
         ),
       );
 
       const result = await runHarness(root, ['validate']);
       expectValidationFailure(result, ['validate']);
       expect(result.stdout).toContain('harness validate failed');
-      expect(result.stdout).toContain('examples/environments/missing.yaml');
+      expect(result.stdout).toContain('.harness/environments/missing.yaml');
     });
   },
   e2eTestTimeoutMs,
@@ -528,7 +562,7 @@ test(
       expectSuccess(await runHarness(root, ['init']), ['init']);
       await installLoopEvidence(root);
 
-      const completionPath = join(root, 'examples/verification/e2e-completion.yaml');
+      const completionPath = join(root, '.harness/outputs/verification/e2e-completion.yaml');
       const completion = await readFile(completionPath, 'utf8');
       await writeFile(
         completionPath,
@@ -541,9 +575,9 @@ test(
         '--phase',
         'complete',
         '--continuity',
-        'examples/continuity/e2e-loop-state.yaml',
+        '.harness/outputs/continuity/e2e-loop-state.yaml',
         '--verification',
-        'examples/verification/e2e-completion.yaml',
+        '.harness/outputs/verification/e2e-completion.yaml',
       ]);
       expectValidationFailure(result, ['loop', 'validate', '--phase', 'complete']);
       expect(result.stdout).toContain('LOOP_COMPLETION_ACCEPTANCE_MISSING');
@@ -565,11 +599,11 @@ async function withFixtureProject(runTest: (root: string) => Promise<void>): Pro
 }
 
 async function installLoopEvidence(root: string): Promise<void> {
-  await mkdir(join(root, 'examples/continuity'), { recursive: true });
-  await mkdir(join(root, 'examples/verification'), { recursive: true });
+  await mkdir(join(root, '.harness/outputs/continuity'), { recursive: true });
+  await mkdir(join(root, '.harness/outputs/verification'), { recursive: true });
   await mkdir(join(root, 'plans/minimal-consumer-loop'), { recursive: true });
   await writeFile(
-    join(root, 'examples/continuity/e2e-loop-state.yaml'),
+    join(root, '.harness/outputs/continuity/e2e-loop-state.yaml'),
     `schema_version: "0.1.0"
 session_id: minimal-consumer-e2e-loop
 feature_list:
@@ -584,13 +618,13 @@ progress_log:
   - timestamp: "2026-05-22T00:00:00Z"
     event: E2E startup verification passed before fixture work began.
     refs:
-      - path: examples/verification/e2e-startup.yaml
+      - path: .harness/outputs/verification/e2e-startup.yaml
         media_type: application/yaml
         description: Fixture-local startup self-verification evidence.
   - timestamp: "2026-05-22T00:10:00Z"
     event: E2E completion verification recorded before completion claim.
     refs:
-      - path: examples/verification/e2e-completion.yaml
+      - path: .harness/outputs/verification/e2e-completion.yaml
         media_type: application/yaml
         description: Fixture-local completion self-verification evidence.
 startup_verification:
@@ -599,10 +633,10 @@ startup_verification:
     command: harness validate
     timeout_seconds: 300
   evidence:
-    - path: examples/verification/e2e-startup.yaml
+    - path: .harness/outputs/verification/e2e-startup.yaml
       media_type: application/yaml
       description: Startup self-verification evidence.
-  self_verification_ref: examples/verification/e2e-startup.yaml
+  self_verification_ref: .harness/outputs/verification/e2e-startup.yaml
 git_checkpoint_sha: abc1234
 handoff_artifacts:
   - path: plans/minimal-consumer-loop/todo.md
@@ -612,7 +646,7 @@ unresolved_risks: []
 `,
   );
   await writeFile(
-    join(root, 'examples/verification/e2e-startup.yaml'),
+    join(root, '.harness/outputs/verification/e2e-startup.yaml'),
     `schema_version: "0.1.0"
 verification_id: e2e-startup
 spec_ref: harness.yaml
@@ -647,7 +681,7 @@ evidence_links:
 `,
   );
   await writeFile(
-    join(root, 'examples/verification/e2e-completion.yaml'),
+    join(root, '.harness/outputs/verification/e2e-completion.yaml'),
     `schema_version: "0.1.0"
 verification_id: e2e-completion
 spec_ref: plans/minimal-consumer-loop/todo.md
@@ -667,15 +701,15 @@ acceptance_checks:
     status: passed
   - id: approval-policy-followed-or-escalated
     expected: Approval policy decisions are read and either followed or explicitly escalated.
-    actual: examples/policies/approval-policy.yaml was read and no escalation was required for fixture validation.
+    actual: .harness/policies/approval-policy.yaml was read and no escalation was required for fixture validation.
     status: passed
   - id: sandbox-policy-followed-or-escalated
     expected: Sandbox policy decisions are read and either followed or explicitly escalated.
-    actual: examples/policies/sandbox-policy.yaml was read and the declared worktree tier was accepted.
+    actual: .harness/policies/sandbox-policy.yaml was read and the declared worktree tier was accepted.
     status: passed
   - id: startup-verification-recorded
     expected: Startup verification runs before work begins and is recorded in continuity state.
-    actual: examples/continuity/e2e-loop-state.yaml records the startup self-verification as the first progress event.
+    actual: .harness/outputs/continuity/e2e-loop-state.yaml records the startup self-verification as the first progress event.
     status: passed
   - id: handoff-artifact-ready
     expected: Long-running work has a handoff artifact before completion is claimed.
@@ -695,28 +729,28 @@ checks_run:
       timeout_seconds: 300
     status: passed
     evidence:
-      - path: .harness/doctor/e2e-doctor.json
+      - path: .harness/outputs/doctor/e2e-doctor.json
         media_type: application/json
         description: Passing doctor-result evidence.
 artifacts:
   - path: harness.yaml
     media_type: application/yaml
     description: Initialized downstream harness file.
-  - path: examples/continuity/e2e-loop-state.yaml
+  - path: .harness/outputs/continuity/e2e-loop-state.yaml
     media_type: application/yaml
     description: Fixture-local continuity state consumed by the loop validator.
 unresolved_risks: []
 evidence_links:
-  - path: examples/policies/approval-policy.yaml
+  - path: .harness/policies/approval-policy.yaml
     media_type: application/yaml
     description: Approval policy read before completion.
-  - path: examples/policies/sandbox-policy.yaml
+  - path: .harness/policies/sandbox-policy.yaml
     media_type: application/yaml
     description: Sandbox policy read before completion.
-  - path: examples/verification/e2e-startup.yaml
+  - path: .harness/outputs/verification/e2e-startup.yaml
     media_type: application/yaml
     description: Startup self-verification evidence consumed by continuity state.
-  - path: examples/continuity/e2e-loop-state.yaml
+  - path: .harness/outputs/continuity/e2e-loop-state.yaml
     media_type: application/yaml
     description: Continuity state with startup and completion progress evidence.
   - path: plans/minimal-consumer-loop/todo.md

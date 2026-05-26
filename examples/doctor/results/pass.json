@@ -179,7 +179,7 @@
         "secret_access": false,
         "host_file_access": false,
         "allowed_inputs": ["README.md", "AGENTS.md"],
-        "allowed_outputs": [".harness/doctor/doc-links.json"]
+        "allowed_outputs": [".harness/outputs/doctor/doc-links.json"]
       }
     }
   ]

@@ -41,7 +41,7 @@ harness.yaml
   -> assess / report
 ```
 
-Every machine-readable output includes `schema_version`. Commands that write files constrain paths to the selected repository root and reject symlinked writes.
+Every machine-readable output includes `schema_version`. Commands that write files constrain paths to the selected repository root and reject symlinked writes. Initialized user projects keep editable harness support files under `.harness/**` and generated evidence under `.harness/outputs/**`; this repository's `examples/**` directory remains only for packaged examples and fixtures.
 
 ## Current non-goals
 

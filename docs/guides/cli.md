@@ -16,10 +16,10 @@ Behavior is identical across the three forms.
 
 ## Glossary
 
-- **Substrate**: `harness.yaml` plus versioned `schemas/` and example artifacts.
-- **Evidence**: schema-validated JSON or Markdown the CLI writes to `.harness/**`.
+- **Substrate**: root `harness.yaml`, versioned `schemas/`, and user-editable support files under `.harness/**`.
+- **Evidence**: schema-validated JSON or Markdown the CLI writes to `.harness/outputs/**`.
 - **GC** (garbage collection): `harness gc audit` looks for entropy in evidence and proposes reviewable cleanup slices; it never deletes.
-- **Profile**: a recurring maintenance contract (see `examples/profiles/gc-stability.yaml`) that consumes existing evidence and emits a handoff artifact. Profiles do not schedule themselves.
+- **Profile**: a recurring maintenance contract (see `.harness/profiles/gc-stability.yaml` after `harness init`) that consumes existing evidence and emits a handoff artifact. Profiles do not schedule themselves.
 - **Scoreboard**: behavioral eval summary written by `harness eval run`.
 - **External-import**: candidate output produced outside the harness CLI and imported via `harness run --external-candidate`; recorded as evidence without claiming provider usage.
 - **Broken-twin**: an eval fixture that is expected to fail verification (the inverse of an oracle), used to prove the verifier discriminates.
@@ -29,22 +29,22 @@ Behavior is identical across the three forms.
 ```bash
 harness init
 harness validate
-harness doctor --file examples/harness.yaml
-harness health --file examples/harness.yaml --accept-unsandboxed-execution
-harness verify --spec examples/verification/self-verification.yaml
-harness run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
-harness eval validate --file examples/harness.yaml
-harness eval run --file examples/harness.yaml
-harness trace validate --file examples/harness.yaml
-harness gc audit --file examples/harness.yaml
-harness profile validate examples/profiles/gc-stability.yaml
-harness profile run examples/profiles/gc-stability.yaml --gc-evidence examples/gc/evidence.json --health-result examples/health/results/pass.json
-harness runner readiness --file examples/harness.yaml
-harness assess --file examples/harness.yaml --format json
-harness report --file examples/harness.yaml --doctor-result examples/doctor/results/pass.json
+harness doctor --format json --output .harness/outputs/doctor/doctor.json
+harness health --accept-unsandboxed-execution --format json --output .harness/outputs/health/health.json
+harness verify --spec path/to/self-verification.yaml
+harness run .harness/evals/harness-self-test/v1.0.0/task.yaml
+harness eval validate --output .harness/outputs/run-results.jsonl
+harness eval run
+harness trace validate
+harness gc audit --format json --output .harness/outputs/gc/gc.json
+harness profile validate .harness/profiles/gc-stability.yaml
+harness profile run .harness/profiles/gc-stability.yaml --gc-evidence .harness/outputs/gc/gc.json --health-result .harness/outputs/health/health.json --output .harness/outputs/profile-runs/gc-stability.json
+harness runner readiness
+harness assess --format json --health-result .harness/outputs/health/health.json
+harness report --doctor-result .harness/outputs/doctor/doctor.json
 ```
 
-The `examples/gc/`, `examples/health/results/`, and `examples/doctor/results/` paths only exist in this repository. In a downstream repo, point the corresponding flags at your own `.harness/` evidence produced by `gc audit`, `health`, and `doctor`.
+These examples assume you are in a repository after `harness init`. The packaged `examples/**` tree is only for this repository's fixtures and docs; initialized user projects keep editable harness support files under `.harness/**` and generated evidence under `.harness/outputs/**`.
 
 ## Bootstrap and validation
 
@@ -60,11 +60,11 @@ The `examples/gc/`, `examples/health/results/`, and `examples/doctor/results/` p
 
 `harness health` executes declared local project health checks. Because this path executes repository-declared commands, it requires `--accept-unsandboxed-execution`. The result records trust requirements, declarative sandbox evidence, command status, and linked artifacts.
 
-`harness verify` consumes an explicit self-verification spec (see `examples/verification/self-verification.yaml`) and records the spec's declared statuses. It does not execute checks itself; failed or blocked acceptance checks cause a `validation-error` exit.
+`harness verify` consumes an explicit self-verification spec (see this repository's `examples/verification/self-verification.yaml`) and records the spec's declared statuses. It does not execute checks itself; failed or blocked acceptance checks cause a `validation-error` exit.
 
 ## Evaluation and runs
 
-`harness eval validate` runs verifier-only eval validation against oracle and broken-twin candidates. It records verifier evidence and a run-result ledger but does not run agents or produce scoreboards. With `--output <path>`, it appends run-results to `<path>` (typically `.harness/run-results.jsonl`) and writes verifier artifacts under `.harness/verifier-results/`.
+`harness eval validate` runs verifier-only eval validation against oracle and broken-twin candidates. It records verifier evidence and a run-result ledger but does not run agents or produce scoreboards. With `--output <path>`, it appends run-results to `<path>` (typically `.harness/outputs/run-results.jsonl`) and writes verifier artifacts under `.harness/outputs/verifier-results/`.
 
 `harness run` executes the deterministic stub runner and writes run-result, trace, verifier-result, and agent-output artifacts.
 

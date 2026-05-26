@@ -12,7 +12,7 @@ The product gives a repository a versioned `harness.yaml`, machine-checkable sch
 - Run deterministic stub agent tasks, verifier-only evals, behavioral evals, trace validation, and reports.
 - Import externally generated candidate output as evidence without pretending it was a live model call.
 - Run GC audits and recurring GC-stability profiles over existing evidence.
-- Use an optional GitHub Actions recipe that calls the same CLI and uploads `.harness/**` evidence.
+- Use an optional GitHub Actions recipe that calls the same CLI and uploads `.harness/outputs/**` evidence.
 
 Current limits are explicit: the package is not published to a registry, no host plugin or native skill package is shipped, no scheduler daemon is included, and provider-backed live model execution is not implemented.
 
@@ -35,11 +35,11 @@ export HARNESS_BIN="$(pwd)/dist/index.js"
 cd /path/to/target/repo
 node "$HARNESS_BIN" init
 node "$HARNESS_BIN" validate
-node "$HARNESS_BIN" health --accept-unsandboxed-execution --format json --output .harness/health/quickstart-health.json
-node "$HARNESS_BIN" assess --format json --health-result .harness/health/quickstart-health.json
+node "$HARNESS_BIN" health --accept-unsandboxed-execution --format json --output .harness/outputs/health/quickstart-health.json
+node "$HARNESS_BIN" assess --format json --health-result .harness/outputs/health/quickstart-health.json
 ```
 
-`harness init` writes a starter `harness.yaml`, curated `examples/` artifacts, and local `.harness/` artifact directories. The starter path uses local validation, declared health checks, deterministic examples, GC evidence, and profile handoffs; it does not need secrets or live model credentials.
+`harness init` writes a root `harness.yaml`, editable harness support files under `.harness/**`, and generated evidence directories under `.harness/outputs/**`. The starter path uses local validation, declared health checks, deterministic fixtures, GC evidence, and profile handoffs; it does not need secrets or live model credentials.
 
 For a package-shaped smoke test, run `bun pm pack --ignore-scripts`, unpack the tarball in a scratch directory, and invoke the bundled `dist/index.js` from that unpacked package. The e2e suite covers this packed-content path without claiming registry publication.
 
@@ -74,7 +74,7 @@ node dist/index.js runner readiness --file examples/harness.yaml
 node dist/index.js report --file examples/harness.yaml --doctor-result examples/doctor/results/pass.json
 ```
 
-The `examples/gc/`, `examples/health/results/`, and `examples/doctor/results/` paths only exist in this repository. A downstream repo should run the equivalent commands against its own `.harness/` evidence produced by `doctor`, `health`, and `gc audit`.
+The `examples/gc/`, `examples/health/results/`, and `examples/doctor/results/` paths only exist in this repository. A downstream repo should run the equivalent commands against its own `.harness/outputs/**` evidence produced by `doctor`, `health`, and `gc audit`.
 
 ## Documentation
 

@@ -141,7 +141,7 @@ async function runGcAuditCommand(
           (error as { code?: string }).code === 'EEXIST'
         ) {
           throw new CliError(
-            `GC output already exists: ${outputPath}. Use a unique path such as .harness/gc/<audit-id>.json.`,
+            `GC output already exists: ${outputPath}. Use a unique path such as .harness/outputs/gc/<audit-id>.json.`,
             ExitCode.usageError,
           );
         }

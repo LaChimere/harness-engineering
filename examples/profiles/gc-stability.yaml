@@ -40,7 +40,7 @@ allowed_actions:
   - summary
 handoff:
   kind: profile-run
-  destination_hint: .harness/profiles/gc-stability.json
+  destination_hint: .harness/outputs/profile-runs/gc-stability.json
 trust_requirements:
   trust_level: sandboxed
   sandbox_required: process
@@ -48,8 +48,8 @@ trust_requirements:
   secret_access: false
   host_file_access: false
   allowed_inputs:
-    - .harness/gc
-    - .harness/health
-    - .harness/profiles
+    - .harness/outputs/gc
+    - .harness/outputs/health
+    - .harness/outputs/profile-runs
   allowed_outputs:
-    - .harness/profiles
+    - .harness/outputs/profile-runs

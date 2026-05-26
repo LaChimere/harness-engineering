@@ -37,7 +37,7 @@ git diff --check
 - `src/commands/` — one module per CLI command.
 - `src/lib/` — shared CLI primitives (schemas, evidence, paths, exit codes).
 - `schemas/` — versioned JSON Schemas.
-- `examples/` — canonical starter substrate (`harness.yaml`, fixtures, CI recipe).
+- `examples/` — packaged examples, fixtures, and this repository's CI recipe.
 - `examples/fixtures/` — schema-valid and intentionally invalid fixtures, indexed by `manifest.json`.
 - `tests/cli/`, `tests/schemas/`, `tests/ci-tests/`, `tests/e2e/`, `tests/unit-tests/` — corresponding test suites.
 - `plans/harness-engineering-platform/` — roadmap, decisions, execution status, and capability ledger.

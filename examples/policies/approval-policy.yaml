@@ -51,5 +51,5 @@ escalation:
   timeout_seconds: 900
 modify_logging:
   required: true
-  log_path: .harness/approvals/modify-log.jsonl
+  log_path: .harness/outputs/approvals/modify-log.jsonl
 terminate_behavior: save-state-and-exit

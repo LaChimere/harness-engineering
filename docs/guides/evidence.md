@@ -1,6 +1,6 @@
 # Evidence and artifacts
 
-Harness Engineering turns repository and agent activity into schema-backed evidence. Most commands either validate existing artifacts or produce new artifacts under `.harness/`.
+Harness Engineering turns repository and agent activity into schema-backed evidence. Most commands either validate existing artifacts or produce new artifacts under `.harness/outputs/`.
 
 ## First evidence loop
 
@@ -42,22 +42,27 @@ Concrete example artifacts shipped with this repository:
 
 ## Evidence directories
 
-`harness init` creates the following directories and the run-result ledger in your target repository:
+`harness init` creates editable support files directly under `.harness/**` and generated evidence/output directories under `.harness/outputs/**`. The default output directories and run-result ledger are:
 
-- `.harness/doctor/`
-- `.harness/health/`
-- `.harness/gc/`
-- `.harness/verifier-results/`
-- `.harness/traces/`
-- `.harness/agent-outputs/`
-- `.harness/scoreboards/`
-- `.harness/profiles/`
-- `.harness/continuity/`
-- `.harness/handoffs/`
-- `.harness/approvals/`
-- `.harness/run-results.jsonl` (empty append-only ledger)
+- `.harness/outputs/doctor/`
+- `.harness/outputs/health/`
+- `.harness/outputs/gc/`
+- `.harness/outputs/verifier-results/`
+- `.harness/outputs/traces/`
+- `.harness/outputs/agent-outputs/`
+- `.harness/outputs/scoreboards/`
+- `.harness/outputs/profile-runs/`
+- `.harness/outputs/continuity/`
+- `.harness/outputs/handoffs/`
+- `.harness/outputs/approvals/`
+- `.harness/outputs/reports/`
+- `.harness/outputs/run-results.jsonl` (empty append-only ledger)
 
-CI recipes typically create `.harness/reports/` themselves before writing summary artifacts; see [CI recipes](ci.md).
+User-editable support files such as policies, checks, eval tasks, profiles, and trace examples stay outside `outputs`, for example `.harness/policies/sandbox-policy.yaml`, `.harness/checks/doc-links.yaml`, and `.harness/profiles/gc-stability.yaml`.
+
+`harness init` writes `.harness/.gitignore` so generated `outputs/` are ignored while the editable support files stay commit-ready. If your root `.gitignore` already ignores `.harness/` wholesale, adjust it to ignore `.harness/outputs/` instead.
+
+If you initialized a project with an older preview layout, update output references from flat `.harness/<kind>/` paths to `.harness/outputs/<kind>/`, move or regenerate old evidence as needed, and replace any root `.gitignore` rule that ignores all of `.harness/` with a narrower `.harness/outputs/` rule.
 
 Commands that write artifacts constrain output paths to the selected repository root and reject symlinked write targets.
 
@@ -77,9 +82,9 @@ Use `harness assess` to read existing artifacts:
 
 ```bash
 harness assess --format json \
-  --doctor-result .harness/doctor/doctor.json \
-  --health-result .harness/health/health.json \
-  --run-results .harness/run-results.jsonl
+  --doctor-result .harness/outputs/doctor/doctor.json \
+  --health-result .harness/outputs/health/health.json \
+  --run-results .harness/outputs/run-results.jsonl
 ```
 
 Assessment output is read-only. It reports missing or partial primitives and can route to native execution-loop guidance or trusted repair-action artifacts, but it never executes repairs or shell commands.

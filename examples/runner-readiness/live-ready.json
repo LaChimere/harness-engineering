@@ -58,10 +58,10 @@
     {
       "id": "trace-output",
       "status": "passed",
-      "summary": "Runner declares trace output path .harness/traces.",
+      "summary": "Runner declares trace output path .harness/outputs/traces.",
       "evidence": [
         {
-          "path": ".harness/traces",
+          "path": ".harness/outputs/traces",
           "media_type": "application/json",
           "description": "Trace output path."
         }

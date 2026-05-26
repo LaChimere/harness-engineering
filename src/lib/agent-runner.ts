@@ -144,10 +144,10 @@ interface AgentExecution {
 }
 
 const schemaVersion = '0.1.0';
-const defaultAgentOutputDir = '.harness/agent-outputs';
-const defaultVerifierOutputDir = '.harness/verifier-results';
-const defaultRunResultOutputPath = '.harness/run-results.jsonl';
-const defaultScoreboardDir = '.harness/scoreboards';
+const defaultAgentOutputDir = '.harness/outputs/agent-outputs';
+const defaultVerifierOutputDir = '.harness/outputs/verifier-results';
+const defaultRunResultOutputPath = '.harness/outputs/run-results.jsonl';
+const defaultScoreboardDir = '.harness/outputs/scoreboards';
 const supportedFailureBuckets = [
   'agent-failure',
   'model-failure',

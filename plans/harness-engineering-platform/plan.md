@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 20 are complete. Stage 11 now provides optional CI recipes over the deterministic CLI/schema artifacts without creating CI-only source-of-truth state. Stage 18 added non-executing runner readiness checks for future live runners while preserving the deterministic stub path. Stage 18.5 imports Copilot-as-model candidate output into harness evidence without claiming provider-backed live execution. Stage 19 added recurring maintenance profile contracts and the GC stability MVP profile. Stage 20 hardens the CLI-first delivery and downstream adoption path.
+Stages 1 through 20 are complete. Stage 11 now provides optional CI recipes over the deterministic CLI/schema artifacts without creating CI-only source-of-truth state. Stage 18 added non-executing runner readiness checks for future live runners while preserving the deterministic stub path. Stage 18.5 imports Copilot-as-model candidate output into harness evidence without claiming provider-backed live execution. Stage 19 added recurring maintenance profile contracts and the GC stability MVP profile. Stage 20 hardens the CLI-first delivery and downstream adoption path; post-review layout refinement keeps initialized-project support files under `.harness/**` and generated evidence under `.harness/outputs/**` while preserving this repository's `examples/**` as examples and fixtures.
 
 ## Goals
 

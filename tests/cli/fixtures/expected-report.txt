@@ -2,16 +2,17 @@ Harness report
 - harness: harness.yaml
 - name: harness-engineering
 - artifacts:
-  - examples/failure-taxonomy.yaml
+  - .harness/taxonomies/failure-taxonomy.yaml
   - AGENTS.md
   - README.md
-  - examples/environments/local.yaml
-  - examples/policies/approval-policy.yaml
-  - examples/policies/sandbox-policy.yaml
-  - examples/model-profiles/stub.yaml
-  - examples/agent-runners/stub.yaml
-  - examples/traces/native-cli-trace.json
-  - examples/traces/external-import.json
-  - examples/evals/harness-self-test/v1.0.0/
-  - examples/judges/policy.yaml
-  - examples/checks/doc-links.yaml
+  - .harness/environments/local.yaml
+  - .harness/policies/approval-policy.yaml
+  - .harness/policies/sandbox-policy.yaml
+  - .harness/model-profiles/stub.yaml
+  - .harness/agent-runners/stub.yaml
+  - .harness/traces/samples/native-cli-trace.json
+  - .harness/traces/samples/external-import.json
+  - .harness/evals/harness-self-test/v1.0.0/
+  - .harness/judges/policy.yaml
+  - .harness/checks/doc-links.yaml
+  - .harness/profiles/gc-stability.yaml

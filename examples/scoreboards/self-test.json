@@ -57,7 +57,7 @@
   },
   "run_results": [
     {
-      "path": ".harness/run-results.jsonl",
+      "path": ".harness/outputs/run-results.jsonl",
       "media_type": "application/jsonl",
       "description": "Agent-run ledger summarized by this scoreboard."
     }

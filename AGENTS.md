@@ -56,7 +56,7 @@ Capability-mining output belongs in `plans/harness-engineering-platform/capabili
 ## Recurring failure modes to avoid
 
 - Do not fabricate provider-backed or live-model evidence. If a result came from deterministic stub execution or `--external-candidate`, label it that way.
-- Do not treat `.harness/**` runtime artifacts as canonical source unless a task explicitly asks to inspect or preserve generated evidence.
+- Do not treat `.harness/outputs/**` runtime artifacts as canonical source unless a task explicitly asks to inspect or preserve generated evidence.
 - Do not add roadmap phase or numbering wording outside `plans/harness-engineering-platform/`.
 - Do not let `doctor`, `gc`, `profile`, CI recipes, plugins, or skills enforce rules that are not reconstructable from schemas, `harness.yaml`, and CLI evidence.
 - Do not silently upgrade schema versions; use previewable `harness migrate` evidence.

@@ -187,7 +187,8 @@ async function runEvalValidate(
           resolveInsideRoot(root, outputOption, 'Eval output'),
           'Eval output',
         );
-  const verifierOutputDir = outputPath === undefined ? undefined : '.harness/verifier-results';
+  const verifierOutputDir =
+    outputPath === undefined ? undefined : '.harness/outputs/verifier-results';
   const effectiveRunId = runId ?? (outputPath === undefined ? undefined : `eval-${randomUUID()}`);
   if (outputPath !== undefined) {
     await assertNoSymlinkWithinRoot(root, resolveInsideRoot(root, outputPath, 'Eval output'));

@@ -63,7 +63,7 @@
       },
       "artifacts": [
         {
-          "path": ".harness/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
+          "path": ".harness/outputs/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
           "media_type": "text/plain",
           "description": "Recorded stub output."
         }
@@ -76,7 +76,7 @@
       "summary": "Deterministic stub output satisfied the verifier.",
       "artifacts": [
         {
-          "path": ".harness/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",
+          "path": ".harness/outputs/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",
           "media_type": "application/json",
           "description": "Verifier result for this run."
         }
@@ -86,17 +86,17 @@
   "logs": [],
   "artifact_links": [
     {
-      "path": ".harness/run-results.jsonl",
+      "path": ".harness/outputs/run-results.jsonl",
       "media_type": "application/jsonl",
       "description": "Run-result ledger containing this run result."
     },
     {
-      "path": ".harness/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
+      "path": ".harness/outputs/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
       "media_type": "text/plain",
       "description": "Deterministic stub output."
     },
     {
-      "path": ".harness/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",
+      "path": ".harness/outputs/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",
       "media_type": "application/json",
       "description": "Verifier result for this run."
     }

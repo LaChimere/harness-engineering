@@ -100,6 +100,10 @@ The package metadata exposes the Node-compatible `harness` binary at `dist/index
 
 Current unsupported delivery paths remain explicit: no installable host plugin, no CI enforcement adapter, no scheduler daemon, and no provider-backed live model execution ships in this package slice.
 
+## Optional CI
+
+`examples/ci/github-actions.yml` is an optional GitHub Actions recipe over the same CLI/schema artifacts. It runs objective blocking checks (`validate`, `doctor`, reviewed `health`, `eval validate`, and `trace validate`), records `gc audit` as advisory evidence, and uploads `.harness/**` evidence. It does not install a plugin, run live models, apply cleanup, require secrets, or create CI-only rule state. See `docs/ci.md` for the blocking/advisory policy and portability notes.
+
 `harness eval run` discovers configured eval task files and runs the runner-bound task's deterministic stub cases end-to-end. The current runner supports exactly one configured eval task for the selected runner; multi-task runner mapping is a future capability. The harness self-test runs both oracle and broken-twin cases without live credentials, records agent-run results in `.harness/run-results.jsonl`, writes traces under the runner's `trace_output`, writes verifier results under `.harness/verifier-results/`, writes agent outputs under `.harness/agent-outputs/`, and writes a scoreboard under `.harness/scoreboards/`. Re-running the same `--run-id` replaces prior ledger entries for that run id. Scoreboards summarize optimization/holdout splits and separate agent/model, harness, verifier, budget, credential, and verification failure buckets. The broken-twin case is intentionally counted as an `agent-failure` run-result while the overall eval run passes when that expected failure is observed.
 
 `harness trace validate` validates a configured set of trace examples or one explicit trace artifact against `schemas/trace.schema.json`. `harness trace import --input <trace> --output <path>` copies an already-normalized trace only after schema validation and refuses output paths that escape the selected root or traverse symlinks.

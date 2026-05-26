@@ -402,26 +402,26 @@ Evidence: `harness loop validate` validates Stage 10 startup and completion gate
 
 ## Stage 11: Optional CI adapters
 
-Deferred: the user explicitly chose to skip optional CI adapter implementation before Stage 12. Keep this stage unchecked until CI examples/adapters are intentionally resumed.
-
-- [ ] Add generic CLI exit semantics for CI.
-- [ ] Add CI examples for schema validation.
-- [ ] Add CI examples for doctor checks.
-- [ ] Add CI examples for eval/trace validation.
-- [ ] Add report artifact upload example.
-- [ ] Include GitHub Actions as one optional example, not the CI contract.
-- [ ] Document blocking vs advisory checks.
-- [ ] Confirm shared schema/report artifacts support blocking/advisory status for downstream adapter consistency.
-- [ ] Ensure uncalibrated LLM-judge results are advisory-only by default.
-- [ ] Run CI examples locally where possible.
+- [x] Add generic CLI exit semantics for CI.
+- [x] Add CI examples for schema validation.
+- [x] Add CI examples for doctor checks.
+- [x] Add CI examples for eval/trace validation.
+- [x] Add report artifact upload example.
+- [x] Include GitHub Actions as one optional example, not the CI contract.
+- [x] Document blocking vs advisory checks.
+- [x] Confirm shared schema/report artifacts support blocking/advisory status for downstream adapter consistency.
+- [x] Ensure uncalibrated LLM-judge results are advisory-only by default.
+- [x] Run CI examples locally where possible.
 - [x] Run `git diff --check`.
+
+Evidence: Stage 11 adds `examples/ci/github-actions.yml` as an optional GitHub Actions recipe over the deterministic CLI. The workflow builds the CLI, runs objective blocking checks (`validate`, `doctor`, reviewed `health`, `eval validate`, `trace validate`), records `gc audit` as advisory evidence, writes schema-backed artifacts under `.harness/**`, runs `assess` as a summary, and uploads `.harness/**` as evidence. `docs/ci.md` records blocking versus advisory policy, including that GC findings require review rather than blocking by exit code and that uncalibrated, stale, below-threshold, or policy-invalid judge results are advisory-only. The recipe does not install a plugin, run live models, require secrets, apply cleanup or repairs, schedule profiles, or create CI-only source-of-truth state. CI recipe tests verify the workflow remains CLI-first and evidence-backed.
 
 ### Stage 11 acceptance criteria
 
-- [ ] A downstream repo can opt into objective CI feedback without needing a plugin or agent.
-- [ ] CI examples are clearly optional adapters.
-- [ ] Blocking/advisory status is represented in shared CLI/schema/report artifacts so CI, plugin, and skill adapters use consistent policy.
-- [ ] Uncalibrated LLM-judge results remain advisory-only by default.
+- [x] A downstream repo can opt into objective CI feedback without needing a plugin or agent.
+- [x] CI examples are clearly optional adapters.
+- [x] Blocking/advisory status is represented in shared CLI/schema/report artifacts so CI, plugin, and skill adapters use consistent policy.
+- [x] Uncalibrated LLM-judge results remain advisory-only by default.
 
 ## Stage 12: Native agent-facing harness-engineering adapter
 

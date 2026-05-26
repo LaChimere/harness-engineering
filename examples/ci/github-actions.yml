@@ -1,0 +1,56 @@
+name: Harness CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harness:
+    name: Harness CLI checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build harness CLI
+        run: bun run build
+
+      - name: Prepare evidence directories
+        run: mkdir -p .harness/doctor .harness/health .harness/gc .harness/verifier-results .harness/reports
+
+      - name: Validate harness configuration
+        run: node dist/index.js validate --file examples/harness.yaml
+
+      - name: Run structural doctor checks
+        run: node dist/index.js doctor --file examples/harness.yaml --format json --output .harness/doctor/ci-doctor.json
+
+      - name: Run declared local health checks
+        run: node dist/index.js health --file examples/harness.yaml --accept-unsandboxed-execution --format json --output .harness/health/ci-health.json
+
+      - name: Audit deterministic entropy evidence (advisory)
+        run: node dist/index.js gc audit --file examples/harness.yaml --format json --output .harness/gc/ci-gc.json
+
+      - name: Validate deterministic eval fixtures
+        run: node dist/index.js eval validate --file examples/harness.yaml --output .harness/verifier-results/ci-eval-validate.jsonl
+
+      - name: Validate trace fixtures
+        run: node dist/index.js trace validate --file examples/harness.yaml --format json > .harness/reports/ci-trace-validation.json
+
+      - name: Summarize harness evidence
+        run: node dist/index.js assess --file examples/harness.yaml --format json --doctor-result .harness/doctor/ci-doctor.json --health-result .harness/health/ci-health.json > .harness/reports/ci-assessment.json
+
+      - name: Upload harness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-evidence
+          path: .harness/**

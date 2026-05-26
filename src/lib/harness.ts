@@ -253,6 +253,17 @@ export function collectHarnessReferences(harness: JsonObject): readonly HarnessR
     }
   }
 
+  const recurringProfiles = getObject(harness, 'recurring_profiles');
+  const profiles =
+    recurringProfiles === undefined ? undefined : getArray(recurringProfiles, 'profiles');
+  if (profiles !== undefined) {
+    for (const profile of profiles) {
+      if (typeof profile === 'string') {
+        pushReference(references, profile, 'recurring profile', 'recurring-profile');
+      }
+    }
+  }
+
   return references;
 }
 

@@ -7,6 +7,7 @@ import { runHealthCommand } from './commands/health.ts';
 import { runInit } from './commands/init.ts';
 import { runLoopCommand } from './commands/loop.ts';
 import { runMigrate } from './commands/migrate.ts';
+import { runProfileCommand } from './commands/profile.ts';
 import { runReport } from './commands/report.ts';
 import { runAgentRunCommand } from './commands/run.ts';
 import { runRunnerCommand } from './commands/runner.ts';
@@ -64,6 +65,8 @@ export async function runCli(args: readonly string[], context: RunContext): Prom
         return await runHealthCommand(commandArgs, commandContext);
       case 'gc':
         return await runGcCommand(commandArgs, commandContext);
+      case 'profile':
+        return await runProfileCommand(commandArgs, commandContext);
       case 'eval':
         return await runEvalCommand(commandArgs, commandContext);
       case 'run':
@@ -103,6 +106,7 @@ Commands:
   doctor     Run deterministic structural harness checks.
   health     Run declared local project health checks.
   gc         Audit or validate deterministic GC evidence.
+  profile    Validate or run recurring maintenance profiles.
   run        Run deterministic stub agent tasks.
   runner     Check runner readiness without live model execution.
   eval       Run eval validation or deterministic behavioral evals.

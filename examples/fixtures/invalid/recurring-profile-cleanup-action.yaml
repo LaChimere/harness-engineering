@@ -1,0 +1,39 @@
+schema_version: "0.1.0"
+profile_id: invalid-cleanup-profile
+profile_version: "0.1.0"
+description: Invalid profile that tries to execute cleanup instead of deterministic summary.
+declared_capability_id: null
+cadence_hint: advisory-weekly
+inputs:
+  - id: gc-audit
+    kind: gc-evidence
+    required: true
+trigger:
+  kind: all
+  conditions:
+    - kind: metric-threshold
+      metric: gc.findings.count
+      comparator: gte
+      value: 0
+stop_condition:
+  kind: all
+  conditions:
+    - kind: metric-threshold
+      metric: gc.findings.count
+      comparator: eq
+      value: 0
+allowed_actions:
+  - cleanup
+handoff:
+  kind: profile-run
+  destination_hint: .harness/profiles/invalid.json
+trust_requirements:
+  trust_level: sandboxed
+  sandbox_required: process
+  network_access: false
+  secret_access: false
+  host_file_access: false
+  allowed_inputs:
+    - .harness/gc
+  allowed_outputs:
+    - .harness/profiles

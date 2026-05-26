@@ -1833,6 +1833,343 @@ test('runner readiness refuses unsupported live prerequisites', async () => {
   ).toBe('sandbox-violation');
 });
 
+test('profile validates and runs gc stability evidence', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await mkdir(join(root, '.harness/gc'), { recursive: true });
+  await writeFile(
+    join(root, '.harness/gc/clean.json'),
+    JSON.stringify(
+      {
+        schema_version: '0.1.0',
+        audit_id: 'profile-clean-gc',
+        generated_at: '2026-05-26T00:00:00Z',
+        findings: [],
+      },
+      null,
+      2,
+    ),
+  );
+  const health = await run(
+    [
+      'health',
+      '--accept-unsandboxed-execution',
+      '--format',
+      'json',
+      '--output',
+      '.harness/health/profile-health.json',
+      '--run-id',
+      'profile-health',
+    ],
+    root,
+  );
+  expect(health.code).toBe(ExitCode.ok);
+
+  const validate = await run(['profile', 'validate', 'examples/profiles/gc-stability.yaml'], root);
+  expect(validate.code).toBe(ExitCode.ok);
+
+  const result = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      '.harness/gc/clean.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--output',
+      '.harness/profiles/gc-stability.json',
+      '--run-id',
+      'profile-clean',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  expect(result.stdout).toContain('harness profile run met');
+  const profileRun = JSON.parse(
+    await readFile(join(root, '.harness/profiles/gc-stability.json'), 'utf8'),
+  );
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('profile-run', profileRun)).toEqual([]);
+  expect(getString(profileRun, 'profile_id')).toBe('gc-stability');
+  expect(getString(getObject(profileRun, 'handoff') ?? {}, 'next_step')).toBe('stop');
+  expect(getString(getObject(profileRun, 'handoff') ?? {}, 'status')).toBe('met');
+  expect(getString(jsonObjects(getArray(profileRun, 'evidence_inputs'))[0] ?? {}, 'kind')).toBe(
+    'gc-evidence',
+  );
+
+  const repeated = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      '.harness/gc/clean.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--previous-run',
+      '.harness/profiles/gc-stability.json',
+      '--run-id',
+      'profile-clean-repeat',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(repeated.code).toBe(ExitCode.ok);
+  const repeatedRun = JSON.parse(repeated.stdout);
+  expect(
+    getNumberForTest(getObject(repeatedRun, 'stop_condition_evaluation') ?? {}, 'clean_streak'),
+  ).toBe(2);
+
+  await writeFile(
+    join(root, '.harness/profiles/foreign.json'),
+    JSON.stringify({ ...profileRun, profile_id: 'other-profile' }, null, 2),
+  );
+  const foreignPrevious = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      '.harness/gc/clean.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--previous-run',
+      '.harness/profiles/foreign.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(foreignPrevious.code).toBe(ExitCode.validationError);
+  expect(foreignPrevious.stderr).toContain(
+    'previous profile run profile_id other-profile does not match',
+  );
+
+  const profileWithoutPreviousInput = (
+    await readFile(join(root, 'examples/profiles/gc-stability.yaml'), 'utf8')
+  ).replace(/ {2}- id: previous-gc-stability\n {4}kind: profile-run\n {4}required: false\n/, '');
+  await writeFile(
+    join(root, 'examples/profiles/gc-stability-no-previous.yaml'),
+    profileWithoutPreviousInput,
+  );
+  const harnessPath = join(root, 'harness.yaml');
+  await writeFile(
+    harnessPath,
+    (await readFile(harnessPath, 'utf8')).replace(
+      '    - examples/profiles/gc-stability.yaml',
+      '    - examples/profiles/gc-stability.yaml\n    - examples/profiles/gc-stability-no-previous.yaml',
+    ),
+  );
+  const undeclaredPrevious = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability-no-previous.yaml',
+      '--gc-evidence',
+      '.harness/gc/clean.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--previous-run',
+      '.harness/profiles/gc-stability.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(undeclaredPrevious.code).toBe(ExitCode.validationError);
+  expect(undeclaredPrevious.stderr).toContain('profile-run evidence');
+
+  const missingRequired = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(missingRequired.code).toBe(ExitCode.validationError);
+  expect(missingRequired.stderr).toContain('profile run requires --gc-evidence');
+
+  await writeFile(
+    join(root, 'examples/profiles/unlisted.yaml'),
+    await readFile(join(root, 'examples/profiles/gc-stability.yaml'), 'utf8'),
+  );
+  const unlisted = await run(
+    [
+      'profile',
+      'run',
+      '--profile',
+      'examples/profiles/unlisted.yaml',
+      '--gc-evidence',
+      '.harness/gc/clean.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(unlisted.code).toBe(ExitCode.validationError);
+  expect(unlisted.stderr).toContain('recurring_profiles.profiles');
+
+  const outsideOutput = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      '.harness/gc/clean.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--output',
+      'profile-outside.json',
+    ],
+    root,
+  );
+  expect(outsideOutput.code).toBe(ExitCode.validationError);
+  expect(outsideOutput.stderr).toContain('profile output must be under');
+
+  const outsideInput = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      'gc-outside.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(outsideInput.code).toBe(ExitCode.validationError);
+  expect(outsideInput.stderr).toContain('trust_requirements.allowed_inputs');
+
+  const traversalInput = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      '.harness/gc/../../harness.yaml',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(traversalInput.code).toBe(ExitCode.validationError);
+  expect(traversalInput.stderr).toContain('trust_requirements.allowed_inputs');
+
+  const traversalOutput = await run(
+    [
+      'profile',
+      'run',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      '.harness/gc/clean.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--output',
+      '.harness/profiles/../profile-outside.json',
+    ],
+    root,
+  );
+  expect(traversalOutput.code).toBe(ExitCode.validationError);
+  expect(traversalOutput.stderr).toContain('profile output must be under');
+});
+
+test('profile run reports not-met without cleanup for dirty gc evidence', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await mkdir(join(root, '.harness/gc'), { recursive: true });
+  await writeFile(
+    join(root, '.harness/gc/dirty.json'),
+    JSON.stringify(
+      {
+        schema_version: '0.1.0',
+        audit_id: 'profile-dirty-gc',
+        generated_at: '2026-05-26T00:00:00Z',
+        findings: [
+          {
+            category: 'broken-reference',
+            severity: 'error',
+            confidence: 1,
+            evidence_refs: [
+              {
+                path: 'harness.yaml',
+                media_type: 'application/yaml',
+                description: 'Dirty fixture evidence.',
+              },
+            ],
+            proposed_cleanup_slice: {
+              id: 'review-broken-reference',
+              description: 'Review broken reference.',
+              target_files: ['harness.yaml'],
+            },
+            blast_radius: 'Fixture only.',
+            atomicity_notes: 'Review independently.',
+            promotion_decision_refs: [],
+            retirement_decision_refs: [],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+  const health = await run(
+    [
+      'health',
+      '--accept-unsandboxed-execution',
+      '--format',
+      'json',
+      '--output',
+      '.harness/health/profile-health.json',
+    ],
+    root,
+  );
+  expect(health.code).toBe(ExitCode.ok);
+
+  const result = await run(
+    [
+      'profile',
+      'run',
+      '--profile',
+      'examples/profiles/gc-stability.yaml',
+      '--gc-evidence',
+      '.harness/gc/dirty.json',
+      '--health-result',
+      '.harness/health/profile-health.json',
+      '--format',
+      'json',
+      '--run-id',
+      'profile-dirty',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const profileRun = JSON.parse(result.stdout);
+  expect(getString(getObject(profileRun, 'handoff') ?? {}, 'status')).toBe('not_met');
+  expect(getString(getObject(profileRun, 'handoff') ?? {}, 'next_step')).toBe('continue');
+  expect(
+    getString(
+      getObject(jsonObjects(getArray(profileRun, 'actions_taken'))[0] ?? {}, 'summary') ?? {},
+      'status',
+    ),
+  ).toBe('not_met');
+});
+
 test('gc audit emits schema-valid JSON for a healthy harness', async () => {
   const result = await run([
     'gc',

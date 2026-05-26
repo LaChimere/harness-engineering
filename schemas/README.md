@@ -49,6 +49,8 @@ Scoreboards summarize agent-run ledgers by optimization/holdout split and total 
 
 `runner-readiness.schema.json` records non-executing readiness checks for agent runners. `harness runner readiness` preserves the deterministic stub path while validating that a future live runner has an explicit environment credential reference, hard cost/token/request budgets, approval and sandbox policy artifacts, a live model profile, repo-local trace output, exact env-only credential scoping, and a schema-defined trace-redaction allowlist that refuses credential environment variable references.
 
+`recurring-profile.schema.json` defines deterministic maintenance profile contracts with structured evidence inputs, trigger thresholds, stop conditions, allowed actions, handoff metadata, and trust requirements. Stage 19 profiles are single-run CLI consumers of substrate artifacts; scheduling and persistence are external. `profile-run.schema.json` records one profile execution with hashed evidence inputs, trigger and stop-condition observations, deterministic summary actions, optional previous-run continuity, and a handoff decision. The GC stability MVP consumes GC and health evidence; it does not run cleanup, mutate the capability ledger, call models, or create prompt-only profile state.
+
 ## Judge policy and inferential review
 
 `judge-policy.schema.json` defines the calibration contract for LLM-mediated review. A policy must include a rubric, labeled sample minimum, agreement metric, numeric blocking threshold, uncertainty notes, stale-calibration window, and below-threshold consequence. The starter policy uses `percent_agreement`; `4 / 5 = 0.8` meets its blocking threshold, while `3 / 5 = 0.6` is below threshold and therefore advisory-only.

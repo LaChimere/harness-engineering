@@ -1,0 +1,55 @@
+schema_version: "0.1.0"
+profile_id: gc-stability
+profile_version: "0.1.0"
+description: Composite GC and health stability profile for recurring maintenance readiness.
+declared_capability_id: null
+cadence_hint: advisory-weekly
+inputs:
+  - id: gc-audit
+    kind: gc-evidence
+    required: true
+  - id: project-health
+    kind: health-result
+    required: true
+  - id: previous-gc-stability
+    kind: profile-run
+    required: false
+trigger:
+  kind: all
+  conditions:
+    - kind: metric-threshold
+      metric: gc.findings.count
+      comparator: gte
+      value: 0
+    - kind: metric-threshold
+      metric: health.status
+      comparator: eq
+      value: passed
+stop_condition:
+  kind: all
+  conditions:
+    - kind: metric-threshold
+      metric: gc.findings.count
+      comparator: eq
+      value: 0
+    - kind: metric-threshold
+      metric: health.status
+      comparator: eq
+      value: passed
+allowed_actions:
+  - summary
+handoff:
+  kind: profile-run
+  destination_hint: .harness/profiles/gc-stability.json
+trust_requirements:
+  trust_level: sandboxed
+  sandbox_required: process
+  network_access: false
+  secret_access: false
+  host_file_access: false
+  allowed_inputs:
+    - .harness/gc
+    - .harness/health
+    - .harness/profiles
+  allowed_outputs:
+    - .harness/profiles

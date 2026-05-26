@@ -414,7 +414,7 @@ Deferred: the user explicitly chose to skip optional CI adapter implementation b
 - [ ] Confirm shared schema/report artifacts support blocking/advisory status for downstream adapter consistency.
 - [ ] Ensure uncalibrated LLM-judge results are advisory-only by default.
 - [ ] Run CI examples locally where possible.
-- [ ] Run `git diff --check`.
+- [x] Run `git diff --check`.
 
 ### Stage 11 acceptance criteria
 
@@ -656,24 +656,26 @@ Evidence: The pre-slice GC audit produced `findings: []`. Stage 18.5 adds `harne
 
 ## Stage 19: Recurring maintenance profile substrate and MVP
 
-- [ ] Define recurring-profile state, trigger, inputs, state artifacts, allowed actions, stop condition, and handoff contract.
-- [ ] Ship entropy-auditor as the MVP profile because it can consume GC and health evidence without live-runner support.
-- [ ] Document objective trigger thresholds for non-MVP profiles: doc-gardener needs docs-health evidence, eval-curator needs holdout eval evidence, and trace-reviewer needs Stage 18 trace evidence.
-- [ ] Implement or document the MVP profile only when it consumes substrate evidence and adds value beyond a one-shot summary.
-- [ ] Add plugin- or scheduler-driven examples if useful.
-- [ ] Add fixtures or examples demonstrating the MVP profile stopping when its condition is met.
-- [ ] Promote Stage 13 capability candidates owned by recurring profiles only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
-- [ ] When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
-- [ ] Run profile tests/evals where available.
+- [x] Define recurring-profile state, trigger, inputs, state artifacts, allowed actions, stop condition, and handoff contract.
+- [x] Ship GC stability as the MVP profile because it can consume GC and health evidence without live-runner support.
+- [x] Document objective trigger thresholds for non-MVP profiles: doc-gardener needs docs-health evidence, eval-curator needs holdout eval evidence, and trace-reviewer needs Stage 18 trace evidence.
+- [x] Implement or document the MVP profile only when it consumes substrate evidence and adds value beyond a one-shot summary.
+- [x] Add plugin- or scheduler-driven examples if useful.
+- [x] Add fixtures or examples demonstrating the MVP profile stopping when its condition is met.
+- [x] Promote Stage 13 capability candidates owned by recurring profiles only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
+- [x] When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
+- [x] Run profile tests/evals where available.
 - [ ] Run `git diff --check`.
+
+Evidence: The pre-slice project GC audit produced `findings: []`, and the capability ledger still has no adopted/superseded or cleanup-eligible entries. Stage 19 adds `schemas/recurring-profile.schema.json` and `schemas/profile-run.schema.json`, plus `harness profile validate` and `harness profile run` as deterministic single-run profile commands. The MVP `examples/profiles/gc-stability.yaml` consumes GC evidence and health-result evidence, evaluates structured trigger and stop-condition thresholds, emits hashed evidence inputs and a profile-run handoff artifact, and records deterministic summary actions only. The profile does not run GC, schedule itself, execute cleanup, mutate repository files, call models, or write capability-ledger adoption state. Tests cover clean stop behavior, dirty not-met behavior, and previous-run clean streak continuity. `bun run check`, unit tests, e2e tests, build, fixture validation, and `git diff --check` passed.
 
 ### Stage 19 acceptance criteria
 
-- [ ] The MVP profile consumes substrate artifacts and adds behavior beyond one-shot summaries.
-- [ ] Stage 13 capability candidates owned by recurring profiles are promoted only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions.
-- [ ] Future profiles have objective trigger thresholds before implementation begins.
-- [ ] The MVP profile has a measurable stop condition and handoff artifact.
-- [ ] Fixtures or examples demonstrate the MVP profile stopping when its condition is met.
+- [x] The MVP profile consumes substrate artifacts and adds behavior beyond one-shot summaries.
+- [x] Stage 13 capability candidates owned by recurring profiles are promoted only when recurring-profile contracts express them as evidence-backed scheduled work with measurable stop conditions.
+- [x] Future profiles have objective trigger thresholds before implementation begins.
+- [x] The MVP profile has a measurable stop condition and handoff artifact.
+- [x] Fixtures or examples demonstrate the MVP profile stopping when its condition is met.
 
 ## Stage 20: Delivery surface and adoption packaging
 

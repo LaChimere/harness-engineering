@@ -26,6 +26,8 @@ engines:
     judge-policy: ">=0.1 <0.2"
     judge-result: ">=0.1 <0.2"
     gc-evidence: ">=0.1 <0.2"
+    recurring-profile: ">=0.1 <0.2"
+    profile-run: ">=0.1 <0.2"
 context:
   maps:
     - AGENTS.md
@@ -104,3 +106,7 @@ continuity:
   session_id_env: HARNESS_SESSION_ID
 gc:
   evidence_dir: .harness/gc
+recurring_profiles:
+  output_dir: .harness/profiles
+  profiles:
+    - examples/profiles/gc-stability.yaml

@@ -6,7 +6,7 @@ Approved by the user on 2026-05-20. This plan translates the Gate 1 research and
 
 The product target is a clean-slate **harness-as-code platform for AI coding agents**. External skills are source material for learning useful agent practices, not product namespaces or dependencies in this repo.
 
-Stages 1 through 10 and Stages 12 through 18 are complete. Stage 11 optional CI adapters are deferred by user request. Stage 18 added non-executing runner readiness checks for future live runners while preserving the deterministic stub path. Stage 18.5 is in progress to import Copilot-as-model candidate output into harness evidence without claiming provider-backed live execution. The next productization target after that slice is Stage 19: recurring maintenance profile substrate and entropy-auditor MVP.
+Stages 1 through 10 and Stages 12 through 19 are complete. Stage 11 optional CI adapters are deferred by user request. Stage 18 added non-executing runner readiness checks for future live runners while preserving the deterministic stub path. Stage 18.5 imports Copilot-as-model candidate output into harness evidence without claiming provider-backed live execution. Stage 19 added recurring maintenance profile contracts and the GC stability MVP profile.
 
 ## Goals
 
@@ -65,7 +65,7 @@ Stages 1 through 10 and Stages 12 through 18 are complete. Stage 11 optional CI 
 | 17 | Local project health checks | Stage 2, Stage 4, Stage 10, Stage 15 | `harness health` safely executes declared local checks such as lint, test, typecheck, and doc checks with trust/sandbox evidence |
 | 18 | Real runner readiness | Stage 6, Stage 7, Stage 17 | Prepare non-stub live agent/model runs with explicit credential references, budgets, sandbox requirements, trace redaction, and refusal modes |
 | 18.5 | Copilot-as-model import evidence | Stage 6, Stage 18 | Import externally generated candidate output into harness trace/run-result/verifier evidence without executing a provider-backed model |
-| 19 | Recurring maintenance profile substrate and MVP | Stage 12, Stage 15, Stage 17 | Define recurring-profile contracts and ship one evidence-backed MVP profile before expanding the full profile set |
+| 19 | Recurring maintenance profile substrate and MVP | Stage 12, Stage 15, Stage 17 | Define recurring-profile contracts and ship one evidence-backed GC stability MVP profile before expanding the full profile set |
 | 20 | Delivery surface and adoption packaging | Stage 3, Stage 17; Stage 18/19 only for advertised live-runner/profile paths | External users can install, initialize, run health checks, and understand current support through package, quickstart, examples, and adapter/CI guidance |
 
 ## Stage acceptance criteria
@@ -246,7 +246,7 @@ Stages 1 through 10 and Stages 12 through 18 are complete. Stage 11 optional CI 
 - Profiles consume substrate artifacts and add behavior beyond one-shot summaries.
 - Stage 13 capability candidates owned by recurring profiles are promoted only when profile contracts express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
 - Any profile adoption of a Stage 13 capability records the adopted `capability_id` and whether cleanup eligibility is triggered.
-- Stage 19 first ships the recurring-profile substrate and the entropy-auditor MVP profile with a measurable stop condition and handoff artifact.
+- Stage 19 first ships the recurring-profile substrate and the GC stability MVP profile with a measurable stop condition and handoff artifact.
 - Additional profiles require their own trigger thresholds before shipping: doc-gardener needs Stage 17 doc-link or docs-health evidence, eval-curator needs holdout eval evidence, and trace-reviewer needs Stage 18 trace evidence.
 - Fixtures or examples demonstrate the MVP profile stopping when its condition is met.
 - Human-facing assessment/report polish, including richer Markdown or dashboard summaries, is deferred until recurring profile and adapter consumption patterns are concrete.

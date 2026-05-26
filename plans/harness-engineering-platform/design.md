@@ -767,7 +767,7 @@ Capability ledger records use this shape:
 - **Dependencies:** Stage 12, Stage 13, Stage 15, and Stage 17. Stage 9 is needed for plugin-driven profiles; Stage 11 is only needed for CI-scheduled profiles. Cleanup eligibility may follow after profile adoption creates replacement evidence.
 - **Allowed changes:**
   - Define the recurring-profile state contract, trigger, inputs, allowed actions, measurable stop condition, and handoff artifact.
-  - Ship entropy-auditor as the MVP profile first because it can consume Stage 14/15 GC evidence plus Stage 17 health evidence without requiring live-runner support.
+  - Ship GC stability as the MVP profile first because it can consume Stage 14/15 GC evidence plus Stage 17 health evidence without requiring live-runner support.
   - Additional profiles require separate trigger thresholds: doc-gardener needs Stage 17 doc-link or docs-health evidence, eval-curator needs holdout eval evidence, and trace-reviewer needs Stage 18 trace evidence.
   - Promote Stage 13 capability candidates owned by recurring profiles only when the recurring-profile contract can express them as evidence-backed scheduled work with measurable stop conditions, not prompt-only habits.
   - When adopting a Stage 13 capability, record the adopted `capability_id` and whether cleanup eligibility is triggered.
@@ -776,6 +776,7 @@ Capability ledger records use this shape:
   - The MVP profile consumes substrate artifacts and adds behavior beyond one-shot summaries.
   - Each future profile has an objective trigger threshold before implementation begins.
   - The MVP profile has a measurable stop condition and handoff artifact.
+  - The MVP profile consumes GC/health evidence as a recurring profile; it does not run GC, execute cleanup, mutate repository files, schedule itself, or write capability-ledger adoption state.
   - Fixtures or examples demonstrate the MVP profile stopping when its condition is met.
 
 ### Stage 20: Delivery surface and adoption packaging

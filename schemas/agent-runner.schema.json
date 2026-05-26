@@ -110,7 +110,21 @@
       "additionalProperties": false
     },
     "credential_reference": {
-      "$ref": "common.schema.json#/$defs/credentialReference"
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/credentialReference"
+        },
+        {
+          "not": {
+            "properties": {
+              "source": {
+                "const": "external"
+              }
+            },
+            "required": ["source"]
+          }
+        }
+      ]
     },
     "budgets": {
       "$ref": "common.schema.json#/$defs/agentBudgets"

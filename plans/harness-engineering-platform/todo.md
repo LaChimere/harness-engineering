@@ -633,6 +633,27 @@ Evidence: Stage 18 adds `harness runner readiness` as a non-executing readiness 
 - [x] The product can explain exactly what must be configured before real execution is allowed.
 - [x] CI-safe validation does not require live credentials.
 
+## Stage 18.5: Copilot-as-model import evidence
+
+- [x] Run project entropy and GC audit before adding the slice.
+- [x] Add an explicit CLI path for importing a repo-local external candidate.
+- [x] Copy imported candidates into harness-managed agent-output artifacts before verifier execution.
+- [x] Emit schema-valid trace, verifier-result, and run-result evidence for imported candidates.
+- [x] Keep external-import evidence distinct from deterministic `agent-run`, assessment run-result evidence, and provider-backed live execution.
+- [x] Record candidate provenance, zero external usage, and `credential_reference.source: external`.
+- [x] Refuse path-escaping or symlinked external candidates.
+- [x] Add schema fixtures preventing external imports from being mislabeled as eval agent runs or stub-provenance traces.
+- [x] Add CLI tests for passing external imports, live-runner context imports, path refusal, and verifier failures.
+
+Evidence: The pre-slice GC audit produced `findings: []`. Stage 18.5 adds `harness run --external-candidate <path>` for Copilot-as-model / agent-mediated smoke testing. The command imports a repo-local candidate into `.harness/agent-outputs/`, runs the configured verifier, and emits `external-import` run-result and trace evidence without executing a model provider, reading live credentials, or charging model usage. External-import artifacts use `credential_reference.source: external`, zero external usage, candidate provenance links with SHA-256, and omit `model_status` so they cannot be mistaken for deterministic `agent-run` or provider-backed live execution. Assessment reports external imports separately and does not count them as agent-run evidence, and the run-result ledger refuses to replace an existing run id with a different evidence kind. Targeted CLI and schema fixture tests passed.
+
+### Stage 18.5 acceptance criteria
+
+- [x] A Copilot-as-model candidate can be verified through harness and produces trace, verifier-result, and run-result evidence.
+- [x] Imported candidates are path-safe, provenance-linked, and copied into the harness artifact area.
+- [x] External-import artifacts are schema-distinct from deterministic `agent-run`, assessment run-result evidence, and provider-backed `live-model` execution.
+- [x] No provider-backed model call, credential read, or model spend is implied by this path.
+
 ## Stage 19: Recurring maintenance profile substrate and MVP
 
 - [ ] Define recurring-profile state, trigger, inputs, state artifacts, allowed actions, stop condition, and handoff contract.

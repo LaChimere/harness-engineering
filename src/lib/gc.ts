@@ -451,6 +451,7 @@ async function executionFindings(input: GcAuditInput): Promise<readonly FindingI
     .filter((runResult) => getString(runResult.document, 'status') !== 'passed')
     .map((runResult): FindingInput => {
       const runId = getString(runResult.document, 'run_id') ?? 'run';
+      const kind = getString(runResult.document, 'kind') ?? 'unknown';
       const status = getString(runResult.document, 'status') ?? 'unknown';
       const failureCode = getString(runResult.document, 'failure_code') ?? 'unspecified';
       return {
@@ -458,9 +459,9 @@ async function executionFindings(input: GcAuditInput): Promise<readonly FindingI
         severity: status === 'error' ? 'error' : 'warning',
         confidence: 1,
         evidencePath: runResult.path,
-        evidenceDescription: `Run result ${runId} status is ${status}; failure_code=${failureCode}.`,
+        evidenceDescription: `Run result ${runId} kind=${kind} status is ${status}; failure_code=${failureCode}.`,
         cleanupId: `review-run-result-${slugForId(runId)}`,
-        cleanupDescription: `Review failed or errored run-result evidence for ${runId}.`,
+        cleanupDescription: `Review failed or errored ${kind} run-result evidence for ${runId}.`,
         targetFiles: [runResult.path],
         blastRadius: 'Execution evidence and linked trace/verifier artifacts.',
         atomicityNotes:

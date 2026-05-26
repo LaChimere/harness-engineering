@@ -412,6 +412,10 @@ async function loadRunResults(input: {
   let failed = 0;
   let error = 0;
   let skipped = 0;
+  let externalImportPassed = 0;
+  let externalImportFailed = 0;
+  let externalImportError = 0;
+  let externalImportSkipped = 0;
   const text = await readFile(absolutePath, 'utf8');
   const parsedEntries: Array<{ readonly label: string; readonly value: unknown }> = [];
   if (input.path.endsWith('.json')) {
@@ -452,7 +456,26 @@ async function loadRunResults(input: {
         .validate('run-result', entry.value)
         .map((issue) => `${entry.label}: ${formatValidationIssue(issue)}`),
     );
-    switch (getString(entry.value, 'status')) {
+    const kind = getString(entry.value, 'kind');
+    const status = getString(entry.value, 'status');
+    if (kind === 'external-import') {
+      switch (status) {
+        case 'passed':
+          externalImportPassed += 1;
+          break;
+        case 'failed':
+          externalImportFailed += 1;
+          break;
+        case 'error':
+          externalImportError += 1;
+          break;
+        case 'skipped':
+          externalImportSkipped += 1;
+          break;
+      }
+      continue;
+    }
+    switch (status) {
       case 'passed':
         passed += 1;
         break;
@@ -471,7 +494,13 @@ async function loadRunResults(input: {
     path: input.path,
     document: {
       schema_version: schemaVersion,
-      total: parsedEntries.length,
+      total: passed + failed + error + skipped,
+      external_import_total:
+        externalImportPassed + externalImportFailed + externalImportError + externalImportSkipped,
+      external_import_passed: externalImportPassed,
+      external_import_failed: externalImportFailed,
+      external_import_error: externalImportError,
+      external_import_skipped: externalImportSkipped,
       passed,
       failed,
       error,
@@ -983,10 +1012,15 @@ function runResultsSummary(runResults: LoadedArtifact | undefined): string {
   const failed = numberValue(document, 'failed');
   const error = numberValue(document, 'error');
   const skipped = numberValue(document, 'skipped');
-  const summary = `${total} run-result record(s) are readable: ${passed} passed, ${failed} failed, ${error} error, ${skipped} skipped.`;
+  const externalImportTotal = numberValue(document, 'external_import_total');
+  const externalImportPassed = numberValue(document, 'external_import_passed');
+  const externalImportFailed = numberValue(document, 'external_import_failed');
+  const externalImportError = numberValue(document, 'external_import_error');
+  const externalImportSkipped = numberValue(document, 'external_import_skipped');
+  const summary = `${total} run-result record(s) counted as agent/eval evidence: ${passed} passed, ${failed} failed, ${error} error, ${skipped} skipped.${externalImportTotal > 0 ? ` External-import records: ${externalImportTotal} total (${externalImportPassed} passed, ${externalImportFailed} failed, ${externalImportError} error, ${externalImportSkipped} skipped), not counted as agent-run evidence.` : ''}`;
   return total > 0 && passed === total && failed === 0 && error === 0 && skipped === 0
     ? summary
-    : `${summary} All supplied run-result records must be passed before treating run evidence as present.`;
+    : `${summary} At least one non-external agent/eval run-result record must be passed, and all counted records must be passed, before treating run evidence as present.`;
 }
 
 function scoreboardReportStatus(

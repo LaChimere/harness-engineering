@@ -351,6 +351,13 @@
       "expected_path": ["credential_reference"]
     },
     {
+      "path": "examples/fixtures/invalid/agent-runner-external-credential.yaml",
+      "schema": "schemas/agent-runner.schema.json",
+      "reason": "External credential provenance is only valid on imported evidence, not runner configuration.",
+      "expected_keyword": "not",
+      "expected_path": ["credential_reference"]
+    },
+    {
       "path": "examples/fixtures/invalid/agent-runner-budget-missing-token.yaml",
       "schema": "schemas/agent-runner.schema.json",
       "reason": "Budget blocks must include at least one token limit.",
@@ -396,6 +403,34 @@
       "expected_keyword": "required",
       "expected_path": [],
       "expected_message_contains": "'session_id'"
+    },
+    {
+      "path": "examples/fixtures/invalid/trace-external-import-stub-credential.json",
+      "schema": "schemas/trace.schema.json",
+      "reason": "External-import traces must not claim stub credential provenance.",
+      "expected_keyword": "const",
+      "expected_path": ["credential_reference", "source"]
+    },
+    {
+      "path": "examples/fixtures/invalid/trace-external-import-stub-model-profile.json",
+      "schema": "schemas/trace.schema.json",
+      "reason": "External-import traces must not claim a stub model profile artifact.",
+      "expected_keyword": "pattern",
+      "expected_path": ["environment_snapshot", "model_profile"]
+    },
+    {
+      "path": "examples/fixtures/invalid/trace-external-import-model-action.json",
+      "schema": "schemas/trace.schema.json",
+      "reason": "External-import traces must not claim harness model actions.",
+      "expected_keyword": "not",
+      "expected_path": ["actions", 0]
+    },
+    {
+      "path": "examples/fixtures/invalid/run-result-external-import-kind-eval.json",
+      "schema": "schemas/run-result.schema.json",
+      "reason": "External-import execution must not be mislabeled as an eval agent run.",
+      "expected_keyword": "const",
+      "expected_path": ["kind"]
     },
     {
       "path": "examples/fixtures/invalid/runner-readiness-live-ready-stub-mode.json",

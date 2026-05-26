@@ -237,5 +237,76 @@
       "$ref": "common.schema.json#/$defs/evidenceLinks"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "determinism_level": {
+            "const": "external-import"
+          }
+        },
+        "required": ["determinism_level"]
+      },
+      "then": {
+        "properties": {
+          "credential_reference": {
+            "properties": {
+              "source": {
+                "const": "external"
+              }
+            }
+          },
+          "usage": {
+            "properties": {
+              "source": {
+                "const": "external"
+              },
+              "requests": {
+                "const": 0
+              },
+              "input_tokens": {
+                "const": 0
+              },
+              "output_tokens": {
+                "const": 0
+              },
+              "total_tokens": {
+                "const": 0
+              },
+              "incurred_cost_usd": {
+                "const": 0
+              }
+            }
+          },
+          "environment_snapshot": {
+            "properties": {
+              "model_profile": {
+                "pattern": "^harness://external-import/"
+              }
+            }
+          },
+          "actions": {
+            "items": {
+              "not": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "type": {
+                        "const": "model"
+                      }
+                    },
+                    "required": ["type"]
+                  },
+                  {
+                    "required": ["model_call"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

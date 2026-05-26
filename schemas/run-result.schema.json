@@ -24,7 +24,7 @@
     },
     "kind": {
       "type": "string",
-      "enum": ["eval", "ad-hoc"]
+      "enum": ["eval", "ad-hoc", "external-import"]
     },
     "suite_id": {
       "$ref": "common.schema.json#/$defs/nonEmptyString"
@@ -60,7 +60,7 @@
       "properties": {
         "mode": {
           "type": "string",
-          "enum": ["verifier-only", "agent-run"]
+          "enum": ["verifier-only", "agent-run", "external-import"]
         },
         "harness_status": {
           "type": "string",
@@ -159,6 +159,46 @@
     {
       "if": {
         "properties": {
+          "kind": {
+            "const": "external-import"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "required": [
+          "suite_id",
+          "task_id",
+          "task_version",
+          "dataset_hash",
+          "split",
+          "verifier_result"
+        ],
+        "properties": {
+          "execution": {
+            "properties": {
+              "mode": {
+                "const": "external-import"
+              }
+            },
+            "required": ["mode"]
+          },
+          "usage": {
+            "properties": {
+              "source": {
+                "const": "external"
+              }
+            }
+          },
+          "model_profile": {
+            "pattern": "^harness://external-import/"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "status": {
             "const": "passed"
           },
@@ -222,6 +262,68 @@
           "execution": {
             "properties": {
               "mode": {
+                "const": "external-import"
+              }
+            },
+            "required": ["mode"]
+          }
+        },
+        "required": ["execution"]
+      },
+      "then": {
+        "required": ["trace"],
+        "properties": {
+          "kind": {
+            "const": "external-import"
+          },
+          "trace": {
+            "not": {
+              "const": "harness://verifier-only/no-agent-trace"
+            }
+          },
+          "execution": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": ["agent_status"]
+                },
+                {
+                  "required": ["model_status"]
+                }
+              ]
+            }
+          },
+          "usage": {
+            "properties": {
+              "source": {
+                "const": "external"
+              },
+              "requests": {
+                "const": 0
+              },
+              "input_tokens": {
+                "const": 0
+              },
+              "output_tokens": {
+                "const": 0
+              },
+              "total_tokens": {
+                "const": 0
+              },
+              "incurred_cost_usd": {
+                "const": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "mode": {
                 "const": "verifier-only"
               }
             },
@@ -272,6 +374,63 @@
                 }
               },
               "required": ["harness_status", "verifier_status"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "external-import"
+          },
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": ["kind", "status"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "harness_status": {
+                "const": "passed"
+              },
+              "verifier_status": {
+                "const": "passed"
+              }
+            }
+          }
+        },
+        "not": {
+          "required": ["failure_code"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "external-import"
+          },
+          "status": {
+            "const": "failed"
+          }
+        },
+        "required": ["kind", "status"]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "harness_status": {
+                "const": "passed"
+              },
+              "verifier_status": {
+                "const": "failed"
+              }
             }
           }
         }

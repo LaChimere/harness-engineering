@@ -149,7 +149,7 @@
       "properties": {
         "source": {
           "type": "string",
-          "enum": ["env", "file", "secret-manager", "host-vault", "stub"]
+          "enum": ["env", "file", "secret-manager", "host-vault", "stub", "external"]
         },
         "name": {
           "$ref": "#/$defs/nonEmptyString"
@@ -249,7 +249,7 @@
         },
         "source": {
           "type": "string",
-          "enum": ["provider-reported", "computed", "stub"]
+          "enum": ["provider-reported", "computed", "stub", "external"]
         }
       },
       "additionalProperties": false

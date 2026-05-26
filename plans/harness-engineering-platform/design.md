@@ -746,6 +746,21 @@ Capability ledger records use this shape:
   - Real-runner readiness does not make live credentials necessary for the starter or CI-safe tests.
   - Fixtures prove missing credential references and trace-redaction violations are refused.
 
+### Stage 18.5: Copilot-as-model import evidence
+
+- **Goal:** Let Copilot-as-model output enter the harness evidence flow before provider-backed live execution exists.
+- **Dependencies:** Stage 6 and Stage 18.
+- **Allowed changes:**
+  - Add an explicit external-candidate import path that copies a repo-local candidate into harness-managed agent-output artifacts and runs the configured verifier.
+  - Emit distinct `external-import` run-result and trace evidence with `credential_reference.source: external`, zero external usage, candidate provenance, and no `model_status`.
+  - Keep verifier `case` semantics (`oracle` or `broken-twin`) separate from candidate provenance.
+  - Prevent external imports from being mislabeled as eval agent runs or scoreboard-backed live/model execution.
+- **Acceptance criteria:**
+  - A Copilot-as-model candidate can be verified through harness and produces trace, verifier-result, and run-result evidence.
+  - Imported candidates are path-safe, provenance-linked, and copied into the harness artifact area.
+  - External-import artifacts are schema-distinct from deterministic `agent-run` and provider-backed `live-model` execution.
+  - No provider-backed model call, credential read, or model spend is implied by this path.
+
 ### Stage 19: Recurring maintenance profile substrate and MVP
 
 - **Goal:** Add a recurring-profile contract and one useful MVP profile after artifacts exist.

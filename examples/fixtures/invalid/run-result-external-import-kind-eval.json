@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "invalid-external-import-kind",
+  "kind": "eval",
+  "suite_id": "harness-self-test",
+  "task_id": "schema-smoke",
+  "task_version": "1.0.0",
+  "dataset_hash": "sha256:27aa95663ba3847b713dae33b3beed3a33280d3aeeff5cb9177f5bc9817c81fd",
+  "split": "optimization",
+  "model_profile": "harness://external-import/copilot-cli",
+  "harness_version": "0.1.0",
+  "status": "passed",
+  "execution": {
+    "mode": "external-import",
+    "harness_status": "passed",
+    "verifier_status": "passed"
+  },
+  "usage": {
+    "billed_model_id": "copilot-cli",
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "requests": 0,
+    "incurred_cost_usd": 0,
+    "source": "external"
+  },
+  "trace": ".harness/traces/invalid-external-import-kind.json",
+  "verifier_result": ".harness/verifier-results/invalid-external-import-kind.json",
+  "artifacts": []
+}

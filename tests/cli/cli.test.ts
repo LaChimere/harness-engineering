@@ -665,7 +665,7 @@ test('assess accepts JSON run-result arrays and summarizes each entry', async ()
   expect(getString(runResults ?? {}, 'status')).toBe('partial');
   expect(getString(runResults ?? {}, 'summary')).toContain('2 run-result record(s)');
   expect(getString(runResults ?? {}, 'summary')).toContain('1 passed, 1 failed');
-  expect(getString(runResults ?? {}, 'summary')).toContain('All supplied run-result records');
+  expect(getString(runResults ?? {}, 'summary')).toContain('all counted records must be passed');
 });
 
 test('assess falls back to direct CLI guidance when no native route is configured', async () => {
@@ -2971,6 +2971,215 @@ test('run executes a deterministic stub task and writes agent artifacts', async 
   expect(await readFile(join(root, agentOutputPath), 'utf8')).toContain('schema-smoke passes');
 });
 
+test('run imports an external candidate and writes external-import artifacts', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(
+    join(root, 'candidate.txt'),
+    'schema-smoke passes\n\nGenerated outside harness by Copilot-as-model.\n',
+  );
+
+  const result = await run(
+    [
+      'run',
+      '--external-candidate',
+      'candidate.txt',
+      '--external-model-id',
+      'copilot-cli',
+      '--run-id',
+      'stage18-5-import',
+      '--session-id',
+      'session-stage18-5',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(result.code).toBe(ExitCode.ok);
+  const summary = JSON.parse(result.stdout);
+  expect(getString(summary, 'actual_status')).toBe('passed');
+  expect(getString(summary, 'source_candidate')).toBe('candidate.txt');
+
+  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  expect(runResults.length).toBe(1);
+  const runResult = runResults[0] ?? {};
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('run-result', runResult)).toEqual([]);
+  expect(getString(runResult, 'kind')).toBe('external-import');
+  expect(getString(runResult, 'model_profile')).toBe('harness://external-import/copilot-cli');
+  expect(getObject(runResult, 'execution')).toEqual({
+    mode: 'external-import',
+    harness_status: 'passed',
+    verifier_status: 'passed',
+  });
+  expect(getString(getObject(runResult, 'usage') ?? {}, 'source')).toBe('external');
+  expect(getNumberForTest(getObject(runResult, 'usage') ?? {}, 'requests')).toBe(0);
+
+  const tracePath = requiredStringForTest(summary, 'trace');
+  const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
+  expect(schemas.validate('trace', trace)).toEqual([]);
+  expect(getString(trace, 'determinism_level')).toBe('external-import');
+  expect(getString(getObject(trace, 'credential_reference') ?? {}, 'source')).toBe('external');
+  expect(getString(getObject(trace, 'usage') ?? {}, 'source')).toBe('external');
+  expect(
+    jsonObjects(getArray(trace, 'actions')).some(
+      (action) => getString(action, 'id') === `${getString(summary, 'run_id')}-external-import`,
+    ),
+  ).toBe(true);
+
+  const verifierResult = JSON.parse(
+    await readFile(join(root, requiredStringForTest(summary, 'verifier_result')), 'utf8'),
+  );
+  expect(schemas.validate('verifier-result', verifierResult)).toEqual([]);
+  expect(getString(verifierResult, 'case')).toBe('oracle');
+  expect(getString(verifierResult, 'status')).toBe('passed');
+
+  const externalOnlyAssessment = await run(
+    ['assess', '--format', 'json', '--run-results', '.harness/run-results.jsonl'],
+    root,
+  );
+  expect(externalOnlyAssessment.code).toBe(ExitCode.ok);
+  const runResultsScore = objectWithString(
+    jsonObjects(getArray(JSON.parse(externalOnlyAssessment.stdout), 'scorecard')),
+    'id',
+    'run-results',
+  );
+  expect(getString(runResultsScore ?? {}, 'status')).toBe('partial');
+  expect(getString(runResultsScore ?? {}, 'summary')).toContain(
+    'not counted as agent-run evidence',
+  );
+
+  await writeFile(
+    join(root, 'examples/model-profiles/live-ready.yaml'),
+    await readFile('examples/model-profiles/live-ready.yaml', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'examples/policies/live-sandbox-policy.yaml'),
+    await readFile('examples/policies/live-sandbox-policy.yaml', 'utf8'),
+  );
+  await writeFile(
+    join(root, 'examples/agent-runners/live-ready.yaml'),
+    await readFile('examples/agent-runners/live-ready.yaml', 'utf8'),
+  );
+  const liveRunnerImport = await run(
+    [
+      'run',
+      '--runner',
+      'examples/agent-runners/live-ready.yaml',
+      '--external-candidate',
+      'candidate.txt',
+      '--external-model-id',
+      'copilot-cli',
+      '--run-id',
+      'stage18-5-live-runner-import',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(liveRunnerImport.code).toBe(ExitCode.ok);
+  const liveRunnerRunResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const liveRunnerRunResult = liveRunnerRunResults.find((entry) =>
+    requiredStringForTest(entry, 'run_id').startsWith('stage18-5-live-runner-import'),
+  );
+  expect(liveRunnerRunResult).toBeDefined();
+  expect(getString(liveRunnerRunResult ?? {}, 'kind')).toBe('external-import');
+  expect(getString(getObject(liveRunnerRunResult ?? {}, 'usage') ?? {}, 'source')).toBe('external');
+});
+
+test('run refuses to replace agent-run evidence with external-import evidence', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(join(root, 'candidate.txt'), 'schema-smoke passes\nexternal replacement\n');
+  const baseRunId = 'stage18-5-ledger-kind';
+
+  const agentRun = await run(['run', '--run-id', baseRunId, '--format', 'json'], root);
+  expect(agentRun.code).toBe(ExitCode.ok);
+  const agentOutputPath = requiredStringForTest(JSON.parse(agentRun.stdout), 'agent_output');
+  const originalAgentOutput = await readFile(join(root, agentOutputPath), 'utf8');
+  expect(originalAgentOutput).not.toContain('external replacement');
+
+  const externalImport = await run(
+    ['run', '--external-candidate', 'candidate.txt', '--run-id', baseRunId, '--format', 'json'],
+    root,
+  );
+  expect(externalImport.code).toBe(ExitCode.validationError);
+  expect(externalImport.stderr).toContain('Refusing to replace run-result');
+  expect(externalImport.stderr).toContain('eval/agent-run -> external-import/external-import');
+
+  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  expect(runResults.length).toBe(1);
+  expect(getString(runResults[0] ?? {}, 'kind')).toBe('eval');
+  expect(await readFile(join(root, agentOutputPath), 'utf8')).toBe(originalAgentOutput);
+});
+
+test('eval run refuses to replace external-import evidence before writing artifacts', async () => {
+  const root = await tempRoot();
+  await run(['init'], root);
+  await writeFile(join(root, 'candidate.txt'), 'schema-smoke passes\nexternal import remains\n');
+  const baseRunId = 'stage18-5-eval-ledger-kind';
+
+  const externalImport = await run(
+    ['run', '--external-candidate', 'candidate.txt', '--run-id', baseRunId, '--format', 'json'],
+    root,
+  );
+  expect(externalImport.code).toBe(ExitCode.ok);
+  const externalSummary = JSON.parse(externalImport.stdout);
+  const agentOutputPath = requiredStringForTest(externalSummary, 'agent_output');
+  const originalAgentOutput = await readFile(join(root, agentOutputPath), 'utf8');
+  expect(originalAgentOutput).toContain('external import remains');
+
+  const evalRun = await run(['eval', 'run', '--run-id', baseRunId, '--format', 'json'], root);
+  expect(evalRun.code).toBe(ExitCode.validationError);
+  expect(evalRun.stderr).toContain('Refusing to replace run-result');
+  expect(evalRun.stderr).toContain('external-import/external-import -> eval/agent-run');
+
+  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  expect(runResults.length).toBe(1);
+  expect(getString(runResults[0] ?? {}, 'kind')).toBe('external-import');
+  expect(await readFile(join(root, agentOutputPath), 'utf8')).toBe(originalAgentOutput);
+});
+
+test('run refuses unsafe external candidates and records verifier failures honestly', async () => {
+  const parent = await tempRoot();
+  const root = join(parent, 'repo');
+  await mkdir(root);
+  await run(['init'], root);
+  await writeFile(join(parent, 'outside.txt'), 'schema-smoke passes outside root.\n');
+
+  const escaped = await run(
+    ['run', '--external-candidate', '../outside.txt', '--run-id', 'stage18-5-escape'],
+    root,
+  );
+  expect(escaped.code).toBe(ExitCode.usageError);
+  expect(escaped.stderr).toContain('External candidate escapes root');
+
+  await writeFile(join(root, 'bad-candidate.txt'), 'schema-smoke fails\n');
+  const failed = await run(
+    [
+      'run',
+      '--external-candidate',
+      'bad-candidate.txt',
+      '--run-id',
+      'stage18-5-failed',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(failed.code).toBe(ExitCode.validationError);
+  const runResults = await readJsonLines(join(root, '.harness/run-results.jsonl'));
+  const runResult = runResults[0] ?? {};
+  expect(getString(runResult, 'kind')).toBe('external-import');
+  expect(getString(runResult, 'status')).toBe('failed');
+  expect(getString(runResult, 'failure_code')).toBe('verification-failure');
+  expect(getObject(runResult, 'execution')).toEqual({
+    mode: 'external-import',
+    harness_status: 'passed',
+    verifier_status: 'failed',
+  });
+});
+
 test('run preserves explicit session association across separate runs', async () => {
   const root = await tempRoot();
   await run(['init'], root);
@@ -3042,6 +3251,14 @@ test('run rejects empty session ids and symlinked stub outputs', async () => {
   const emptyEvalSession = await run(['eval', 'run', '--session-id='], await tempRoot());
   expect(emptyEvalSession.code).toBe(ExitCode.usageError);
   expect(emptyEvalSession.stderr).toContain('eval run --session-id must not be empty');
+  const externalModelWithoutCandidate = await run(
+    ['run', '--external-model-id', 'copilot-cli'],
+    await tempRoot(),
+  );
+  expect(externalModelWithoutCandidate.code).toBe(ExitCode.usageError);
+  expect(externalModelWithoutCandidate.stderr).toContain(
+    'run --external-model-id requires --external-candidate',
+  );
 
   const parent = await tempRoot();
   const root = join(parent, 'repo');

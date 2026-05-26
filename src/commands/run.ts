@@ -12,7 +12,17 @@ import { readPackageVersion } from '../lib/project.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
 import type { CommandContext } from './init.ts';
 
-const valueOptions = new Set(['root', 'file', 'runner', 'format', 'run-id', 'session-id', 'case']);
+const valueOptions = new Set([
+  'root',
+  'file',
+  'runner',
+  'format',
+  'run-id',
+  'session-id',
+  'case',
+  'external-candidate',
+  'external-model-id',
+]);
 const flagOptions = new Set<string>();
 
 export async function runAgentRunCommand(
@@ -41,6 +51,20 @@ export async function runAgentRunCommand(
   if (caseKind !== 'oracle' && caseKind !== 'broken-twin') {
     throw new CliError('run --case must be oracle or broken-twin.', ExitCode.usageError);
   }
+  const externalCandidatePath = optionValue(options, 'external-candidate');
+  const externalModelId = optionValue(options, 'external-model-id');
+  if (externalCandidatePath !== undefined && externalCandidatePath.trim().length === 0) {
+    throw new CliError('run --external-candidate must not be empty.', ExitCode.usageError);
+  }
+  if (externalModelId !== undefined && externalModelId.trim().length === 0) {
+    throw new CliError('run --external-model-id must not be empty.', ExitCode.usageError);
+  }
+  if (externalModelId !== undefined && externalCandidatePath === undefined) {
+    throw new CliError(
+      'run --external-model-id requires --external-candidate.',
+      ExitCode.usageError,
+    );
+  }
 
   const root = resolveRootForInspectionCommand(context.cwd, optionValue(options, 'root') ?? '.');
   const schemas = await loadSchemaRegistry(context.packageRoot);
@@ -59,6 +83,8 @@ export async function runAgentRunCommand(
     ...(options.positionals[0] === undefined ? {} : { taskPath: options.positionals[0] }),
     ...(runId === undefined ? {} : { runId }),
     ...(sessionId === undefined ? {} : { sessionId }),
+    ...(externalCandidatePath === undefined ? {} : { externalCandidatePath }),
+    ...(externalModelId === undefined ? {} : { externalModelId }),
     caseKind,
   });
 

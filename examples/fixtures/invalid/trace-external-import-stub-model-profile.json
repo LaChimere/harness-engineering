@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1.0",
-  "session_id": "harness-stage6-import",
-  "run_id": "imported-trace-001",
+  "session_id": "invalid-external-import",
+  "run_id": "invalid-external-import-stub-model-profile",
   "harness_version": "0.1.0",
   "inputs": {
     "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
@@ -11,7 +11,7 @@
     "environment": "examples/environments/local.yaml",
     "sandbox": "examples/policies/sandbox-policy.yaml",
     "approval_policy": "examples/policies/approval-policy.yaml",
-    "model_profile": "harness://external-import/imported-candidate",
+    "model_profile": "examples/model-profiles/stub.yaml",
     "runner": "examples/agent-runners/stub.yaml"
   },
   "started_at": "2026-05-21T00:00:00Z",
@@ -22,7 +22,7 @@
   "credential_reference": {
     "source": "external",
     "name": "imported-candidate",
-    "purpose": "Imported normalized trace fixture",
+    "purpose": "Invalid external-import model profile fixture",
     "scope": "per-run"
   },
   "budgets": {
@@ -43,11 +43,5 @@
   },
   "actions": [],
   "logs": [],
-  "artifact_links": [
-    {
-      "path": "examples/run-results/run-result.json",
-      "media_type": "application/json",
-      "description": "Run result associated with the imported trace."
-    }
-  ]
+  "artifact_links": []
 }

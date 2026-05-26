@@ -31,7 +31,7 @@ Local doctor checks, eval verifiers, and repair actions all reuse the same `trus
 
 ## Credentials and budgets
 
-Agent runners reference credentials with `credential_reference`; they must not embed secret values. Model execution also requires `budgets` with cost, request, and token limits so `harness run` can refuse unbounded runs deterministically. The deterministic runner accepts only non-secret `source: stub` credential references and recorded fixture outputs; live model credentials remain out of scope.
+Agent runners reference credentials with `credential_reference`; they must not embed secret values. Model execution also requires `budgets` with cost, request, and token limits so `harness run` can refuse unbounded runs deterministically. The deterministic runner accepts only non-secret `source: stub` credential references and recorded fixture outputs; live model credentials remain out of scope. External candidate imports use `source: external` to show that the model output was produced outside harness and imported for verification.
 
 Trace and run-result artifacts record aggregate usage evidence with token, request, model, and cost fields so budgets can be audited after execution. Agent-run traces also require the credential reference and budget contract that governed the run.
 
@@ -39,7 +39,7 @@ Trace and run-result artifacts record aggregate usage evidence with token, reque
 
 Eval tasks declare suite/task identity, task version, dataset hash, optimization or holdout split, verifier command, timeout, oracle/baseline artifacts, and verifier trust requirements. `harness eval validate` recomputes the dataset hash before execution and refuses to run verifier commands whose trust declaration asks for network, secret, host-file, or any sandbox tier other than `process`. It enforces the declaration contract before execution; runtime sandbox enforcement belongs to future runner hardening.
 
-Run results include an `execution` block. `verifier-only` records separate `harness_status` and `verifier_status` fields. `agent-run` records `harness_status`, `verifier_status`, `agent_status`, and `model_status`, and must link to a real trace artifact rather than the verifier-only sentinel trace. Linked deterministic verifier evidence is shaped by `verifier-result.schema.json`.
+Run results include an `execution` block. `verifier-only` records separate `harness_status` and `verifier_status` fields. `agent-run` records `harness_status`, `verifier_status`, `agent_status`, and `model_status`, and must link to a real trace artifact rather than the verifier-only sentinel trace. `external-import` records a candidate generated outside harness, keeps `model_status` absent, requires external zero-usage accounting, and cannot be labeled as an `eval` agent run. Assessment treats external imports as separately labelled import evidence rather than counted agent-run evidence. Linked deterministic verifier evidence is shaped by `verifier-result.schema.json`.
 
 Scoreboards summarize agent-run ledgers by optimization/holdout split and total counts. Their failure buckets explicitly separate `agent-failure`, `model-failure`, `harness-error`, `verifier-error`, `verification-failure`, `budget-exceeded`, and `credential-missing` so behavioral regressions do not collapse into one opaque failure class. The broken-twin fixture intentionally contributes an `agent-failure` bucket while the overall eval run can still pass because that negative control failed as expected.
 

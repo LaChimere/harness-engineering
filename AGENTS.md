@@ -26,9 +26,8 @@ This repository is the canonical harness-as-code platform for AI coding agents. 
   - `health` is declared local project checks with explicit trust boundaries.
   - `verify` consumes explicit self-verification evidence.
   - `eval` runs task/verifier suites.
-  - `run` records deterministic or imported candidate execution evidence.
-  - `gc` audits evidence and proposes reviewable cleanup slices without applying them.
   - `profile` consumes evidence and emits deterministic handoff artifacts.
+  - `gc` audits evidence and proposes reviewable cleanup slices without applying them.
 - Do not add subjective "AI slop" scoring as a doctor, GC, or profile category.
 
 ## Toolchain decisions

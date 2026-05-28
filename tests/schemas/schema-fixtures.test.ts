@@ -13,55 +13,55 @@ import {
 } from '../../src/lib/json.ts';
 import { loadSchemaRegistry } from '../../src/lib/schema-registry.ts';
 
-interface Manifest {
-  readonly valid: readonly ValidFixture[];
-  readonly invalid: readonly InvalidFixture[];
-  readonly custom_valid?: readonly CustomValidFixture[];
-  readonly custom_invalid?: readonly CustomInvalidFixture[];
-  readonly referenced_evidence?: readonly ReferencedEvidenceFixture[];
-  readonly failure_taxonomy_required_codes: readonly string[];
-  readonly plugin_capability_matrix_invariants: MatrixInvariantRules;
+interface IManifest {
+  readonly valid: readonly IValidFixture[];
+  readonly invalid: readonly IInvalidFixture[];
+  readonly ['custom_valid']?: readonly ICustomValidFixture[];
+  readonly ['custom_invalid']?: readonly ICustomInvalidFixture[];
+  readonly ['referenced_evidence']?: readonly IReferencedEvidenceFixture[];
+  readonly ['failure_taxonomy_required_codes']: readonly string[];
+  readonly ['plugin_capability_matrix_invariants']: IMatrixInvariantRules;
 }
 
-interface MatrixInvariantRules {
-  readonly capability_dimensions: readonly string[];
-  readonly limited_adapter_core_capabilities: readonly string[];
-  readonly rich_ux_capabilities: readonly string[];
-  readonly out_of_scope_surface_kinds: readonly string[];
-  readonly out_of_scope_distribution_surfaces: readonly string[];
-  readonly tier_consequences: Readonly<Record<string, string>>;
-  readonly null_decision_consequences: Readonly<Record<string, string>>;
-  readonly selectable_tiers: readonly string[];
+interface IMatrixInvariantRules {
+  readonly ['capability_dimensions']: readonly string[];
+  readonly ['limited_adapter_core_capabilities']: readonly string[];
+  readonly ['rich_ux_capabilities']: readonly string[];
+  readonly ['out_of_scope_surface_kinds']: readonly string[];
+  readonly ['out_of_scope_distribution_surfaces']: readonly string[];
+  readonly ['tier_consequences']: Readonly<Record<string, string>>;
+  readonly ['null_decision_consequences']: Readonly<Record<string, string>>;
+  readonly ['selectable_tiers']: readonly string[];
 }
 
-interface ValidFixture {
+interface IValidFixture {
   readonly path: string;
   readonly schema: string;
 }
 
-interface InvalidFixture {
+interface IInvalidFixture {
   readonly path: string;
   readonly schema: string;
-  readonly expected_keyword: string;
-  readonly expected_path: readonly (string | number)[];
-  readonly expected_message_contains?: string;
+  readonly ['expected_keyword']: string;
+  readonly ['expected_path']: readonly (string | number)[];
+  readonly ['expected_message_contains']?: string;
 }
 
-interface ReferencedEvidenceFixture {
+interface IReferencedEvidenceFixture {
   readonly path: string;
   readonly reason: string;
 }
 
-interface CustomInvalidFixture {
+interface ICustomInvalidFixture {
   readonly path: string;
   readonly check: string;
   readonly matrix?: string;
-  readonly expected_missing_code?: string;
-  readonly expected_error_code?: string;
-  readonly expected_message_contains?: string;
+  readonly ['expected_missing_code']?: string;
+  readonly ['expected_error_code']?: string;
+  readonly ['expected_message_contains']?: string;
 }
 
-interface CustomValidFixture {
+interface ICustomValidFixture {
   readonly path: string;
   readonly check: string;
   readonly matrix?: string;
@@ -143,10 +143,10 @@ test('custom-invalid fixtures fail with their manifest-declared reason', async (
   }
 });
 
-async function loadManifest(): Promise<Manifest> {
+async function loadManifest(): Promise<IManifest> {
   const manifest = JSON.parse(
     await readFile('examples/fixtures/manifest.json', 'utf8'),
-  ) as Manifest;
+  ) as IManifest;
   return manifest;
 }
 
@@ -199,9 +199,9 @@ function missingTaxonomyCodes(
 }
 
 async function runCustomCheck(
-  fixture: CustomValidFixture | CustomInvalidFixture,
+  fixture: ICustomValidFixture | ICustomInvalidFixture,
   document: unknown,
-  manifest: Manifest,
+  manifest: IManifest,
 ): Promise<readonly string[]> {
   switch (fixture.check) {
     case 'failure_taxonomy_required_codes':
@@ -221,7 +221,7 @@ async function runCustomCheck(
 }
 
 function adapterScopeMatrixPath(
-  fixture: CustomValidFixture | CustomInvalidFixture,
+  fixture: ICustomValidFixture | ICustomInvalidFixture,
   document: unknown,
 ): string {
   if (fixture.matrix !== undefined) {
@@ -242,7 +242,7 @@ function matrixError(code: string, message: string): string {
 
 function validatePluginCapabilityMatrix(
   document: unknown,
-  rules: MatrixInvariantRules,
+  rules: IMatrixInvariantRules,
 ): readonly string[] {
   const errors: string[] = [];
   if (!isObject(document)) {
@@ -322,7 +322,7 @@ function validateHostCapabilities(
   host: JsonObject,
   hostId: string,
   localEvidenceIds: ReadonlySet<string>,
-  rules: MatrixInvariantRules,
+  rules: IMatrixInvariantRules,
   errors: string[],
 ): void {
   const capabilities = getObject(host, 'capabilities');
@@ -360,7 +360,7 @@ function validateHostCapabilities(
 function validateHostTier(
   host: JsonObject,
   hostId: string,
-  rules: MatrixInvariantRules,
+  rules: IMatrixInvariantRules,
   errors: string[],
 ): void {
   const tier = getString(host, 'tier');
@@ -511,7 +511,7 @@ function validateHostTier(
 function validateMatrixDecision(
   matrix: JsonObject,
   hostsById: ReadonlyMap<string, JsonObject>,
-  rules: MatrixInvariantRules,
+  rules: IMatrixInvariantRules,
   errors: string[],
 ): void {
   const decision = getObject(matrix, 'decision');

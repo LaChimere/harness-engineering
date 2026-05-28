@@ -16,7 +16,7 @@ import { isObject } from '../lib/json.ts';
 import { hasFlag, optionValue, parseOptions } from '../lib/options.ts';
 import { resolveRootForWriteCommand } from '../lib/paths.ts';
 
-export interface CommandContext {
+export interface ICommandContext {
   readonly cwd: string;
   readonly packageRoot: string;
   readonly stdout: (message: string) => void;
@@ -155,7 +155,10 @@ const starterPathReplacements: ReadonlyArray<readonly [string, string]> = [
   ['.harness/approvals', '.harness/outputs/approvals'],
 ];
 
-export async function runInit(args: readonly string[], context: CommandContext): Promise<ExitCode> {
+export async function runInit(
+  args: readonly string[],
+  context: ICommandContext,
+): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 0) {
     throw new CliError('init does not accept positional arguments.', ExitCode.usageError);

@@ -6,7 +6,7 @@ import semver from 'semver';
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
-import { type HarnessValidationResult, validateHarnessConfiguration } from './harness.ts';
+import { type IHarnessValidationResult, validateHarnessConfiguration } from './harness.ts';
 import {
   getArray,
   getObject,
@@ -17,15 +17,15 @@ import {
   objectEntries,
 } from './json.ts';
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
-import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
+import { formatValidationIssue, type ISchemaRegistry } from './schema-registry.ts';
 
 export type GcStatus = 'passed' | 'findings';
 
-export interface GcAuditInput {
+export interface IGcAuditInput {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly auditId?: string;
   readonly generatedAt?: string;
   readonly previousAuditRef?: string;
@@ -38,13 +38,13 @@ export interface GcAuditInput {
   readonly judgeResultPath?: string;
 }
 
-export interface GcAuditRun {
+export interface IGcAuditRun {
   readonly evidence: JsonObject;
   readonly markdown: string;
   readonly status: GcStatus;
 }
 
-interface FindingInput {
+interface IFindingInput {
   readonly category:
     | 'broken-reference'
     | 'duplicate-id'
@@ -65,20 +65,20 @@ interface FindingInput {
   readonly atomicityNotes: string;
 }
 
-interface DuplicateRecord {
+interface IDuplicateRecord {
   readonly key: string;
   readonly value: string;
   readonly path: string;
 }
 
-interface LoadedEvidenceArtifact {
+interface ILoadedEvidenceArtifact {
   readonly path: string;
   readonly document: JsonObject;
 }
 
 const schemaVersion = '0.1.0';
 
-export async function runGcAudit(input: GcAuditInput): Promise<GcAuditRun> {
+export async function runGcAudit(input: IGcAuditInput): Promise<IGcAuditRun> {
   const validation = await validateHarnessConfiguration({
     root: input.root,
     harnessPath: input.harnessPath,
@@ -109,11 +109,13 @@ export async function runGcAudit(input: GcAuditInput): Promise<GcAuditRun> {
   ]);
   const findings = findingInputs.map(finding);
   const evidence: JsonObject = {
-    schema_version: schemaVersion,
-    audit_id: input.auditId ?? defaultAuditId(input.harnessPath, findings),
-    generated_at: input.generatedAt ?? new Date().toISOString(),
+    ['schema_version']: schemaVersion,
+    ['audit_id']: input.auditId ?? defaultAuditId(input.harnessPath, findings),
+    ['generated_at']: input.generatedAt ?? new Date().toISOString(),
     findings,
-    ...(input.previousAuditRef === undefined ? {} : { previous_audit_ref: input.previousAuditRef }),
+    ...(input.previousAuditRef === undefined
+      ? {}
+      : { ['previous_audit_ref']: input.previousAuditRef }),
   };
   return {
     evidence,
@@ -291,8 +293,8 @@ function isExternalOrFragmentRef(path: string): boolean {
 
 function brokenReferenceFindings(
   harnessPath: string,
-  validation: HarnessValidationResult,
-): readonly FindingInput[] {
+  validation: IHarnessValidationResult,
+): readonly IFindingInput[] {
   return validation.referenceIssues.map((issue, index) => ({
     category: 'broken-reference',
     severity: 'error',
@@ -310,9 +312,9 @@ function brokenReferenceFindings(
 
 function staleSchemaVersionFindings(
   harnessPath: string,
-  validation: HarnessValidationResult,
-  schemas: SchemaRegistry,
-): readonly FindingInput[] {
+  validation: IHarnessValidationResult,
+  schemas: ISchemaRegistry,
+): readonly IFindingInput[] {
   const harness = validation.document;
   if (harness === undefined) {
     return [];
@@ -321,7 +323,7 @@ function staleSchemaVersionFindings(
   if (schemaRanges === undefined) {
     return [];
   }
-  const findings: FindingInput[] = [];
+  const findings: IFindingInput[] = [];
   for (const [schemaName, range] of objectEntries(schemaRanges)) {
     if (typeof range !== 'string' || !schemas.schemaNames.has(schemaName)) {
       continue;
@@ -348,10 +350,10 @@ function staleSchemaVersionFindings(
 async function duplicateIdFindings(
   root: string,
   harnessPath: string,
-  validation: HarnessValidationResult,
+  validation: IHarnessValidationResult,
   repairActionsDir: string | undefined,
   capabilityLedgerPath: string | undefined,
-): Promise<readonly FindingInput[]> {
+): Promise<readonly IFindingInput[]> {
   const records = [
     ...doctorCheckIdRecords(harnessPath, validation),
     ...(await repairActionIdRecords(root, repairActionsDir ?? 'examples/repair-actions')),
@@ -360,12 +362,12 @@ async function duplicateIdFindings(
       capabilityLedgerPath ?? 'plans/harness-engineering-platform/capability-ledger.yaml',
     )),
   ];
-  const groups = new Map<string, DuplicateRecord[]>();
+  const groups = new Map<string, IDuplicateRecord[]>();
   for (const record of records) {
     const groupKey = `${record.key}:${record.value}`;
     groups.set(groupKey, [...(groups.get(groupKey) ?? []), record]);
   }
-  const findings: FindingInput[] = [];
+  const findings: IFindingInput[] = [];
   for (const recordsForId of groups.values()) {
     if (recordsForId.length < 2) {
       continue;
@@ -391,7 +393,7 @@ async function duplicateIdFindings(
   return findings;
 }
 
-async function verificationFindings(input: GcAuditInput): Promise<readonly FindingInput[]> {
+async function verificationFindings(input: IGcAuditInput): Promise<readonly IFindingInput[]> {
   if (input.verificationPath === undefined) {
     return [];
   }
@@ -442,14 +444,14 @@ async function verificationFindings(input: GcAuditInput): Promise<readonly Findi
   ];
 }
 
-async function executionFindings(input: GcAuditInput): Promise<readonly FindingInput[]> {
+async function executionFindings(input: IGcAuditInput): Promise<readonly IFindingInput[]> {
   if (input.runResultsPath === undefined) {
     return [];
   }
   const runResults = await loadRunResults(input.root, input.runResultsPath, input.schemas);
   return runResults
     .filter((runResult) => getString(runResult.document, 'status') !== 'passed')
-    .map((runResult): FindingInput => {
+    .map((runResult): IFindingInput => {
       const runId = getString(runResult.document, 'run_id') ?? 'run';
       const kind = getString(runResult.document, 'kind') ?? 'unknown';
       const status = getString(runResult.document, 'status') ?? 'unknown';
@@ -470,7 +472,7 @@ async function executionFindings(input: GcAuditInput): Promise<readonly FindingI
     });
 }
 
-async function scoreboardFindings(input: GcAuditInput): Promise<readonly FindingInput[]> {
+async function scoreboardFindings(input: IGcAuditInput): Promise<readonly IFindingInput[]> {
   if (input.scoreboardPath === undefined) {
     return [];
   }
@@ -502,7 +504,7 @@ async function scoreboardFindings(input: GcAuditInput): Promise<readonly Finding
   ];
 }
 
-async function traceFindings(input: GcAuditInput): Promise<readonly FindingInput[]> {
+async function traceFindings(input: IGcAuditInput): Promise<readonly IFindingInput[]> {
   if (input.tracePath === undefined) {
     return [];
   }
@@ -538,7 +540,7 @@ async function traceFindings(input: GcAuditInput): Promise<readonly FindingInput
   ];
 }
 
-async function judgeCalibrationFindings(input: GcAuditInput): Promise<readonly FindingInput[]> {
+async function judgeCalibrationFindings(input: IGcAuditInput): Promise<readonly IFindingInput[]> {
   if (input.judgeResultPath === undefined) {
     return [];
   }
@@ -577,8 +579,8 @@ async function loadEvidenceArtifact(
   path: string,
   schemaName: string,
   label: string,
-  schemas: SchemaRegistry,
-): Promise<LoadedEvidenceArtifact> {
+  schemas: ISchemaRegistry,
+): Promise<ILoadedEvidenceArtifact> {
   const absolutePath = resolveInsideRoot(root, path, label);
   await assertNoSymlinkWithinRoot(root, absolutePath, 'read');
   if ((await pathKind(absolutePath)) !== 'file') {
@@ -610,8 +612,8 @@ async function loadEvidenceArtifact(
 async function loadRunResults(
   root: string,
   path: string,
-  schemas: SchemaRegistry,
-): Promise<readonly LoadedEvidenceArtifact[]> {
+  schemas: ISchemaRegistry,
+): Promise<readonly ILoadedEvidenceArtifact[]> {
   const absolutePath = resolveInsideRoot(root, path, 'run results');
   await assertNoSymlinkWithinRoot(root, absolutePath, 'read');
   if ((await pathKind(absolutePath)) !== 'file') {
@@ -651,8 +653,8 @@ async function loadRunResults(
 function validatedRunResult(
   path: string,
   value: JsonValue,
-  schemas: SchemaRegistry,
-): LoadedEvidenceArtifact {
+  schemas: ISchemaRegistry,
+): ILoadedEvidenceArtifact {
   if (!isObject(value)) {
     throw new CliError(
       `GC audit run results must contain JSON objects: ${path}`,
@@ -674,9 +676,9 @@ function validatedRunResult(
 
 function doctorCheckIdRecords(
   harnessPath: string,
-  validation: HarnessValidationResult,
-): readonly DuplicateRecord[] {
-  const intrinsicRecords: DuplicateRecord[] = [
+  validation: IHarnessValidationResult,
+): readonly IDuplicateRecord[] {
+  const intrinsicRecords: IDuplicateRecord[] = [
     'schema-validity',
     'engine-compatibility',
     'reference-exists',
@@ -687,7 +689,7 @@ function doctorCheckIdRecords(
     path: `${harnessPath}#/doctor/intrinsic/${id}`,
   }));
   const checks = getArray(getObject(validation.document ?? {}, 'doctor') ?? {}, 'checks') ?? [];
-  const declaredRecords = checks.flatMap((check, index): DuplicateRecord[] => {
+  const declaredRecords = checks.flatMap((check, index): IDuplicateRecord[] => {
     const id = isObject(check) ? getString(check, 'id') : undefined;
     return id === undefined
       ? []
@@ -705,12 +707,12 @@ function doctorCheckIdRecords(
 async function repairActionIdRecords(
   root: string,
   directory: string,
-): Promise<readonly DuplicateRecord[]> {
+): Promise<readonly IDuplicateRecord[]> {
   const absoluteDirectory = resolveInsideRoot(root, directory, 'repair actions directory');
   if ((await pathKind(absoluteDirectory)) !== 'directory') {
     return [];
   }
-  const records: DuplicateRecord[] = [];
+  const records: IDuplicateRecord[] = [];
   for (const file of (await readdir(absoluteDirectory)).sort()) {
     if (!file.endsWith('.yaml') && !file.endsWith('.yml') && !file.endsWith('.json')) {
       continue;
@@ -736,7 +738,7 @@ async function repairActionIdRecords(
 async function capabilityIdRecords(
   root: string,
   path: string,
-): Promise<readonly DuplicateRecord[]> {
+): Promise<readonly IDuplicateRecord[]> {
   const absolutePath = resolveInsideRoot(root, path, 'capability ledger');
   await assertNoSymlinkWithinRoot(root, absolutePath, 'read');
   if ((await pathKind(absolutePath)) !== 'file') {
@@ -744,7 +746,7 @@ async function capabilityIdRecords(
   }
   const document = await loadDocument(absolutePath);
   const capabilities = isObject(document) ? (getArray(document, 'capabilities') ?? []) : [];
-  return capabilities.flatMap((capability, index): DuplicateRecord[] => {
+  return capabilities.flatMap((capability, index): IDuplicateRecord[] => {
     if (!isObject(capability)) {
       return [];
     }
@@ -755,31 +757,31 @@ async function capabilityIdRecords(
   });
 }
 
-function finding(input: FindingInput): JsonObject {
+function finding(input: IFindingInput): JsonObject {
   return {
     category: input.category,
     severity: input.severity,
     confidence: input.confidence,
-    evidence_refs: [
+    ['evidence_refs']: [
       {
         path: input.evidencePath,
-        media_type: mediaType(input.evidencePath),
+        ['media_type']: mediaType(input.evidencePath),
         description: input.evidenceDescription,
       },
     ],
-    proposed_cleanup_slice: {
+    ['proposed_cleanup_slice']: {
       id: input.cleanupId,
       description: input.cleanupDescription,
-      target_files: [...input.targetFiles],
+      ['target_files']: [...input.targetFiles],
     },
-    blast_radius: input.blastRadius,
-    atomicity_notes: input.atomicityNotes,
-    promotion_decision_refs: [],
-    retirement_decision_refs: [],
+    ['blast_radius']: input.blastRadius,
+    ['atomicity_notes']: input.atomicityNotes,
+    ['promotion_decision_refs']: [],
+    ['retirement_decision_refs']: [],
   };
 }
 
-function dedupeFindingCleanupIds(inputs: readonly FindingInput[]): readonly FindingInput[] {
+function dedupeFindingCleanupIds(inputs: readonly IFindingInput[]): readonly IFindingInput[] {
   const seenCounts = new Map<string, number>();
   const emittedIds = new Set<string>();
   return inputs.map((input) => {

@@ -10,7 +10,7 @@ import { resolveInsideRoot, resolveRootForInspectionCommand } from '../lib/paths
 import { loadRecurringProfile, runProfile, serializeProfileRunJson } from '../lib/profile.ts';
 import { readPackageVersion } from '../lib/project.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const validateValueOptions = new Set(['root', 'profile']);
 const runValueOptions = new Set([
@@ -28,7 +28,7 @@ const flagOptions = new Set<string>();
 
 export async function runProfileCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const [subcommand, ...subcommandArgs] = args;
   switch (subcommand) {
@@ -49,7 +49,7 @@ export async function runProfileCommand(
 
 async function runProfileValidate(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, validateValueOptions, flagOptions);
   if (options.positionals.length > 1) {
@@ -72,7 +72,7 @@ async function runProfileValidate(
   return ExitCode.ok;
 }
 
-async function runProfileRun(args: readonly string[], context: CommandContext): Promise<ExitCode> {
+async function runProfileRun(args: readonly string[], context: ICommandContext): Promise<ExitCode> {
   const options = parseOptions(args, runValueOptions, flagOptions);
   if (options.positionals.length > 1) {
     throw new CliError(

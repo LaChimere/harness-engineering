@@ -6,11 +6,11 @@ import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
 import { validateHarnessConfiguration } from './harness.ts';
 import { getArray, getObject, getString, isObject, type JsonObject } from './json.ts';
 import { resolveInsideRoot } from './paths.ts';
-import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
+import { formatValidationIssue, type ISchemaRegistry } from './schema-registry.ts';
 
 type ReadinessStatus = 'passed' | 'failed';
 
-interface ReadinessCheck {
+interface IReadinessCheck {
   readonly id: string;
   readonly status: ReadinessStatus;
   readonly summary: string;
@@ -18,16 +18,16 @@ interface ReadinessCheck {
   readonly evidence: readonly JsonObject[];
 }
 
-export interface RunnerReadinessInput {
+export interface IRunnerReadinessInput {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runnerPath?: string;
   readonly runId?: string;
 }
 
-export interface RunnerReadinessRun {
+export interface IRunnerReadinessRun {
   readonly result: JsonObject;
   readonly markdown: string;
   readonly status: ReadinessStatus;
@@ -37,7 +37,9 @@ const schemaVersion = '0.1.0';
 const supportedLiveCredentialSource = 'env';
 const environmentVariableNamePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-export async function runRunnerReadiness(input: RunnerReadinessInput): Promise<RunnerReadinessRun> {
+export async function runRunnerReadiness(
+  input: IRunnerReadinessInput,
+): Promise<IRunnerReadinessRun> {
   const validation = await validateHarnessConfiguration(input);
   const issues = [
     ...validation.schemaIssues.map((issue) => `schema: ${issue}`),
@@ -59,13 +61,13 @@ export async function runRunnerReadiness(input: RunnerReadinessInput): Promise<R
     : 'passed';
   const mode = credentialSource(runner) === 'stub' ? 'stub' : 'live';
   const result: JsonObject = {
-    schema_version: schemaVersion,
-    run_id: input.runId ?? defaultRunId(runnerPath, input.cliVersion, checks),
-    harness_version: input.cliVersion,
+    ['schema_version']: schemaVersion,
+    ['run_id']: input.runId ?? defaultRunId(runnerPath, input.cliVersion, checks),
+    ['harness_version']: input.cliVersion,
     runner: runnerPath,
     mode,
     status,
-    live_ready: mode === 'live' && status === 'passed',
+    ['live_ready']: mode === 'live' && status === 'passed',
     checks: checks.map(checkJson),
   };
   return {
@@ -82,7 +84,7 @@ export function serializeRunnerReadinessJson(result: JsonObject): string {
 async function loadRunner(
   root: string,
   runnerPath: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
 ): Promise<JsonObject> {
   const absolutePath = resolveInsideRoot(root, runnerPath, 'Agent runner');
   await assertNoSymlinkWithinRoot(root, absolutePath, 'read');
@@ -107,8 +109,8 @@ async function readinessChecks(
   root: string,
   runnerPath: string,
   runner: JsonObject,
-  schemas: SchemaRegistry,
-): Promise<readonly ReadinessCheck[]> {
+  schemas: ISchemaRegistry,
+): Promise<readonly IReadinessCheck[]> {
   const source = credentialSource(runner);
   const mode = source === 'stub' ? 'stub' : 'live';
   return [
@@ -140,8 +142,8 @@ async function readinessChecks(
 async function policyCheck(
   root: string,
   runner: JsonObject,
-  schemas: SchemaRegistry,
-): Promise<ReadinessCheck> {
+  schemas: ISchemaRegistry,
+): Promise<IReadinessCheck> {
   const approvalPolicyPath = requiredString(runner, 'approval_policy');
   await loadPolicyObject(root, approvalPolicyPath, 'approval policy', schemas, 'approval-policy');
   return {
@@ -152,7 +154,7 @@ async function policyCheck(
   };
 }
 
-function credentialCheck(runner: JsonObject): ReadinessCheck {
+function credentialCheck(runner: JsonObject): IReadinessCheck {
   const credential = getObject(runner, 'credential_reference') ?? {};
   const source = getString(credential, 'source');
   if (source === 'stub') {
@@ -190,7 +192,7 @@ function credentialCheck(runner: JsonObject): ReadinessCheck {
   };
 }
 
-function budgetCheck(runner: JsonObject): ReadinessCheck {
+function budgetCheck(runner: JsonObject): IReadinessCheck {
   const budgets = getObject(runner, 'budgets') ?? {};
   const hasTokenBudget =
     numberValue(budgets, 'max_input_tokens') !== undefined ||
@@ -222,8 +224,8 @@ async function sandboxCheck(
   root: string,
   runner: JsonObject,
   mode: 'stub' | 'live',
-  schemas: SchemaRegistry,
-): Promise<ReadinessCheck> {
+  schemas: ISchemaRegistry,
+): Promise<IReadinessCheck> {
   const sandboxPath = requiredString(runner, 'sandbox');
   const sandbox = await loadPolicyObject(
     root,
@@ -283,7 +285,7 @@ async function sandboxCheck(
   };
 }
 
-async function traceOutputCheck(root: string, runner: JsonObject): Promise<ReadinessCheck> {
+async function traceOutputCheck(root: string, runner: JsonObject): Promise<IReadinessCheck> {
   const traceOutput = getString(runner, 'trace_output');
   if (traceOutput === undefined || /^[A-Za-z][A-Za-z0-9+.-]*:/.test(traceOutput)) {
     return {
@@ -320,8 +322,8 @@ async function modelProfileCheck(
   root: string,
   runner: JsonObject,
   mode: 'stub' | 'live',
-  schemas: SchemaRegistry,
-): Promise<ReadinessCheck> {
+  schemas: ISchemaRegistry,
+): Promise<IReadinessCheck> {
   const modelProfilePath = requiredString(runner, 'model_profile');
   const profile = await loadPolicyObject(
     root,
@@ -352,7 +354,7 @@ async function modelProfileCheck(
   };
 }
 
-function traceRedactionCheck(runner: JsonObject, mode: 'stub' | 'live'): ReadinessCheck {
+function traceRedactionCheck(runner: JsonObject, mode: 'stub' | 'live'): IReadinessCheck {
   if (mode === 'stub') {
     return {
       id: 'trace-redaction',
@@ -399,11 +401,11 @@ function traceRedactionCheck(runner: JsonObject, mode: 'stub' | 'live'): Readine
   };
 }
 
-function checkJson(check: ReadinessCheck): JsonObject {
+function checkJson(check: IReadinessCheck): JsonObject {
   return {
     id: check.id,
     status: check.status,
-    ...(check.failureCode === undefined ? {} : { failure_code: check.failureCode }),
+    ...(check.failureCode === undefined ? {} : { ['failure_code']: check.failureCode }),
     summary: check.summary,
     evidence: [...check.evidence],
   };
@@ -447,7 +449,7 @@ async function loadPolicyObject(
   root: string,
   path: string,
   label: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
   schemaName: string,
 ): Promise<JsonObject> {
   const absolutePath = resolveInsideRoot(root, path, label);
@@ -499,13 +501,13 @@ function requiredString(object: JsonObject, key: string): string {
 }
 
 function artifact(path: string, mediaType: string, description: string): JsonObject {
-  return { path, media_type: mediaType, description };
+  return { path, ['media_type']: mediaType, description };
 }
 
 function defaultRunId(
   runnerPath: string,
   cliVersion: string,
-  checks: readonly ReadinessCheck[],
+  checks: readonly IReadinessCheck[],
 ): string {
   const digest = createHash('sha256')
     .update(JSON.stringify({ runnerPath, cliVersion, checks }))

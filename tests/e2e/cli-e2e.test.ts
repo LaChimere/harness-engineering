@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-interface CliResult {
+interface ICliResult {
   readonly code: number;
   readonly stdout: string;
   readonly stderr: string;
@@ -770,13 +770,13 @@ async function runAndParseJson(root: string, args: readonly string[]): Promise<J
   return parseJsonObject(result.stdout, args.join(' '));
 }
 
-async function runHarness(cwd: string, args: readonly string[]): Promise<CliResult> {
+async function runHarness(cwd: string, args: readonly string[]): Promise<ICliResult> {
   return await runProcess(cwd, runtimePath, [cliPath, ...args], {
     commandLabel: [runtimePath, cliPath, ...args].join(' '),
   });
 }
 
-async function runHarnessBin(cwd: string, args: readonly string[]): Promise<CliResult> {
+async function runHarnessBin(cwd: string, args: readonly string[]): Promise<ICliResult> {
   const binPath = await packageHarnessBinPath();
   if (process.platform !== 'win32' && (await commandExists('node'))) {
     return await runProcess(cwd, binPath, args, { commandLabel: ['harness', ...args].join(' ') });
@@ -786,7 +786,7 @@ async function runHarnessBin(cwd: string, args: readonly string[]): Promise<CliR
   });
 }
 
-async function runProjectTest(cwd: string): Promise<CliResult> {
+async function runProjectTest(cwd: string): Promise<ICliResult> {
   return await runProcess(cwd, runtimePath, ['run', 'test'], { commandLabel: 'bun run test' });
 }
 
@@ -795,7 +795,7 @@ async function runProcess(
   executable: string,
   args: readonly string[],
   options: { readonly commandLabel?: string } = {},
-): Promise<CliResult> {
+): Promise<ICliResult> {
   return await new Promise((resolve, reject) => {
     const command = options.commandLabel ?? [executable, ...args].join(' ');
     const detached = process.platform !== 'win32';
@@ -810,7 +810,7 @@ async function runProcess(
     let settled = false;
     let timeout: Timer | undefined;
     let forceKill: Timer | undefined;
-    function finish(result: CliResult): void {
+    function finish(result: ICliResult): void {
       if (settled) {
         return;
       }
@@ -923,7 +923,7 @@ async function commandExists(command: string): Promise<boolean> {
 }
 
 function e2eEnvironment(): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { NO_COLOR: '1' };
+  const env: NodeJS.ProcessEnv = { ['NO_COLOR']: '1' };
   for (const key of [
     'PATH',
     'SystemRoot',
@@ -981,14 +981,14 @@ function packedFilePaths(stdout: string): ReadonlySet<string> {
   return paths;
 }
 
-function expectSuccess(result: CliResult, args: readonly string[]): void {
+function expectSuccess(result: ICliResult, args: readonly string[]): void {
   if (result.code !== exitCode.ok) {
     throw new Error(formatUnexpectedResult('success', args, result));
   }
   expect(result.timedOut).toBe(false);
 }
 
-function expectValidationFailure(result: CliResult, args: readonly string[]): void {
+function expectValidationFailure(result: ICliResult, args: readonly string[]): void {
   if (result.code !== exitCode.validationError) {
     throw new Error(formatUnexpectedResult('validation failure', args, result));
   }
@@ -998,7 +998,7 @@ function expectValidationFailure(result: CliResult, args: readonly string[]): vo
 function formatUnexpectedResult(
   expected: string,
   args: readonly string[],
-  result: CliResult,
+  result: ICliResult,
 ): string {
   const signal = result.signal === undefined ? 'none' : result.signal;
   return [

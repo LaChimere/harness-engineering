@@ -16,14 +16,14 @@ import {
 } from '../lib/paths.ts';
 import { readPackageVersion } from '../lib/project.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set(['root', 'file', 'format', 'output', 'run-id']);
 const flagOptions = new Set(['accept-unsandboxed-execution']);
 
 export async function runHealthCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 1) {

@@ -21,10 +21,10 @@ import {
 } from '../lib/paths.ts';
 import {
   formatValidationIssue,
+  type ISchemaRegistry,
   loadSchemaRegistry,
-  type SchemaRegistry,
 } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set([
   'root',
@@ -41,7 +41,7 @@ const flagOptions = new Set<string>();
 
 export async function runReport(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 1) {
@@ -137,9 +137,9 @@ export async function runReport(
 async function summarizeRunResult(
   root: string,
   options: ReturnType<typeof parseOptions>,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
   citedPaths: Set<string>,
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<JsonObject | undefined> {
   const artifactPath = optionValue(options, 'run-result');
   if (artifactPath === undefined) {
@@ -177,7 +177,7 @@ async function summarizeOptionalArtifact(
   optionName: string,
   label: string,
   citedPaths: Set<string>,
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<void> {
   const artifactPath = optionValue(options, optionName);
   if (artifactPath === undefined) {
@@ -201,9 +201,9 @@ async function summarizeOptionalArtifact(
 async function summarizeJudgePolicy(
   root: string,
   artifactPath: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
   citedPaths: Set<string>,
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<JsonObject> {
   const policy = await loadValidatedArtifact(
     root,
@@ -251,9 +251,9 @@ async function summarizeJudgeResult(
   root: string,
   artifactPath: string,
   explicitPolicyPath: string | undefined,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
   citedPaths: Set<string>,
-  context: CommandContext,
+  context: ICommandContext,
   runResult?: JsonObject,
 ): Promise<void> {
   const result = await loadValidatedArtifact(
@@ -335,7 +335,7 @@ async function summarizeJudgeResult(
 async function validateLinkedJudgeResults(
   root: string,
   runResult: JsonObject,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
 ): Promise<readonly { readonly path: string; readonly policyPath: string }[]> {
   const linked: Array<{ path: string; policyPath: string }> = [];
   const policyCache = new Map<string, CachedJudgePolicy>();
@@ -396,7 +396,7 @@ type CachedJudgePolicy = {
 async function loadCachedJudgePolicy(
   root: string,
   policyPath: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
   cache: Map<string, CachedJudgePolicy>,
 ): Promise<CachedJudgePolicy> {
   const canonicalPath = relativePathFromRoot(
@@ -430,7 +430,7 @@ async function loadValidatedArtifact(
   artifactPath: string,
   label: string,
   schemaName: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
 ): Promise<JsonObject> {
   const artifact = await loadReportArtifact(root, artifactPath, label);
   const issues = schemas.validate(schemaName, artifact).map(formatValidationIssue);

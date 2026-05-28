@@ -8,7 +8,7 @@ import type { JsonObject, JsonValue } from './json.ts';
 import { getArray, getObject, getString, isObject } from './json.ts';
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
 import { runShellCommand } from './process.ts';
-import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
+import { formatValidationIssue, type ISchemaRegistry } from './schema-registry.ts';
 
 type EvalValidationStatus = 'passed' | 'failed' | 'error';
 type EvalCaseKind = 'oracle' | 'broken-twin';
@@ -23,42 +23,42 @@ type FailureCode =
   | 'timeout'
   | 'sandbox-violation';
 
-export interface EvalTaskDiscoveryInput {
+export interface IEvalTaskDiscoveryInput {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
 }
 
-export interface EvalTaskDiscoveryResult {
+export interface IEvalTaskDiscoveryResult {
   readonly taskPaths: readonly string[];
   readonly issues: readonly string[];
 }
 
-export interface EvalValidationInput {
+export interface IEvalValidationInput {
   readonly root: string;
   readonly taskPaths: readonly string[];
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runId?: string;
   readonly outputPath?: string;
   readonly verifierOutputDir?: string;
 }
 
-export interface EvalValidationRun {
+export interface IEvalValidationRun {
   readonly status: EvalValidationStatus;
   readonly result: JsonObject;
   readonly markdown: string;
   readonly runResults: readonly JsonObject[];
-  readonly verifierResults: readonly VerifierResultArtifact[];
+  readonly verifierResults: readonly IVerifierResultArtifact[];
 }
 
-export interface VerifierResultArtifact {
+export interface IVerifierResultArtifact {
   readonly path: string;
   readonly result: JsonObject;
 }
 
-interface EvalTaskData {
+interface IEvalTaskData {
   readonly taskPath: string;
   readonly document: JsonObject;
   readonly suiteId: string;
@@ -71,30 +71,30 @@ interface EvalTaskData {
   readonly environment: string;
   readonly timeoutSeconds: number;
   readonly verifier: JsonObject;
-  readonly oracle?: EvalTaskArtifact;
-  readonly baseline?: EvalTaskArtifact;
+  readonly oracle?: IEvalTaskArtifact;
+  readonly baseline?: IEvalTaskArtifact;
 }
 
-interface EvalTaskArtifact {
+interface IEvalTaskArtifact {
   readonly kind: string;
   readonly artifact: string;
 }
 
-interface EvalCase {
+interface IEvalCase {
   readonly kind: EvalCaseKind;
   readonly expectedStatus: EvalCaseExpectedStatus;
   readonly candidatePath: string;
 }
 
-interface EvaluatedCase {
+interface IEvaluatedCase {
   readonly summary: JsonObject;
   readonly runResult: JsonObject;
-  readonly verifierResult: VerifierResultArtifact;
+  readonly verifierResult: IVerifierResultArtifact;
   readonly expectationMet: boolean;
   readonly runStatus: RunResultStatus;
 }
 
-interface VerifierExecutionResult {
+interface IVerifierExecutionResult {
   readonly status: RunResultStatus;
   readonly verifierStatus: VerifierStatus;
   readonly harnessStatus: HarnessStatus;
@@ -113,8 +113,8 @@ const verifierOnlyModelProfile = 'harness://verifier-only/no-model';
 const verifierOnlyTrace = 'harness://verifier-only/no-agent-trace';
 
 export async function discoverEvalTaskPathsFromHarness(
-  input: EvalTaskDiscoveryInput,
-): Promise<EvalTaskDiscoveryResult> {
+  input: IEvalTaskDiscoveryInput,
+): Promise<IEvalTaskDiscoveryResult> {
   const validation = await validateHarnessConfiguration(input);
   const issues = [
     ...validation.schemaIssues.map((issue) => `schema: ${issue}`),
@@ -168,10 +168,10 @@ export async function discoverEvalTaskPathsFromHarness(
   return { taskPaths: [...new Set(taskPaths)].sort(), issues };
 }
 
-export async function runEvalValidation(input: EvalValidationInput): Promise<EvalValidationRun> {
+export async function runEvalValidation(input: IEvalValidationInput): Promise<IEvalValidationRun> {
   const taskSummaries: JsonObject[] = [];
   const runResults: JsonObject[] = [];
-  const verifierResults: VerifierResultArtifact[] = [];
+  const verifierResults: IVerifierResultArtifact[] = [];
 
   for (const taskPath of input.taskPaths) {
     const taskRun = await evaluateTask(input, taskPath);
@@ -182,12 +182,12 @@ export async function runEvalValidation(input: EvalValidationInput): Promise<Eva
 
   const status = statusForTaskSummaries(taskSummaries);
   const result: JsonObject = {
-    schema_version: schemaVersion,
-    run_id: validationRunId(input.runId, input.taskPaths),
+    ['schema_version']: schemaVersion,
+    ['run_id']: validationRunId(input.runId, input.taskPaths),
     status,
     tasks: taskSummaries,
-    run_results: runResults,
-    verifier_results: verifierResults.map((artifact) => ({
+    ['run_results']: runResults,
+    ['verifier_results']: verifierResults.map((artifact) => ({
       path: artifact.path,
       result: artifact.result,
     })),
@@ -230,12 +230,12 @@ export async function computeEvalTaskDatasetHash(root: string, task: JsonObject)
 }
 
 async function evaluateTask(
-  input: EvalValidationInput,
+  input: IEvalValidationInput,
   taskPath: string,
 ): Promise<{
   readonly summary: JsonObject;
   readonly runResults: readonly JsonObject[];
-  readonly verifierResults: readonly VerifierResultArtifact[];
+  readonly verifierResults: readonly IVerifierResultArtifact[];
 }> {
   const absoluteTaskPath = resolveInsideRoot(input.root, taskPath, 'Eval task');
   const document = await loadDocument(absoluteTaskPath);
@@ -310,7 +310,7 @@ async function evaluateTask(
     };
   }
 
-  const evaluatedCases: EvaluatedCase[] = [];
+  const evaluatedCases: IEvaluatedCase[] = [];
   for (const evalCase of cases) {
     evaluatedCases.push(await evaluateCase(input, task, evalCase));
   }
@@ -349,10 +349,10 @@ async function tryComputeDatasetHash(
 }
 
 async function evaluateCase(
-  input: EvalValidationInput,
-  task: EvalTaskData,
-  evalCase: EvalCase,
-): Promise<EvaluatedCase> {
+  input: IEvalValidationInput,
+  task: IEvalTaskData,
+  evalCase: IEvalCase,
+): Promise<IEvaluatedCase> {
   const runId = runIdForCase(input.runId, task, evalCase);
   const verifierResultPath =
     input.verifierOutputDir === undefined
@@ -381,11 +381,11 @@ async function evaluateCase(
   return {
     summary: {
       case: evalCase.kind,
-      expected_status: evalCase.expectedStatus,
-      actual_status: execution.status,
-      expectation_met: expectationMet,
-      run_id: runId,
-      verifier_result: verifierResultPath,
+      ['expected_status']: evalCase.expectedStatus,
+      ['actual_status']: execution.status,
+      ['expectation_met']: expectationMet,
+      ['run_id']: runId,
+      ['verifier_result']: verifierResultPath,
     },
     runResult,
     verifierResult,
@@ -395,10 +395,10 @@ async function evaluateCase(
 }
 
 async function executeVerifier(
-  input: EvalValidationInput,
-  task: EvalTaskData,
-  evalCase: EvalCase,
-): Promise<VerifierExecutionResult> {
+  input: IEvalValidationInput,
+  task: IEvalTaskData,
+  evalCase: IEvalCase,
+): Promise<IVerifierExecutionResult> {
   const trustIssue = validateVerifierExecutionTrust(input, task, evalCase);
   if (trustIssue !== undefined) {
     return {
@@ -431,15 +431,15 @@ async function executeVerifier(
     processLabel: 'Verifier process',
     environment: {
       ...stringMap(getObject(command, 'environment')),
-      HARNESS_EVAL_CASE: evalCase.kind,
-      HARNESS_EVAL_EXPECTED_STATUS: evalCase.expectedStatus,
-      HARNESS_EVAL_CANDIDATE: evalCase.candidatePath,
-      HARNESS_EVAL_TASK: task.taskPath,
-      HARNESS_EVAL_SUITE_ID: task.suiteId,
-      HARNESS_EVAL_TASK_ID: task.taskId,
-      HARNESS_EVAL_TASK_VERSION: task.taskVersion,
-      HARNESS_EVAL_DATASET_HASH: task.datasetHash,
-      HARNESS_EVAL_SPLIT: task.split,
+      ['HARNESS_EVAL_CASE']: evalCase.kind,
+      ['HARNESS_EVAL_EXPECTED_STATUS']: evalCase.expectedStatus,
+      ['HARNESS_EVAL_CANDIDATE']: evalCase.candidatePath,
+      ['HARNESS_EVAL_TASK']: task.taskPath,
+      ['HARNESS_EVAL_SUITE_ID']: task.suiteId,
+      ['HARNESS_EVAL_TASK_ID']: task.taskId,
+      ['HARNESS_EVAL_TASK_VERSION']: task.taskVersion,
+      ['HARNESS_EVAL_DATASET_HASH']: task.datasetHash,
+      ['HARNESS_EVAL_SPLIT']: task.split,
     },
   });
   const durationMs = Date.now() - startedAt;
@@ -520,9 +520,9 @@ async function executeVerifier(
 }
 
 function validateVerifierExecutionTrust(
-  input: EvalValidationInput,
-  task: EvalTaskData,
-  evalCase: EvalCase,
+  input: IEvalValidationInput,
+  task: IEvalTaskData,
+  evalCase: IEvalCase,
 ): string | undefined {
   const kind = requiredString(task.verifier, 'kind');
   if (kind !== 'command') {
@@ -571,58 +571,58 @@ function validateVerifierExecutionTrust(
 }
 
 function runResultForCase(input: {
-  readonly input: EvalValidationInput;
-  readonly task: EvalTaskData;
-  readonly evalCase: EvalCase;
+  readonly input: IEvalValidationInput;
+  readonly task: IEvalTaskData;
+  readonly evalCase: IEvalCase;
   readonly runId: string;
   readonly verifierResultPath: string;
-  readonly execution: VerifierExecutionResult;
+  readonly execution: IVerifierExecutionResult;
 }): JsonObject {
   return {
-    schema_version: schemaVersion,
-    run_id: input.runId,
+    ['schema_version']: schemaVersion,
+    ['run_id']: input.runId,
     kind: 'eval',
-    suite_id: input.task.suiteId,
-    task_id: input.task.taskId,
-    task_version: input.task.taskVersion,
-    dataset_hash: input.task.datasetHash,
+    ['suite_id']: input.task.suiteId,
+    ['task_id']: input.task.taskId,
+    ['task_version']: input.task.taskVersion,
+    ['dataset_hash']: input.task.datasetHash,
     split: input.task.split,
-    model_profile: verifierOnlyModelProfile,
-    harness_version: input.input.cliVersion,
+    ['model_profile']: verifierOnlyModelProfile,
+    ['harness_version']: input.input.cliVersion,
     status: input.execution.status,
     ...(input.execution.failureCode === undefined
       ? {}
-      : { failure_code: input.execution.failureCode }),
+      : { ['failure_code']: input.execution.failureCode }),
     trace: verifierOnlyTrace,
-    verifier_result: input.verifierResultPath,
+    ['verifier_result']: input.verifierResultPath,
     execution: {
       mode: 'verifier-only',
-      harness_status: input.execution.harnessStatus,
-      verifier_status: input.execution.verifierStatus,
+      ['harness_status']: input.execution.harnessStatus,
+      ['verifier_status']: input.execution.verifierStatus,
     },
     usage: {
-      billed_model_id: 'verifier-only',
-      input_tokens: 0,
-      output_tokens: 0,
-      total_tokens: 0,
+      ['billed_model_id']: 'verifier-only',
+      ['input_tokens']: 0,
+      ['output_tokens']: 0,
+      ['total_tokens']: 0,
       requests: 0,
-      incurred_cost_usd: 0,
+      ['incurred_cost_usd']: 0,
       source: 'stub',
     },
     artifacts: [
       {
         path: input.task.taskPath,
-        media_type: mediaTypeForPath(input.task.taskPath),
+        ['media_type']: mediaTypeForPath(input.task.taskPath),
         description: 'Eval task under validation.',
       },
       {
         path: input.evalCase.candidatePath,
-        media_type: mediaTypeForPath(input.evalCase.candidatePath),
+        ['media_type']: mediaTypeForPath(input.evalCase.candidatePath),
         description: `${input.evalCase.kind} candidate artifact.`,
       },
       {
         path: input.task.environment,
-        media_type: mediaTypeForPath(input.task.environment),
+        ['media_type']: mediaTypeForPath(input.task.environment),
         description: 'Eval task environment declaration.',
       },
     ],
@@ -630,32 +630,34 @@ function runResultForCase(input: {
 }
 
 function verifierResultForCase(input: {
-  readonly task: EvalTaskData;
-  readonly evalCase: EvalCase;
+  readonly task: IEvalTaskData;
+  readonly evalCase: IEvalCase;
   readonly runId: string;
   readonly verifierResultPath: string;
-  readonly execution: VerifierExecutionResult;
-}): VerifierResultArtifact {
+  readonly execution: IVerifierExecutionResult;
+}): IVerifierResultArtifact {
   return {
     path: input.verifierResultPath,
     result: {
-      schema_version: schemaVersion,
-      verifier_id: input.task.taskId,
-      run_id: input.runId,
+      ['schema_version']: schemaVersion,
+      ['verifier_id']: input.task.taskId,
+      ['run_id']: input.runId,
       case: input.evalCase.kind,
-      expected_status: input.evalCase.expectedStatus,
+      ['expected_status']: input.evalCase.expectedStatus,
       candidate: input.evalCase.candidatePath,
       status: input.execution.verifierStatus,
-      harness_status: input.execution.harnessStatus,
+      ['harness_status']: input.execution.harnessStatus,
       summary: input.execution.summary,
-      timed_out: input.execution.timedOut,
-      ...(input.execution.exitCode === undefined ? {} : { exit_code: input.execution.exitCode }),
+      ['timed_out']: input.execution.timedOut,
+      ...(input.execution.exitCode === undefined
+        ? {}
+        : { ['exit_code']: input.execution.exitCode }),
       ...(input.execution.signal === undefined ? {} : { signal: input.execution.signal }),
     },
   };
 }
 
-function taskData(taskPath: string, document: JsonObject): EvalTaskData {
+function taskData(taskPath: string, document: JsonObject): IEvalTaskData {
   return {
     taskPath,
     document,
@@ -674,8 +676,8 @@ function taskData(taskPath: string, document: JsonObject): EvalTaskData {
   };
 }
 
-function evalCases(root: string, task: EvalTaskData): readonly EvalCase[] {
-  const cases: EvalCase[] = [];
+function evalCases(root: string, task: IEvalTaskData): readonly IEvalCase[] {
+  const cases: IEvalCase[] = [];
   if (task.oracle !== undefined) {
     cases.push({
       kind: 'oracle',
@@ -693,7 +695,7 @@ function evalCases(root: string, task: EvalTaskData): readonly EvalCase[] {
   return cases;
 }
 
-function unsupportedBaselineKindIssue(task: EvalTaskData): string | undefined {
+function unsupportedBaselineKindIssue(task: IEvalTaskData): string | undefined {
   if (task.baseline === undefined || task.baseline.kind === 'expected-failure') {
     return undefined;
   }
@@ -703,7 +705,7 @@ function unsupportedBaselineKindIssue(task: EvalTaskData): string | undefined {
 function taskSummary(input: {
   readonly taskPath: string;
   readonly status: EvalValidationStatus;
-  readonly task?: EvalTaskData;
+  readonly task?: IEvalTaskData;
   readonly cases?: readonly JsonObject[];
   readonly issues?: readonly string[];
 }): JsonObject {
@@ -713,10 +715,10 @@ function taskSummary(input: {
     ...(input.task === undefined
       ? {}
       : {
-          suite_id: input.task.suiteId,
-          task_id: input.task.taskId,
-          task_version: input.task.taskVersion,
-          dataset_hash: input.task.datasetHash,
+          ['suite_id']: input.task.suiteId,
+          ['task_id']: input.task.taskId,
+          ['task_version']: input.task.taskVersion,
+          ['dataset_hash']: input.task.datasetHash,
           split: input.task.split,
         }),
     cases: [...(input.cases ?? [])],
@@ -724,7 +726,7 @@ function taskSummary(input: {
   };
 }
 
-function statusForEvaluatedCases(cases: readonly EvaluatedCase[]): EvalValidationStatus {
+function statusForEvaluatedCases(cases: readonly IEvaluatedCase[]): EvalValidationStatus {
   if (cases.some((evalCase) => evalCase.runStatus === 'error')) {
     return 'error';
   }
@@ -748,7 +750,7 @@ function validationRunId(runId: string | undefined, taskPaths: readonly string[]
   return `eval-validate-${digest}`;
 }
 
-function runIdForCase(runId: string | undefined, task: EvalTaskData, evalCase: EvalCase): string {
+function runIdForCase(runId: string | undefined, task: IEvalTaskData, evalCase: IEvalCase): string {
   const digest = createHash('sha256')
     .update(
       [
@@ -817,7 +819,7 @@ function datasetReferences(
 function optionalArtifact(
   object: JsonObject,
   key: 'oracle' | 'baseline',
-): { readonly oracle?: EvalTaskArtifact; readonly baseline?: EvalTaskArtifact } {
+): { readonly oracle?: IEvalTaskArtifact; readonly baseline?: IEvalTaskArtifact } {
   const artifact = getObject(object, key);
   if (artifact === undefined) {
     return {};

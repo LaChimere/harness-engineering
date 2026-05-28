@@ -2,26 +2,26 @@ import { createHash } from 'node:crypto';
 import { validateHarnessConfiguration } from './harness.ts';
 import type { JsonObject, JsonValue } from './json.ts';
 import { getArray, getObject, getString, isObject } from './json.ts';
-import type { SchemaRegistry } from './schema-registry.ts';
+import type { ISchemaRegistry } from './schema-registry.ts';
 
 type DoctorStatus = 'passed' | 'failed' | 'warning';
 type DoctorOutcome = 'passed' | 'failed' | 'skipped';
 
-export interface DoctorRun {
+export interface IDoctorRun {
   readonly result: JsonObject;
   readonly markdown: string;
   readonly status: DoctorStatus;
 }
 
-export interface DoctorRunInput {
+export interface IDoctorRunInput {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runId?: string;
 }
 
-interface DoctorDeclaration {
+interface IDoctorDeclaration {
   readonly kind: 'builtin' | 'local';
   readonly id: string;
   readonly path?: string;
@@ -42,16 +42,16 @@ const processExitSemantics = {
 } as const;
 
 const readOnlyTrustRequirements: JsonObject = {
-  trust_level: 'sandboxed',
-  sandbox_required: 'process',
-  network_access: false,
-  secret_access: false,
-  host_file_access: false,
-  allowed_inputs: [],
-  allowed_outputs: [],
+  ['trust_level']: 'sandboxed',
+  ['sandbox_required']: 'process',
+  ['network_access']: false,
+  ['secret_access']: false,
+  ['host_file_access']: false,
+  ['allowed_inputs']: [],
+  ['allowed_outputs']: [],
 };
 
-export async function runDoctor(input: DoctorRunInput): Promise<DoctorRun> {
+export async function runDoctor(input: IDoctorRunInput): Promise<IDoctorRun> {
   const validation = await validateHarnessConfiguration(input);
   const declarations =
     validation.schemaIssues.length === 0 && validation.document !== undefined
@@ -76,11 +76,11 @@ export async function runDoctor(input: DoctorRunInput): Promise<DoctorRun> {
   ];
   const status = statusForChecks(checks);
   const result: JsonObject = {
-    schema_version: schemaVersion,
-    run_id:
+    ['schema_version']: schemaVersion,
+    ['run_id']:
       input.runId ??
       defaultRunId(input.harnessPath, input.cliVersion, input.schemas.schemaVersion, checks),
-    harness_version: input.cliVersion,
+    ['harness_version']: input.cliVersion,
     status,
     checks,
   };
@@ -193,7 +193,7 @@ function referenceExistsCheck(
 function builtinSupportCheck(
   harnessPath: string,
   schemaIssues: readonly string[],
-  declarations: readonly DoctorDeclaration[],
+  declarations: readonly IDoctorDeclaration[],
 ): JsonObject {
   if (schemaIssues.length > 0) {
     return doctorCheck({
@@ -235,7 +235,7 @@ function builtinSupportCheck(
 
 function localCheckDeclarations(
   schemaIssues: readonly string[],
-  declarations: readonly DoctorDeclaration[],
+  declarations: readonly IDoctorDeclaration[],
 ): readonly JsonObject[] {
   if (schemaIssues.length > 0) {
     return [];
@@ -289,27 +289,27 @@ function doctorCheck(input: {
     evidence: [
       {
         path: input.evidencePath,
-        media_type: mediaTypeForPath(input.evidencePath),
+        ['media_type']: mediaTypeForPath(input.evidencePath),
         description: input.evidenceDescription,
       },
     ],
     remediation: input.remediation,
     fixtures: [...input.fixtures],
-    false_positive_policy:
+    ['false_positive_policy']:
       'Doctor findings are deterministic structural findings. Treat false positives as schema/check contract bugs and fix the fixture or check definition before suppressing.',
-    exit_semantics: processExitSemantics,
-    trust_requirements: input.trustRequirements ?? readOnlyTrustRequirements,
+    ['exit_semantics']: processExitSemantics,
+    ['trust_requirements']: input.trustRequirements ?? readOnlyTrustRequirements,
   };
 }
 
-function collectDoctorDeclarations(harness: JsonObject): readonly DoctorDeclaration[] {
+function collectDoctorDeclarations(harness: JsonObject): readonly IDoctorDeclaration[] {
   const doctor = getObject(harness, 'doctor');
   const checks = doctor === undefined ? undefined : getArray(doctor, 'checks');
   if (checks === undefined) {
     return [];
   }
 
-  const declarations: DoctorDeclaration[] = [];
+  const declarations: IDoctorDeclaration[] = [];
   for (const check of checks) {
     if (typeof check === 'string' && check.startsWith('builtin:')) {
       // Builtins are intrinsic structural checks; declarations validate support, not execution selection.

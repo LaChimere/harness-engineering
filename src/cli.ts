@@ -22,13 +22,16 @@ import {
 } from './lib/exit-codes.ts';
 import { packageRootFromImportMeta, readPackageVersion } from './lib/project.ts';
 
-export interface RunContext {
+export interface IRunContext {
   readonly cwd: string;
   readonly stdout: (message: string) => void;
   readonly stderr: (message: string) => void;
 }
 
-export async function runCli(args: readonly string[], context: RunContext): Promise<ExitCodeValue> {
+export async function runCli(
+  args: readonly string[],
+  context: IRunContext,
+): Promise<ExitCodeValue> {
   try {
     const packageRoot = await packageRootFromImportMeta(import.meta.url);
     const commandContext = {

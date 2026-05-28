@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import process from 'node:process';
 
-export interface ShellCommandInput {
+export interface IShellCommandInput {
   readonly command: string;
   readonly cwd: string;
   readonly timeoutSeconds: number;
@@ -9,7 +9,7 @@ export interface ShellCommandInput {
   readonly processLabel?: string;
 }
 
-export interface ShellCommandResult {
+export interface IShellCommandResult {
   readonly exitCode?: number;
   readonly signal?: string;
   readonly timedOut: boolean;
@@ -22,11 +22,11 @@ export interface ShellCommandResult {
 
 const maxCapturedOutputLength = 16_384;
 type ShellCommandResultWithoutTruncation = Omit<
-  ShellCommandResult,
+  IShellCommandResult,
   'stdoutTruncated' | 'stderrTruncated'
 >;
 
-export async function runShellCommand(input: ShellCommandInput): Promise<ShellCommandResult> {
+export async function runShellCommand(input: IShellCommandInput): Promise<IShellCommandResult> {
   return await new Promise((resolve) => {
     const label = input.processLabel ?? 'Child process';
     const pathEnvKey = 'PATH';
@@ -47,9 +47,9 @@ export async function runShellCommand(input: ShellCommandInput): Promise<ShellCo
       detached,
       env: {
         ...input.environment,
-        PATH: input.environment[pathEnvKey] ?? '/usr/bin:/bin',
-        LANG: input.environment[langEnvKey] ?? 'C',
-        LC_ALL: input.environment[lcAllEnvKey] ?? 'C',
+        [pathEnvKey]: input.environment[pathEnvKey] ?? '/usr/bin:/bin',
+        [langEnvKey]: input.environment[langEnvKey] ?? 'C',
+        [lcAllEnvKey]: input.environment[lcAllEnvKey] ?? 'C',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });

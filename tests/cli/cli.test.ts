@@ -10,7 +10,7 @@ import { loadDocument } from '../../src/lib/files.ts';
 import { getArray, getObject, getString, isObject, type JsonObject } from '../../src/lib/json.ts';
 import { loadSchemaRegistry } from '../../src/lib/schema-registry.ts';
 
-interface RunResult {
+interface IRunResult {
   readonly code: number;
   readonly stdout: string;
   readonly stderr: string;
@@ -224,17 +224,17 @@ test('adapter validate rejects scope that overclaims partial matrix capabilities
   }
   const invalidScope = {
     ...scope,
-    implemented_capabilities: [
+    ['implemented_capabilities']: [
       ...jsonObjects(getArray(scope, 'implemented_capabilities')),
       {
         capability: 'annotation_apis',
         fallback: 'supported',
-        evidence_ids: ['github-copilot-cli-hooks'],
-        user_label: 'Durable inline annotations',
+        ['evidence_ids']: ['github-copilot-cli-hooks'],
+        ['user_label']: 'Durable inline annotations',
         note: 'Invalidly promotes partial annotation support.',
       },
     ],
-    unavailable_capabilities: jsonObjects(getArray(scope, 'unavailable_capabilities')).filter(
+    ['unavailable_capabilities']: jsonObjects(getArray(scope, 'unavailable_capabilities')).filter(
       (capability) => getString(capability, 'capability') !== 'annotation_apis',
     ),
   };
@@ -266,8 +266,8 @@ test('adapter validate rejects resolution order modes absent from scope manageme
     JSON.stringify(
       {
         ...scope,
-        cli_management_modes: ['repo-pinned', 'bootstrap'],
-        cli_resolution_order: ['repo-pinned', 'user-installed'],
+        ['cli_management_modes']: ['repo-pinned', 'bootstrap'],
+        ['cli_resolution_order']: ['repo-pinned', 'user-installed'],
       },
       null,
       2,
@@ -355,7 +355,7 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
   expect(
     schemas.validate('assessment', {
       ...assessment,
-      implementation_routing: {
+      ['implementation_routing']: {
         ...routing,
         routes: routes.map((route) =>
           getString(route, 'kind') === 'repair-action'
@@ -368,16 +368,16 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
   expect(
     schemas.validate('assessment', {
       ...assessment,
-      implementation_routing: {
+      ['implementation_routing']: {
         ...routing,
-        selected_route: 'repair-action',
+        ['selected_route']: 'repair-action',
       },
     }).length,
   ).toBeGreaterThan(0);
   expect(
     schemas.validate('assessment', {
       ...assessment,
-      implementation_routing: {
+      ['implementation_routing']: {
         ...routing,
         routes: routes.map((route) =>
           getString(route, 'kind') === 'execution-loop'
@@ -390,11 +390,11 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
   expect(
     schemas.validate('assessment', {
       ...assessment,
-      implementation_routing: {
+      ['implementation_routing']: {
         ...routing,
         routes: routes.map((route) =>
           getString(route, 'kind') === 'repair-action'
-            ? { ...route, approval_state: 'proposed', status: 'available' }
+            ? { ...route, ['approval_state']: 'proposed', status: 'available' }
             : route,
         ),
       },
@@ -407,9 +407,9 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
   expect(
     schemas.validate('assessment', {
       ...assessment,
-      implementation_routing: {
+      ['implementation_routing']: {
         ...routing,
-        selected_route: 'external-source-material',
+        ['selected_route']: 'external-source-material',
       },
     }).length,
   ).toBeGreaterThan(0);
@@ -1406,13 +1406,13 @@ test('doctor emits schema-valid JSON for a healthy harness', async () => {
   expect(
     localCheck === undefined ? undefined : getObject(localCheck, 'trust_requirements'),
   ).toEqual({
-    trust_level: 'sandboxed',
-    sandbox_required: 'process',
-    network_access: false,
-    secret_access: false,
-    host_file_access: false,
-    allowed_inputs: ['README.md', 'AGENTS.md'],
-    allowed_outputs: ['.harness/outputs/doctor/doc-links.json'],
+    ['trust_level']: 'sandboxed',
+    ['sandbox_required']: 'process',
+    ['network_access']: false,
+    ['secret_access']: false,
+    ['host_file_access']: false,
+    ['allowed_inputs']: ['README.md', 'AGENTS.md'],
+    ['allowed_outputs']: ['.harness/outputs/doctor/doc-links.json'],
   });
 
   const schemas = await loadSchemaRegistry(process.cwd());
@@ -1466,7 +1466,7 @@ test('health emits schema-valid JSON and can feed assess', async () => {
   expect(assessment.code).toBe(ExitCode.ok);
   const assessmentJson = JSON.parse(assessment.stdout);
   expect(getString(assessmentJson, 'scorecard_version')).toBe('0.2.0');
-  expect(getObject(assessmentJson, 'maturity')).toMatchObject({ max_score: 10 });
+  expect(getObject(assessmentJson, 'maturity')).toMatchObject({ ['max_score']: 10 });
   expect(
     getString(
       objectWithString(
@@ -1489,7 +1489,7 @@ test('health emits schema-valid JSON and can feed assess', async () => {
           {
             ...healthCheck,
             status: 'failed',
-            failure_code: 'command-failed',
+            ['failure_code']: 'command-failed',
             summary: 'Stale failed check should not bind as present.',
           },
           {
@@ -1521,7 +1521,7 @@ test('health emits schema-valid JSON and can feed assess', async () => {
   const noHealthAssessment = await run(['assess', '--format', 'json'], root);
   expect(noHealthAssessment.code).toBe(ExitCode.ok);
   const noHealthAssessmentJson = JSON.parse(noHealthAssessment.stdout);
-  expect(getObject(noHealthAssessmentJson, 'maturity')).toMatchObject({ max_score: 10 });
+  expect(getObject(noHealthAssessmentJson, 'maturity')).toMatchObject({ ['max_score']: 10 });
   expect(
     getString(
       objectWithString(
@@ -1920,9 +1920,9 @@ test('profile validates and runs gc stability evidence', async () => {
     join(root, '.harness/outputs/gc/clean.json'),
     JSON.stringify(
       {
-        schema_version: '0.1.0',
-        audit_id: 'profile-clean-gc',
-        generated_at: '2026-05-26T00:00:00Z',
+        ['schema_version']: '0.1.0',
+        ['audit_id']: 'profile-clean-gc',
+        ['generated_at']: '2026-05-26T00:00:00Z',
         findings: [],
       },
       null,
@@ -2005,7 +2005,7 @@ test('profile validates and runs gc stability evidence', async () => {
 
   await writeFile(
     join(root, '.harness/outputs/profile-runs/foreign.json'),
-    JSON.stringify({ ...profileRun, profile_id: 'other-profile' }, null, 2),
+    JSON.stringify({ ...profileRun, ['profile_id']: 'other-profile' }, null, 2),
   );
   const foreignPrevious = await run(
     [
@@ -2176,30 +2176,30 @@ test('profile run reports not-met without cleanup for dirty gc evidence', async 
     join(root, '.harness/outputs/gc/dirty.json'),
     JSON.stringify(
       {
-        schema_version: '0.1.0',
-        audit_id: 'profile-dirty-gc',
-        generated_at: '2026-05-26T00:00:00Z',
+        ['schema_version']: '0.1.0',
+        ['audit_id']: 'profile-dirty-gc',
+        ['generated_at']: '2026-05-26T00:00:00Z',
         findings: [
           {
             category: 'broken-reference',
             severity: 'error',
             confidence: 1,
-            evidence_refs: [
+            ['evidence_refs']: [
               {
                 path: 'harness.yaml',
-                media_type: 'application/yaml',
+                ['media_type']: 'application/yaml',
                 description: 'Dirty fixture evidence.',
               },
             ],
-            proposed_cleanup_slice: {
+            ['proposed_cleanup_slice']: {
               id: 'review-broken-reference',
               description: 'Review broken reference.',
-              target_files: ['harness.yaml'],
+              ['target_files']: ['harness.yaml'],
             },
-            blast_radius: 'Fixture only.',
-            atomicity_notes: 'Review independently.',
-            promotion_decision_refs: [],
-            retirement_decision_refs: [],
+            ['blast_radius']: 'Fixture only.',
+            ['atomicity_notes']: 'Review independently.',
+            ['promotion_decision_refs']: [],
+            ['retirement_decision_refs']: [],
           },
         ],
       },
@@ -2348,9 +2348,9 @@ test('gc audit accepts run-result JSONL evidence', async () => {
   await run(['init'], root);
   const failedRunResult = await readFile('examples/run-results/failed-run-result.json', 'utf8');
   const runResult = JSON.parse(failedRunResult) as JsonObject;
-  const firstRecord = { ...runResult, run_id: 'run-cleanup-collision' };
-  const secondRecord = { ...runResult, run_id: 'run-cleanup-collision' };
-  const collidingRecord = { ...runResult, run_id: 'run-cleanup-collision-2' };
+  const firstRecord = { ...runResult, ['run_id']: 'run-cleanup-collision' };
+  const secondRecord = { ...runResult, ['run_id']: 'run-cleanup-collision' };
+  const collidingRecord = { ...runResult, ['run_id']: 'run-cleanup-collision-2' };
   await writeFile(
     join(root, '.harness/run-results.JSONL'),
     `${JSON.stringify(firstRecord)}\n${JSON.stringify(secondRecord)}\n${JSON.stringify(collidingRecord)}\n`,
@@ -2417,39 +2417,39 @@ test('gc validate accepts schema-valid evidence and rejects semantic gaps', asyn
     invalidPath,
     JSON.stringify(
       {
-        schema_version: '0.1.0',
-        audit_id: 'invalid-gc',
-        generated_at: '2026-05-24T00:00:00Z',
+        ['schema_version']: '0.1.0',
+        ['audit_id']: 'invalid-gc',
+        ['generated_at']: '2026-05-24T00:00:00Z',
         findings: [
           {
             category: 'broken-reference',
             severity: 'warning',
             confidence: 0.5,
-            evidence_refs: [{ path: 'harness.yaml' }],
-            proposed_cleanup_slice: {
+            ['evidence_refs']: [{ path: 'harness.yaml' }],
+            ['proposed_cleanup_slice']: {
               id: 'duplicate-cleanup',
               description: 'Fragment target.',
-              target_files: ['harness.yaml#/doctor/checks/0'],
+              ['target_files']: ['harness.yaml#/doctor/checks/0'],
             },
-            blast_radius: 'Single file.',
-            atomicity_notes: 'Invalid semantic fixture.',
-            promotion_decision_refs: [],
-            retirement_decision_refs: [],
+            ['blast_radius']: 'Single file.',
+            ['atomicity_notes']: 'Invalid semantic fixture.',
+            ['promotion_decision_refs']: [],
+            ['retirement_decision_refs']: [],
           },
           {
             category: 'duplicate-id',
             severity: 'warning',
             confidence: 0.5,
-            evidence_refs: [{ path: 'harness.yaml' }],
-            proposed_cleanup_slice: {
+            ['evidence_refs']: [{ path: 'harness.yaml' }],
+            ['proposed_cleanup_slice']: {
               id: 'duplicate-cleanup',
               description: 'Duplicate cleanup id.',
-              target_files: ['harness.yaml'],
+              ['target_files']: ['harness.yaml'],
             },
-            blast_radius: 'None.',
-            atomicity_notes: 'Invalid semantic fixture.',
-            promotion_decision_refs: [],
-            retirement_decision_refs: [],
+            ['blast_radius']: 'None.',
+            ['atomicity_notes']: 'Invalid semantic fixture.',
+            ['promotion_decision_refs']: [],
+            ['retirement_decision_refs']: [],
           },
         ],
       },
@@ -2474,25 +2474,25 @@ test('gc validate checks local references and supports reference-only escapes', 
   const root = await tempRoot();
   await run(['init'], root);
   const validEvidence = {
-    schema_version: '0.1.0',
-    audit_id: 'gc-reference-valid',
-    generated_at: '2026-05-24T00:00:00Z',
-    previous_audit_ref: 'harness://gc/previous',
+    ['schema_version']: '0.1.0',
+    ['audit_id']: 'gc-reference-valid',
+    ['generated_at']: '2026-05-24T00:00:00Z',
+    ['previous_audit_ref']: 'harness://gc/previous',
     findings: [
       {
         category: 'broken-reference',
         severity: 'warning',
         confidence: 0.5,
-        evidence_refs: [{ path: '#/findings/0' }, { path: 'https://example.invalid/gc.json' }],
-        proposed_cleanup_slice: {
+        ['evidence_refs']: [{ path: '#/findings/0' }, { path: 'https://example.invalid/gc.json' }],
+        ['proposed_cleanup_slice']: {
           id: 'valid-reference-checks',
           description: 'Valid local cleanup target with external evidence refs.',
-          target_files: ['harness.yaml'],
+          ['target_files']: ['harness.yaml'],
         },
-        blast_radius: 'Single file.',
-        atomicity_notes: 'Reference validation fixture.',
-        promotion_decision_refs: [{ path: '#/findings/0' }],
-        retirement_decision_refs: [],
+        ['blast_radius']: 'Single file.',
+        ['atomicity_notes']: 'Reference validation fixture.',
+        ['promotion_decision_refs']: [{ path: '#/findings/0' }],
+        ['retirement_decision_refs']: [],
       },
     ],
   };
@@ -2502,15 +2502,15 @@ test('gc validate checks local references and supports reference-only escapes', 
 
   const invalidEvidence = {
     ...validEvidence,
-    audit_id: 'gc-reference-invalid',
-    previous_audit_ref: '../old-gc.json',
+    ['audit_id']: 'gc-reference-invalid',
+    ['previous_audit_ref']: '../old-gc.json',
     findings: [
       {
         ...validEvidence.findings[0],
-        proposed_cleanup_slice: {
+        ['proposed_cleanup_slice']: {
           id: 'invalid-reference-checks',
           description: 'External cleanup target must be rejected.',
-          target_files: ['https://example.invalid/cleanup.yaml'],
+          ['target_files']: ['https://example.invalid/cleanup.yaml'],
         },
       },
     ],
@@ -2537,24 +2537,24 @@ test('gc validate rejects symlinked local refs', async () => {
     join(root, 'symlink-gc.json'),
     JSON.stringify(
       {
-        schema_version: '0.1.0',
-        audit_id: 'gc-symlink',
-        generated_at: '2026-05-24T00:00:00Z',
+        ['schema_version']: '0.1.0',
+        ['audit_id']: 'gc-symlink',
+        ['generated_at']: '2026-05-24T00:00:00Z',
         findings: [
           {
             category: 'broken-reference',
             severity: 'warning',
             confidence: 0.5,
-            evidence_refs: [{ path: 'harness-link.yaml' }],
-            proposed_cleanup_slice: {
+            ['evidence_refs']: [{ path: 'harness-link.yaml' }],
+            ['proposed_cleanup_slice']: {
               id: 'symlink-reference',
               description: 'Symlink evidence ref.',
-              target_files: ['harness.yaml'],
+              ['target_files']: ['harness.yaml'],
             },
-            blast_radius: 'Single file.',
-            atomicity_notes: 'Symlink reference validation fixture.',
-            promotion_decision_refs: [],
-            retirement_decision_refs: [],
+            ['blast_radius']: 'Single file.',
+            ['atomicity_notes']: 'Symlink reference validation fixture.',
+            ['promotion_decision_refs']: [],
+            ['retirement_decision_refs']: [],
           },
         ],
       },
@@ -2934,37 +2934,37 @@ test('report validates judge results linked from run-result artifacts', async ()
     join(root, 'run-result-with-invalid-judge.json'),
     JSON.stringify(
       {
-        schema_version: '0.1.0',
-        run_id: 'judge-policy-semantic-invalid-run',
+        ['schema_version']: '0.1.0',
+        ['run_id']: 'judge-policy-semantic-invalid-run',
         kind: 'eval',
-        suite_id: 'harness-self-test',
-        task_id: 'schema-smoke',
-        task_version: '1.0.0',
-        dataset_hash: 'sha256:27aa95663ba3847b713dae33b3beed3a33280d3aeeff5cb9177f5bc9817c81fd',
+        ['suite_id']: 'harness-self-test',
+        ['task_id']: 'schema-smoke',
+        ['task_version']: '1.0.0',
+        ['dataset_hash']: 'sha256:27aa95663ba3847b713dae33b3beed3a33280d3aeeff5cb9177f5bc9817c81fd',
         split: 'optimization',
-        model_profile: 'harness://verifier-only/no-model',
-        harness_version: '0.1.0',
+        ['model_profile']: 'harness://verifier-only/no-model',
+        ['harness_version']: '0.1.0',
         status: 'passed',
         execution: {
           mode: 'verifier-only',
-          harness_status: 'passed',
-          verifier_status: 'passed',
+          ['harness_status']: 'passed',
+          ['verifier_status']: 'passed',
         },
         usage: {
-          billed_model_id: 'verifier-only',
-          input_tokens: 0,
-          output_tokens: 0,
-          total_tokens: 0,
+          ['billed_model_id']: 'verifier-only',
+          ['input_tokens']: 0,
+          ['output_tokens']: 0,
+          ['total_tokens']: 0,
           requests: 0,
-          incurred_cost_usd: 0,
+          ['incurred_cost_usd']: 0,
           source: 'stub',
         },
         trace: 'harness://verifier-only/no-agent-trace',
-        verifier_result: 'examples/verifier-results/schema-smoke.json',
-        judge_results: [
+        ['verifier_result']: 'examples/verifier-results/schema-smoke.json',
+        ['judge_results']: [
           {
             path: 'examples/judges/results/policy-violations/blocking-low-agreement.json',
-            media_type: 'application/json',
+            ['media_type']: 'application/json',
             description: 'Policy-violating judge result.',
           },
         ],
@@ -3058,19 +3058,19 @@ test('eval validate proves oracle pass and broken twin fail deterministically', 
     expect(getString(runResult, 'model_profile')).toBe('harness://verifier-only/no-model');
     expect(getString(runResult, 'trace')).toBe('harness://verifier-only/no-agent-trace');
     expect(getObject(runResult, 'usage')).toEqual({
-      billed_model_id: 'verifier-only',
-      input_tokens: 0,
-      output_tokens: 0,
-      total_tokens: 0,
+      ['billed_model_id']: 'verifier-only',
+      ['input_tokens']: 0,
+      ['output_tokens']: 0,
+      ['total_tokens']: 0,
       requests: 0,
-      incurred_cost_usd: 0,
+      ['incurred_cost_usd']: 0,
       source: 'stub',
     });
     const execution = getObject(runResult, 'execution');
     expect(execution).toEqual({
       mode: 'verifier-only',
-      harness_status: 'passed',
-      verifier_status: getString(runResult, 'status') === 'passed' ? 'passed' : 'failed',
+      ['harness_status']: 'passed',
+      ['verifier_status']: getString(runResult, 'status') === 'passed' ? 'passed' : 'failed',
     });
     if (getString(runResult, 'status') === 'passed') {
       expect(getString(runResult, 'failure_code')).toBeUndefined();
@@ -3217,8 +3217,8 @@ test('eval validate refuses unsafe verifier trust declarations', async () => {
     expect(getString(runResult, 'failure_code')).toBe('sandbox-violation');
     expect(getObject(runResult, 'execution')).toEqual({
       mode: 'verifier-only',
-      harness_status: 'failed',
-      verifier_status: 'skipped',
+      ['harness_status']: 'failed',
+      ['verifier_status']: 'skipped',
     });
   }
   expect(await pathExistsForTest(join(root, 'should-not-run'))).toBe(false);
@@ -3300,8 +3300,8 @@ test('eval validate distinguishes verifier command errors from verification fail
     expect(getString(runResult, 'failure_code')).toBe('verifier-error');
     expect(getObject(runResult, 'execution')).toEqual({
       mode: 'verifier-only',
-      harness_status: 'passed',
-      verifier_status: 'error',
+      ['harness_status']: 'passed',
+      ['verifier_status']: 'error',
     });
   }
 });
@@ -3332,8 +3332,8 @@ test('eval validate reports verifier command timeouts distinctly', async () => {
     expect(getString(runResult, 'failure_code')).toBe('timeout');
     expect(getObject(runResult, 'execution')).toEqual({
       mode: 'verifier-only',
-      harness_status: 'passed',
-      verifier_status: 'error',
+      ['harness_status']: 'passed',
+      ['verifier_status']: 'error',
     });
   }
 });
@@ -3392,10 +3392,10 @@ test('run executes a deterministic stub task and writes agent artifacts', async 
   expect(getString(runResult, 'verifier_result')).toBe(verifierResultPath);
   expect(getObject(runResult, 'execution')).toEqual({
     mode: 'agent-run',
-    harness_status: 'passed',
-    verifier_status: 'passed',
-    agent_status: 'passed',
-    model_status: 'passed',
+    ['harness_status']: 'passed',
+    ['verifier_status']: 'passed',
+    ['agent_status']: 'passed',
+    ['model_status']: 'passed',
   });
 
   const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
@@ -3451,8 +3451,8 @@ test('run imports an external candidate and writes external-import artifacts', a
   expect(getString(runResult, 'model_profile')).toBe('harness://external-import/copilot-cli');
   expect(getObject(runResult, 'execution')).toEqual({
     mode: 'external-import',
-    harness_status: 'passed',
-    verifier_status: 'passed',
+    ['harness_status']: 'passed',
+    ['verifier_status']: 'passed',
   });
   expect(getString(getObject(runResult, 'usage') ?? {}, 'source')).toBe('external');
   expect(getNumberForTest(getObject(runResult, 'usage') ?? {}, 'requests')).toBe(0);
@@ -3632,8 +3632,8 @@ test('run refuses unsafe external candidates and records verifier failures hones
   expect(getString(runResult, 'failure_code')).toBe('verification-failure');
   expect(getObject(runResult, 'execution')).toEqual({
     mode: 'external-import',
-    harness_status: 'passed',
-    verifier_status: 'failed',
+    ['harness_status']: 'passed',
+    ['verifier_status']: 'failed',
   });
 });
 
@@ -3866,10 +3866,10 @@ test('eval run maps harness refusals into scoreboard failure buckets', async () 
     expect(getString(runResult, 'failure_code')).toBe('sandbox-violation');
     expect(getObject(runResult, 'execution')).toEqual({
       mode: 'agent-run',
-      harness_status: 'failed',
-      verifier_status: 'skipped',
-      agent_status: 'skipped',
-      model_status: 'skipped',
+      ['harness_status']: 'failed',
+      ['verifier_status']: 'skipped',
+      ['agent_status']: 'skipped',
+      ['model_status']: 'skipped',
     });
   }
 
@@ -3917,10 +3917,10 @@ test('eval run maps verifier command errors into scoreboard failure buckets', as
     expect(getString(runResult, 'failure_code')).toBe('verifier-error');
     expect(getObject(runResult, 'execution')).toEqual({
       mode: 'agent-run',
-      harness_status: 'passed',
-      verifier_status: 'error',
-      agent_status: 'skipped',
-      model_status: 'passed',
+      ['harness_status']: 'passed',
+      ['verifier_status']: 'error',
+      ['agent_status']: 'skipped',
+      ['model_status']: 'passed',
     });
   }
   const scoreboard = JSON.parse(
@@ -4057,7 +4057,7 @@ async function copyStage10LoopArtifacts(root: string): Promise<void> {
   );
 }
 
-async function run(args: readonly string[], cwd = process.cwd()): Promise<RunResult> {
+async function run(args: readonly string[], cwd = process.cwd()): Promise<IRunResult> {
   const stdout: string[] = [];
   const stderr: string[] = [];
   const code = await runCli(args, {
@@ -4114,9 +4114,9 @@ function invalidExternalSourceMaterialAssessment(
 ): JsonObject {
   return {
     ...assessment,
-    implementation_routing: {
+    ['implementation_routing']: {
       ...routing,
-      selected_route: 'execution-loop',
+      ['selected_route']: 'execution-loop',
       routes: [
         ...jsonObjects(getArray(routing, 'routes')).filter(
           (route) => getString(route, 'kind') !== 'external-source-material',

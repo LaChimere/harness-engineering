@@ -5,7 +5,7 @@ import { optionValue, parseOptions } from '../lib/options.ts';
 import { resolveRootForInspectionCommand } from '../lib/paths.ts';
 import { readPackageVersion } from '../lib/project.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set([
   'root',
@@ -25,7 +25,7 @@ const flagOptions = new Set<string>();
 
 export async function runAssessCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 0) {

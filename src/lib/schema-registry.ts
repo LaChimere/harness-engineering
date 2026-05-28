@@ -9,25 +9,25 @@ import { loadDocument } from './files.ts';
 import type { JsonValue } from './json.ts';
 import { getString, isObject } from './json.ts';
 
-export interface ValidationIssue {
+export interface IValidationIssue {
   readonly path: string;
   readonly keyword: string;
   readonly message: string;
 }
 
-export interface SchemaRegistry {
+export interface ISchemaRegistry {
   readonly schemaVersion: string;
   readonly schemaNames: ReadonlySet<string>;
-  validate(schemaName: string, document: JsonValue): readonly ValidationIssue[];
+  validate(schemaName: string, document: JsonValue): readonly IValidationIssue[];
 }
 
-interface LoadedSchema {
+interface ILoadedSchema {
   readonly name: string;
   readonly id: string;
   readonly document: AnySchema;
 }
 
-export async function loadSchemaRegistry(packageRoot: string): Promise<SchemaRegistry> {
+export async function loadSchemaRegistry(packageRoot: string): Promise<ISchemaRegistry> {
   const schemasDirectory = join(packageRoot, 'schemas');
   const ajv = new Ajv2020({
     allErrors: true,
@@ -37,7 +37,7 @@ export async function loadSchemaRegistry(packageRoot: string): Promise<SchemaReg
   addFormats(ajv);
   ajv.addKeyword('x-stability');
 
-  const loadedSchemas: LoadedSchema[] = [];
+  const loadedSchemas: ILoadedSchema[] = [];
   const schemaFiles = (await readdir(schemasDirectory))
     .filter((file) => file.endsWith('.schema.json'))
     .sort();
@@ -86,7 +86,7 @@ export async function loadSchemaRegistry(packageRoot: string): Promise<SchemaReg
   return {
     schemaVersion,
     schemaNames: new Set(validators.keys()),
-    validate(schemaName: string, document: JsonValue): readonly ValidationIssue[] {
+    validate(schemaName: string, document: JsonValue): readonly IValidationIssue[] {
       const validator = validators.get(schemaName);
       if (validator === undefined) {
         throw new CliError(`No loaded schema named ${schemaName}.`, ExitCode.internalError);
@@ -100,12 +100,12 @@ export async function loadSchemaRegistry(packageRoot: string): Promise<SchemaReg
   };
 }
 
-export function formatValidationIssue(issue: ValidationIssue): string {
+export function formatValidationIssue(issue: IValidationIssue): string {
   const path = issue.path.length === 0 ? '<root>' : issue.path;
   return `${path} ${issue.keyword}: ${issue.message}`;
 }
 
-function formatAjvError(error: ErrorObject): ValidationIssue {
+function formatAjvError(error: ErrorObject): IValidationIssue {
   return {
     path: error.instancePath,
     keyword: error.keyword,
@@ -113,7 +113,7 @@ function formatAjvError(error: ErrorObject): ValidationIssue {
   };
 }
 
-function inferSchemaVersion(schemas: readonly LoadedSchema[]): string {
+function inferSchemaVersion(schemas: readonly ILoadedSchema[]): string {
   const harnessSchema = schemas.find((schema) => schema.name === 'harness');
   if (harnessSchema === undefined) {
     throw new CliError('Harness schema is missing from schemas/.', ExitCode.internalError);

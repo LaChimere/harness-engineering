@@ -7,19 +7,19 @@ import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
 import { validateHarnessConfiguration } from './harness.ts';
 import { getArray, getObject, getString, getValue, isObject, type JsonObject } from './json.ts';
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
-import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
+import { formatValidationIssue, type ISchemaRegistry } from './schema-registry.ts';
 
 type EvidenceKind = 'gc-evidence' | 'health-result' | 'profile-run';
 type StopStatus = 'met' | 'not_met' | 'inconclusive';
 
-interface LoadedEvidence {
+interface ILoadedEvidence {
   readonly kind: EvidenceKind;
   readonly path: string;
   readonly sha256: string;
   readonly document: JsonObject;
 }
 
-interface ConditionObservation {
+interface IConditionObservation {
   readonly metric: string;
   readonly actual: string | number | boolean | null;
   readonly comparator: string;
@@ -27,17 +27,17 @@ interface ConditionObservation {
   readonly matched: boolean;
 }
 
-interface ConditionResult {
+interface IConditionResult {
   readonly matched: boolean;
-  readonly observations: ConditionObservation[];
+  readonly observations: IConditionObservation[];
 }
 
-export interface ProfileRunRequest {
+export interface IProfileRunRequest {
   readonly root: string;
   readonly harnessPath: string;
   readonly profilePath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runId?: string;
   readonly gcEvidencePath?: string;
   readonly healthResultPath?: string;
@@ -45,7 +45,7 @@ export interface ProfileRunRequest {
   readonly outputPath?: string;
 }
 
-export interface ProfileRun {
+export interface IProfileRun {
   readonly result: JsonObject;
   readonly markdown: string;
   readonly status: StopStatus;
@@ -56,7 +56,7 @@ const schemaVersion = '0.1.0';
 export async function loadRecurringProfile(input: {
   readonly root: string;
   readonly profilePath: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
 }): Promise<{ readonly path: string; readonly document: JsonObject }> {
   const path = await canonicalFilePath(input.root, input.profilePath, 'Profile');
   const document = await loadSchemaObject(input.root, path, 'recurring-profile', input.schemas);
@@ -70,7 +70,7 @@ export async function loadRecurringProfile(input: {
   return { path, document };
 }
 
-async function loadProfileHarness(input: ProfileRunRequest): Promise<JsonObject> {
+async function loadProfileHarness(input: IProfileRunRequest): Promise<JsonObject> {
   const validation = await validateHarnessConfiguration({
     root: input.root,
     harnessPath: input.harnessPath,
@@ -118,7 +118,7 @@ async function profilePathFromHarness(
   return requestedProfilePath;
 }
 
-export async function runProfile(input: ProfileRunRequest): Promise<ProfileRun> {
+export async function runProfile(input: IProfileRunRequest): Promise<IProfileRun> {
   const harness = await loadProfileHarness(input);
   const canonicalProfilePath = await profilePathFromHarness(input.root, harness, input.profilePath);
   const profile = await loadRecurringProfile({
@@ -161,9 +161,9 @@ export async function runProfile(input: ProfileRunRequest): Promise<ProfileRun> 
       ? undefined
       : await loadEvidence(input.root, input.previousRunPath, 'profile-run', input.schemas);
 
-  const evidenceByKind = new Map<EvidenceKind, LoadedEvidence>(
+  const evidenceByKind = new Map<EvidenceKind, ILoadedEvidence>(
     [gcEvidence, healthResult, previousRun]
-      .filter((value): value is LoadedEvidence => value !== undefined)
+      .filter((value): value is ILoadedEvidence => value !== undefined)
       .map((value) => [value.kind, value]),
   );
   for (const requiredInput of requiredInputs) {
@@ -201,36 +201,36 @@ export async function runProfile(input: ProfileRunRequest): Promise<ProfileRun> 
       ? 'met'
       : 'not_met';
   const evidenceInputs = [gcEvidence, healthResult, previousRun]
-    .filter((value): value is LoadedEvidence => value !== undefined)
+    .filter((value): value is ILoadedEvidence => value !== undefined)
     .map((value) => hashedArtifact(value));
   const result: JsonObject = {
-    schema_version: schemaVersion,
-    run_id: input.runId ?? `profile-${randomUUID()}`,
-    harness_version: input.cliVersion,
-    generated_at: new Date().toISOString(),
-    profile_ref: await hashedFile(
+    ['schema_version']: schemaVersion,
+    ['run_id']: input.runId ?? `profile-${randomUUID()}`,
+    ['harness_version']: input.cliVersion,
+    ['generated_at']: new Date().toISOString(),
+    ['profile_ref']: await hashedFile(
       input.root,
       profile.path,
       'application/yaml',
       'Recurring profile.',
     ),
-    profile_id: requiredString(profile.document, 'profile_id'),
-    profile_version: requiredString(profile.document, 'profile_version'),
-    declared_capability_id: null,
-    ...(previousRun === undefined ? {} : { previous_run_ref: hashedArtifactRef(previousRun) }),
-    evidence_inputs: evidenceInputs,
-    trigger_evaluation: conditionResultJson(trigger),
-    stop_condition_evaluation: {
+    ['profile_id']: requiredString(profile.document, 'profile_id'),
+    ['profile_version']: requiredString(profile.document, 'profile_version'),
+    ['declared_capability_id']: null,
+    ...(previousRun === undefined ? {} : { ['previous_run_ref']: hashedArtifactRef(previousRun) }),
+    ['evidence_inputs']: evidenceInputs,
+    ['trigger_evaluation']: conditionResultJson(trigger),
+    ['stop_condition_evaluation']: {
       matched: stopCondition.matched,
       observations: observationsJson(stopCondition.observations),
       status,
-      clean_streak: cleanStreak,
+      ['clean_streak']: cleanStreak,
     },
-    actions_taken: actionsForProfile(profile.document, status, metricsWithStreak),
+    ['actions_taken']: actionsForProfile(profile.document, status, metricsWithStreak),
     handoff: {
       kind: 'profile-run',
       status,
-      next_step: status === 'met' ? 'stop' : 'continue',
+      ['next_step']: status === 'met' ? 'stop' : 'continue',
       summary: handoffSummary(status, metricsWithStreak),
     },
     errors: [],
@@ -246,7 +246,7 @@ export function serializeProfileRunJson(result: JsonObject): string {
   return `${JSON.stringify(result, null, 2)}\n`;
 }
 
-function suppliedEvidenceKinds(input: ProfileRunRequest): EvidenceKind[] {
+function suppliedEvidenceKinds(input: IProfileRunRequest): EvidenceKind[] {
   const kinds: EvidenceKind[] = [];
   if (input.gcEvidencePath !== undefined) {
     kinds.push('gc-evidence');
@@ -374,8 +374,8 @@ async function loadEvidence(
   root: string,
   path: string,
   kind: EvidenceKind,
-  schemas: SchemaRegistry,
-): Promise<LoadedEvidence> {
+  schemas: ISchemaRegistry,
+): Promise<ILoadedEvidence> {
   const canonicalPath = await canonicalFilePath(root, path, kind);
   const document = await loadSchemaObject(root, canonicalPath, kind, schemas);
   return {
@@ -415,7 +415,7 @@ async function loadSchemaObject(
   root: string,
   path: string,
   schemaName: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
 ): Promise<JsonObject> {
   const document = await loadDocument(resolveInsideRoot(root, path, schemaName));
   if (!isObject(document)) {
@@ -444,9 +444,9 @@ async function canonicalFilePath(root: string, path: string, label: string): Pro
 }
 
 function metricsForEvidence(
-  gcEvidence: LoadedEvidence | undefined,
-  healthResult: LoadedEvidence | undefined,
-  previousRun: LoadedEvidence | undefined,
+  gcEvidence: ILoadedEvidence | undefined,
+  healthResult: ILoadedEvidence | undefined,
+  previousRun: ILoadedEvidence | undefined,
 ): Map<string, string | number | boolean | null> {
   const previousStop =
     previousRun === undefined
@@ -468,7 +468,7 @@ function metricsForEvidence(
 function evaluateCondition(
   condition: JsonObject,
   metrics: ReadonlyMap<string, string | number | boolean | null>,
-): ConditionResult {
+): IConditionResult {
   const kind = getString(condition, 'kind');
   if (kind === 'all' || kind === 'any') {
     const results = (getArray(condition, 'conditions') ?? [])
@@ -531,9 +531,9 @@ function actionsForProfile(
       kind: 'summary',
       summary: {
         status,
-        gc_findings: metricNumber(metrics, 'gc.findings.count'),
-        health_status: metricString(metrics, 'health.status', 'missing'),
-        clean_streak: metricNumber(metrics, 'profile.clean_streak'),
+        ['gc_findings']: metricNumber(metrics, 'gc.findings.count'),
+        ['health_status']: metricString(metrics, 'health.status', 'missing'),
+        ['clean_streak']: metricNumber(metrics, 'profile.clean_streak'),
       },
     },
   ];
@@ -560,14 +560,14 @@ function renderProfileRunMarkdown(result: JsonObject): string {
   ].join('\n');
 }
 
-function conditionResultJson(result: ConditionResult): JsonObject {
+function conditionResultJson(result: IConditionResult): JsonObject {
   return {
     matched: result.matched,
     observations: observationsJson(result.observations),
   };
 }
 
-function observationsJson(observations: readonly ConditionObservation[]): JsonObject[] {
+function observationsJson(observations: readonly IConditionObservation[]): JsonObject[] {
   return observations.map((observation) => ({
     metric: observation.metric,
     actual: observation.actual,
@@ -577,21 +577,21 @@ function observationsJson(observations: readonly ConditionObservation[]): JsonOb
   }));
 }
 
-function hashedArtifact(evidence: LoadedEvidence): JsonObject {
+function hashedArtifact(evidence: ILoadedEvidence): JsonObject {
   return {
     kind: evidence.kind,
     path: evidence.path,
     sha256: evidence.sha256,
-    media_type: mediaTypeForPath(evidence.path),
+    ['media_type']: mediaTypeForPath(evidence.path),
     description: `${evidence.kind} evidence input.`,
   };
 }
 
-function hashedArtifactRef(evidence: LoadedEvidence): JsonObject {
+function hashedArtifactRef(evidence: ILoadedEvidence): JsonObject {
   return {
     path: evidence.path,
     sha256: evidence.sha256,
-    media_type: mediaTypeForPath(evidence.path),
+    ['media_type']: mediaTypeForPath(evidence.path),
     description: `${evidence.kind} evidence input.`,
   };
 }
@@ -605,7 +605,7 @@ async function hashedFile(
   return {
     path,
     sha256: await fileSha256(root, path),
-    media_type: mediaType,
+    ['media_type']: mediaType,
     description,
   };
 }

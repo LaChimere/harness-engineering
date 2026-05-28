@@ -17,20 +17,20 @@ import {
 import { readPackageVersion } from '../lib/project.ts';
 import {
   formatValidationIssue,
+  type ISchemaRegistry,
   loadSchemaRegistry,
-  type SchemaRegistry,
 } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const validateValueOptions = new Set(['root', 'file', 'continuity', 'verification', 'phase']);
 const validateFlagOptions = new Set<string>();
 
-interface SchemaIssue {
+interface ISchemaIssue {
   readonly prefix: string;
   readonly message: string;
 }
 
-interface PolicyContext {
+interface IPolicyContext {
   readonly approvalPolicyId: string;
   readonly sandboxPolicyId: string;
   readonly sandboxTier: string;
@@ -38,7 +38,7 @@ interface PolicyContext {
 
 export async function runLoopCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const [subcommand, ...subcommandArgs] = args;
   if (
@@ -58,7 +58,7 @@ export async function runLoopCommand(
 
 async function runLoopValidate(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, validateValueOptions, validateFlagOptions);
   if (options.positionals.length > 0) {
@@ -193,7 +193,7 @@ function executionLoopPhase(value: string): ExecutionLoopPhase {
 
 function renderHarnessIssues(
   result: Awaited<ReturnType<typeof validateHarnessConfiguration>>,
-  context: CommandContext,
+  context: ICommandContext,
 ): ExitCode | undefined {
   if (result.schemaIssues.length > 0) {
     context.stdout(`harness loop validate failed: ${result.harnessPath}`);
@@ -222,12 +222,12 @@ function renderHarnessIssues(
 async function readPolicyContext(
   root: string,
   harness: JsonObject,
-  schemas: SchemaRegistry,
-  context: CommandContext,
-): Promise<PolicyContext | undefined> {
+  schemas: ISchemaRegistry,
+  context: ICommandContext,
+): Promise<IPolicyContext | undefined> {
   const approvalPath = getString(harness, 'approval_policy');
   const sandboxPath = getString(harness, 'sandbox');
-  const issues: SchemaIssue[] = [];
+  const issues: ISchemaIssue[] = [];
   if (approvalPath === undefined) {
     issues.push({ prefix: 'approval policy', message: 'harness is missing approval_policy' });
   }
@@ -281,11 +281,11 @@ async function loadRequiredArtifact(
   root: string,
   path: string,
   description: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
   schemaName: string,
 ): Promise<{
   readonly document: JsonValue;
-  readonly issues: readonly SchemaIssue[];
+  readonly issues: readonly ISchemaIssue[];
   readonly relativePath: string;
 }> {
   const absolutePath = await readableArtifactPath(root, path, description);
@@ -305,9 +305,9 @@ async function loadReferencedArtifact(
   root: string,
   path: string,
   description: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
   schemaName: string,
-): Promise<{ readonly document?: JsonValue; readonly issues: readonly SchemaIssue[] }> {
+): Promise<{ readonly document?: JsonValue; readonly issues: readonly ISchemaIssue[] }> {
   const localPath = stripFragment(path);
   let absolutePath: string;
   try {

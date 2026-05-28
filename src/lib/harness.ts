@@ -16,11 +16,11 @@ import {
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
 import {
   formatValidationIssue,
-  type SchemaRegistry,
-  type ValidationIssue,
+  type ISchemaRegistry,
+  type IValidationIssue,
 } from './schema-registry.ts';
 
-export interface HarnessValidationResult {
+export interface IHarnessValidationResult {
   readonly harnessPath: string;
   readonly document?: JsonObject;
   readonly schemaIssues: readonly string[];
@@ -29,7 +29,7 @@ export interface HarnessValidationResult {
   readonly checkedReferences: readonly string[];
 }
 
-export interface HarnessReference {
+export interface IHarnessReference {
   readonly path: string;
   readonly description: string;
   readonly schemaName?: string;
@@ -39,8 +39,8 @@ export async function validateHarnessConfiguration(input: {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
-}): Promise<HarnessValidationResult> {
+  readonly schemas: ISchemaRegistry;
+}): Promise<IHarnessValidationResult> {
   const harnessPath = resolveInsideRoot(input.root, input.harnessPath, 'Harness file');
   await assertNoSymlinkWithinRoot(input.root, harnessPath, 'read');
   if ((await pathKind(harnessPath)) !== 'file') {
@@ -84,7 +84,7 @@ export async function validateHarnessConfiguration(input: {
 function checkEngineCompatibility(
   harness: JsonObject,
   cliVersion: string,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
 ): readonly string[] {
   const engines = getObject(harness, 'engines');
   if (engines === undefined) {
@@ -124,7 +124,7 @@ function checkEngineCompatibility(
 async function checkHarnessReferences(
   root: string,
   harness: JsonObject,
-  schemas: SchemaRegistry,
+  schemas: ISchemaRegistry,
 ): Promise<{ readonly issues: readonly string[]; readonly checked: readonly string[] }> {
   const issues: string[] = [];
   const checked: string[] = [];
@@ -180,8 +180,8 @@ async function checkHarnessReferences(
   return { issues, checked };
 }
 
-export function collectHarnessReferences(harness: JsonObject): readonly HarnessReference[] {
-  const references: HarnessReference[] = [];
+export function collectHarnessReferences(harness: JsonObject): readonly IHarnessReference[] {
+  const references: IHarnessReference[] = [];
   const harnessBlock = getObject(harness, 'harness');
   const failureTaxonomy =
     harnessBlock === undefined ? undefined : getString(harnessBlock, 'failure_taxonomy');
@@ -268,7 +268,7 @@ export function collectHarnessReferences(harness: JsonObject): readonly HarnessR
 }
 
 function pushReference(
-  references: HarnessReference[],
+  references: IHarnessReference[],
   path: string | undefined,
   description: string,
   schemaName?: string,
@@ -282,7 +282,7 @@ function pushReference(
 }
 
 function pushReferenceMap(
-  references: HarnessReference[],
+  references: IHarnessReference[],
   map: JsonObject | undefined,
   description: string,
   schemaName: string,
@@ -316,7 +316,7 @@ async function schemaDocumentsInDirectory(directory: string): Promise<readonly s
 
 function formatReferenceIssues(
   path: string,
-  issues: readonly ValidationIssue[],
+  issues: readonly IValidationIssue[],
 ): readonly string[] {
   return issues.map((issue) => `${path}: ${formatValidationIssue(issue)}`);
 }

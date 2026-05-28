@@ -21,7 +21,7 @@ import {
 } from '../lib/paths.ts';
 import { readPackageVersion } from '../lib/project.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set([
   'root',
@@ -44,7 +44,7 @@ const validateFlagOptions = new Set(['skip-reference-checks']);
 
 export async function runGcCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const [subcommand, ...subcommandArgs] = args;
   switch (subcommand) {
@@ -65,7 +65,7 @@ export async function runGcCommand(
 
 async function runGcAuditCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 0) {
@@ -166,7 +166,7 @@ async function validatePreviousAuditRef(root: string, previousAuditRef: string):
 
 async function runGcValidateCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, validateFlagOptions);
   if (options.positionals.length > 1) {
@@ -201,7 +201,7 @@ async function runGcValidateCommand(
     context.stdout(
       JSON.stringify(
         {
-          schema_version: '0.1.0',
+          ['schema_version']: '0.1.0',
           status,
           artifact: artifactPath,
           issues,

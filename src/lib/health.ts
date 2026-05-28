@@ -14,20 +14,20 @@ import {
 } from './json.ts';
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
 import { runShellCommand } from './process.ts';
-import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
+import { formatValidationIssue, type ISchemaRegistry } from './schema-registry.ts';
 
 type HealthStatus = 'passed' | 'failed' | 'error';
 type HealthCheckStatus = 'passed' | 'failed' | 'error' | 'skipped';
 export type HealthExitClass = 'passed' | 'failed' | 'refused';
 
-interface HealthCheckDeclaration {
+interface IHealthCheckDeclaration {
   readonly id: string;
   readonly command: JsonObject;
   readonly trustRequirements: JsonObject;
   readonly artifacts: readonly JsonObject[];
 }
 
-interface HealthCheckRun {
+interface IHealthCheckRun {
   readonly id: string;
   readonly command: JsonObject;
   readonly timeoutSeconds: number;
@@ -46,17 +46,17 @@ interface HealthCheckRun {
   readonly trustRequirements: JsonObject;
 }
 
-export interface HealthRunInput {
+export interface IHealthRunInput {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runId?: string;
   readonly allowDeclarativeExecution?: boolean;
   readonly outputPath?: string;
 }
 
-export interface HealthRun {
+export interface IHealthRun {
   readonly result: JsonObject;
   readonly markdown: string;
   readonly status: HealthStatus;
@@ -66,7 +66,7 @@ export interface HealthRun {
 const schemaVersion = '0.1.0';
 const defaultTimeoutSeconds = 60;
 
-export async function runHealth(input: HealthRunInput): Promise<HealthRun> {
+export async function runHealth(input: IHealthRunInput): Promise<IHealthRun> {
   const validation = await validateHarnessConfiguration(input);
   const validationIssues = [
     ...validation.schemaIssues.map((issue) => `schema: ${issue}`),
@@ -106,22 +106,22 @@ export async function runHealth(input: HealthRunInput): Promise<HealthRun> {
     'sandbox-policy',
   );
   const declarations = healthCheckDeclarations(health);
-  const checks: HealthCheckRun[] = [];
+  const checks: IHealthCheckRun[] = [];
   for (const declaration of declarations) {
     checks.push(await runHealthCheck(input.root, outputDir, sandboxPolicy, declaration));
   }
   const status = healthStatusForChecks(checks);
   const result: JsonObject = {
-    schema_version: schemaVersion,
-    run_id: input.runId ?? defaultRunId(input.harnessPath, input.cliVersion, checks),
-    harness_version: input.cliVersion,
+    ['schema_version']: schemaVersion,
+    ['run_id']: input.runId ?? defaultRunId(input.harnessPath, input.cliVersion, checks),
+    ['harness_version']: input.cliVersion,
     status,
-    sandbox_enforcement: 'declarative',
-    runtime_enforced: false,
+    ['sandbox_enforcement']: 'declarative',
+    ['runtime_enforced']: false,
     source: {
       harness: input.harnessPath,
-      approval_policy: approvalPolicyPath,
-      sandbox_policy: sandboxPolicyPath,
+      ['approval_policy']: approvalPolicyPath,
+      ['sandbox_policy']: sandboxPolicyPath,
     },
     checks: checks.map(healthCheckJson),
   };
@@ -163,7 +163,7 @@ export function assertHealthOutputPathInsideDir(
   }
 }
 
-function healthCheckDeclarations(health: JsonObject): readonly HealthCheckDeclaration[] {
+function healthCheckDeclarations(health: JsonObject): readonly IHealthCheckDeclaration[] {
   return (getArray(health, 'checks') ?? []).filter(isObject).map((check) => ({
     id: requiredString(check, 'id', 'health check id'),
     command: requiredObject(check, 'command', 'health check command'),
@@ -180,8 +180,8 @@ async function runHealthCheck(
   root: string,
   outputDir: string,
   sandboxPolicy: JsonObject,
-  declaration: HealthCheckDeclaration,
-): Promise<HealthCheckRun> {
+  declaration: IHealthCheckDeclaration,
+): Promise<IHealthCheckRun> {
   const timeoutSeconds =
     numberValue(declaration.command, 'timeout_seconds') ?? defaultTimeoutSeconds;
   const trustIssue = validateHealthCheckTrust(root, outputDir, sandboxPolicy, declaration);
@@ -319,7 +319,7 @@ function validateHealthCheckTrust(
   root: string,
   outputDir: string,
   sandboxPolicy: JsonObject,
-  declaration: HealthCheckDeclaration,
+  declaration: IHealthCheckDeclaration,
 ):
   | {
       readonly failureCode: string;
@@ -439,7 +439,7 @@ function isReferenceOnlyPath(path: string): boolean {
 }
 
 async function loadValidatedPolicy(
-  input: HealthRunInput,
+  input: IHealthRunInput,
   path: string,
   label: string,
   schemaName: string,
@@ -460,7 +460,7 @@ async function loadValidatedPolicy(
   return document;
 }
 
-function healthStatusForChecks(checks: readonly HealthCheckRun[]): HealthStatus {
+function healthStatusForChecks(checks: readonly IHealthCheckRun[]): HealthStatus {
   if (checks.some((check) => check.status === 'error' || check.status === 'skipped')) {
     return 'error';
   }
@@ -470,7 +470,7 @@ function healthStatusForChecks(checks: readonly HealthCheckRun[]): HealthStatus 
   return 'passed';
 }
 
-function healthExitClassForChecks(checks: readonly HealthCheckRun[]): HealthExitClass {
+function healthExitClassForChecks(checks: readonly IHealthCheckRun[]): HealthExitClass {
   if (checks.some((check) => check.status === 'failed')) {
     return 'failed';
   }
@@ -489,26 +489,26 @@ function healthExitClassForChecks(checks: readonly HealthCheckRun[]): HealthExit
   return 'passed';
 }
 
-function healthCheckJson(check: HealthCheckRun): JsonObject {
+function healthCheckJson(check: IHealthCheckRun): JsonObject {
   return {
     id: check.id,
     command: check.command,
-    timeout_seconds: check.timeoutSeconds,
+    ['timeout_seconds']: check.timeoutSeconds,
     status: check.status,
-    sandbox_enforcement: 'declarative',
-    runtime_enforced: false,
-    ...(check.failureCode === undefined ? {} : { failure_code: check.failureCode }),
-    duration_ms: check.durationMs,
-    ...(check.exitCode === undefined ? {} : { exit_code: check.exitCode }),
+    ['sandbox_enforcement']: 'declarative',
+    ['runtime_enforced']: false,
+    ...(check.failureCode === undefined ? {} : { ['failure_code']: check.failureCode }),
+    ['duration_ms']: check.durationMs,
+    ...(check.exitCode === undefined ? {} : { ['exit_code']: check.exitCode }),
     ...(check.signal === undefined ? {} : { signal: check.signal }),
     summary: check.summary,
     ...(check.stdout === undefined ? {} : { stdout: check.stdout }),
-    stdout_truncated: check.stdoutTruncated,
+    ['stdout_truncated']: check.stdoutTruncated,
     ...(check.stderr === undefined ? {} : { stderr: check.stderr }),
-    stderr_truncated: check.stderrTruncated,
+    ['stderr_truncated']: check.stderrTruncated,
     evidence: [...check.evidence],
     artifacts: [...check.artifacts],
-    trust_requirements: check.trustRequirements,
+    ['trust_requirements']: check.trustRequirements,
   };
 }
 
@@ -537,7 +537,7 @@ function renderHealthMarkdown(result: JsonObject): string {
 function defaultRunId(
   harnessPath: string,
   cliVersion: string,
-  checks: readonly HealthCheckRun[],
+  checks: readonly IHealthCheckRun[],
 ): string {
   const digest = createHash('sha256')
     .update(
@@ -562,7 +562,7 @@ function declaredArtifacts(artifacts: readonly JsonObject[]): readonly JsonObjec
     const description = getString(artifactRef, 'description');
     return {
       path: requiredString(artifactRef, 'path', 'health check artifact path'),
-      ...(mediaType === undefined ? {} : { media_type: mediaType }),
+      ...(mediaType === undefined ? {} : { ['media_type']: mediaType }),
       ...(description === undefined ? {} : { description }),
     };
   });

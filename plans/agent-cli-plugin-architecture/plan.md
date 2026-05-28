@@ -22,9 +22,9 @@ This split is chosen because the work has strict contract dependencies: naming c
 
 ## PR sequence
 
-### PR 1: Interface naming cleanup plan and rename-only slices
+### PR 1: Biome naming cleanup plan and rename-only interface slices
 
-Goal: Bring existing TypeScript interfaces into compliance with the already-enforced Biome naming rules without changing runtime behavior.
+Goal: Bring current TypeScript naming into compliance with the already-enforced Biome naming rules so `bun run check` passes, without changing runtime behavior.
 
 Likely directories/files:
 
@@ -39,6 +39,8 @@ Allowed changes:
 - Generate `interface-rename-plan.md` from `bun biome lint --reporter=json` `useNamingConvention` interface violations.
 - Rename non-`I`-prefixed interfaces to `I*` names.
 - Update imports, exports, and type references required by those renames.
+- Preserve external JSON/evidence field names that intentionally use snake_case or CONSTANT_CASE by representing them with computed literal property keys in TypeScript.
+- Rename non-conforming type parameters to `T*` names.
 - Split into small domain slices when the generated inventory is large.
 
 Prohibited changes:
@@ -53,8 +55,10 @@ Acceptance criteria:
 
 - `interface-rename-plan.md` lists every non-conforming interface, target name, affected files, slice ID, and slice rationale.
 - Each slice diff is rename-only and reviewer-verifiable.
-- No remaining interface naming violations block the configured Biome check.
-- The final interface inventory is proven by rerunning `bun biome lint --reporter=json` and confirming there are no remaining `useNamingConvention` diagnostics for interface declarations.
+- External JSON/evidence field names retain their emitted wire shape; only their TypeScript syntax changes to satisfy Biome.
+- The external-key convention is documented with a reviewer-verifiable inventory command so future slices do not reintroduce bare snake_case/CONSTANT_CASE properties.
+- No remaining `useNamingConvention` diagnostics block the configured Biome check.
+- The final inventory is proven by rerunning `bun biome lint --reporter=json` and confirming there are no remaining `useNamingConvention` diagnostics.
 
 Validation commands:
 

@@ -5,7 +5,7 @@ import { join, posix } from 'node:path';
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
-import { type HarnessValidationResult, validateHarnessConfiguration } from './harness.ts';
+import { type IHarnessValidationResult, validateHarnessConfiguration } from './harness.ts';
 import {
   getArray,
   getObject,
@@ -15,13 +15,13 @@ import {
   type JsonValue,
 } from './json.ts';
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
-import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
+import { formatValidationIssue, type ISchemaRegistry } from './schema-registry.ts';
 
-export interface AssessmentRequest {
+export interface IAssessmentRequest {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly doctorResultPath?: string;
   readonly healthResultPath?: string;
   readonly runResultsPath?: string;
@@ -35,11 +35,11 @@ export interface AssessmentRequest {
 
 type ArtifactRead = JsonObject & {
   path: string;
-  media_type?: string;
+  ['media_type']?: string;
   description: string;
 };
 
-interface LoadedArtifact {
+interface ILoadedArtifact {
   readonly path: string;
   readonly document?: JsonObject;
   readonly status: 'loaded' | 'missing' | 'invalid';
@@ -54,7 +54,7 @@ type ScorecardItem = JsonObject & {
   evidence: ArtifactRead[];
 };
 
-interface RepairActionCandidate {
+interface IRepairActionCandidate {
   readonly path: string;
   readonly status: 'loaded' | 'missing' | 'invalid';
   readonly document?: JsonObject;
@@ -64,7 +64,7 @@ interface RepairActionCandidate {
 const schemaVersion = '0.1.0';
 const defaultRepairActionsDir = 'examples/repair-actions';
 
-export async function buildAssessment(request: AssessmentRequest): Promise<JsonObject> {
+export async function buildAssessment(request: IAssessmentRequest): Promise<JsonObject> {
   const artifactsRead: ArtifactRead[] = [];
   const harness = await loadHarnessAssessment(request, artifactsRead);
   const harnessDocument = harness.document;
@@ -151,38 +151,38 @@ export async function buildAssessment(request: AssessmentRequest): Promise<JsonO
 
   const sortedArtifactsRead = sortedArtifacts(artifactsRead);
   return {
-    schema_version: schemaVersion,
+    ['schema_version']: schemaVersion,
     'x-stability': 'provisional',
-    assessment_id: assessmentIdFor({
+    ['assessment_id']: assessmentIdFor({
       cliVersion: request.cliVersion,
       harnessPath: harness.path,
       scorecard,
       implementationRouting,
       artifactsRead: sortedArtifactsRead,
     }),
-    adapter_path: {
+    ['adapter_path']: {
       kind: 'cli-command',
       command: 'harness assess --format json',
       rationale:
         'The native agent-facing adapter is a deterministic CLI command so agents, plugins, skills, and CI can consume one schema-backed substrate output.',
-      rejected_paths: [
+      ['rejected_paths']: [
         'skills/harness-engineering is intentionally deferred so this repository does not introduce a skill-only source of truth; external workflow practices are recorded as source material for harness-native capability candidates.',
       ],
     },
     source: {
       root: '.',
       harness: harness.path,
-      cli_version: request.cliVersion,
+      ['cli_version']: request.cliVersion,
     },
     status: statusFor(harness, scorecard),
     maturity,
-    scorecard_version: '0.2.0',
+    ['scorecard_version']: '0.2.0',
     scorecard,
-    missing_primitives: missingPrimitives,
-    rollout_plan: rolloutPlan(scorecard),
+    ['missing_primitives']: missingPrimitives,
+    ['rollout_plan']: rolloutPlan(scorecard),
     recommendations,
-    implementation_routing: implementationRouting,
-    artifacts_read: sortedArtifactsRead,
+    ['implementation_routing']: implementationRouting,
+    ['artifacts_read']: sortedArtifactsRead,
   };
 }
 
@@ -281,9 +281,9 @@ function routeMetadata(route: JsonObject): string {
 }
 
 async function loadHarnessAssessment(
-  request: AssessmentRequest,
+  request: IAssessmentRequest,
   artifactsRead: ArtifactRead[],
-): Promise<LoadedArtifact> {
+): Promise<ILoadedArtifact> {
   const absolutePath = resolveInsideRoot(request.root, request.harnessPath, 'Harness file');
   await assertNoSymlinkWithinRoot(request.root, absolutePath, 'read');
   if ((await pathKind(absolutePath)) !== 'file') {
@@ -300,7 +300,7 @@ async function loadHarnessAssessment(
       'Harness source of truth.',
     ),
   );
-  let validation: HarnessValidationResult;
+  let validation: IHarnessValidationResult;
   try {
     validation = await validateHarnessConfiguration({
       root: request.root,
@@ -342,9 +342,9 @@ async function loadOptionalSchemaArtifact(input: {
   readonly path: string | undefined;
   readonly label: string;
   readonly schemaName: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly artifactsRead: ArtifactRead[];
-}): Promise<LoadedArtifact | undefined> {
+}): Promise<ILoadedArtifact | undefined> {
   if (input.path === undefined) {
     return undefined;
   }
@@ -391,9 +391,9 @@ async function loadOptionalSchemaArtifact(input: {
 async function loadRunResults(input: {
   readonly root: string;
   readonly path: string | undefined;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly artifactsRead: ArtifactRead[];
-}): Promise<LoadedArtifact | undefined> {
+}): Promise<ILoadedArtifact | undefined> {
   if (input.path === undefined) {
     return undefined;
   }
@@ -493,14 +493,14 @@ async function loadRunResults(input: {
   return {
     path: input.path,
     document: {
-      schema_version: schemaVersion,
+      ['schema_version']: schemaVersion,
       total: passed + failed + error + skipped,
-      external_import_total:
+      ['external_import_total']:
         externalImportPassed + externalImportFailed + externalImportError + externalImportSkipped,
-      external_import_passed: externalImportPassed,
-      external_import_failed: externalImportFailed,
-      external_import_error: externalImportError,
-      external_import_skipped: externalImportSkipped,
+      ['external_import_passed']: externalImportPassed,
+      ['external_import_failed']: externalImportFailed,
+      ['external_import_error']: externalImportError,
+      ['external_import_skipped']: externalImportSkipped,
       passed,
       failed,
       error,
@@ -515,7 +515,7 @@ async function loadReportArtifact(
   root: string,
   reportPath: string | undefined,
   artifactsRead: ArtifactRead[],
-): Promise<LoadedArtifact | undefined> {
+): Promise<ILoadedArtifact | undefined> {
   if (reportPath === undefined) {
     return undefined;
   }
@@ -546,8 +546,8 @@ async function loadReportArtifact(
     ...(issues.length === 0
       ? {
           document: {
-            schema_version: schemaVersion,
-            line_count: lines.length,
+            ['schema_version']: schemaVersion,
+            ['line_count']: lines.length,
           },
         }
       : {}),
@@ -558,11 +558,11 @@ async function loadReportArtifact(
 
 async function discoverRepairActions(input: {
   readonly root: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly explicitPath: string | undefined;
   readonly directory: string;
   readonly artifactsRead: ArtifactRead[];
-}): Promise<readonly RepairActionCandidate[]> {
+}): Promise<readonly IRepairActionCandidate[]> {
   const paths = new Set<string>();
   if (input.explicitPath !== undefined) {
     paths.add(canonicalPath(input.root, input.explicitPath, 'repair action'));
@@ -579,7 +579,7 @@ async function discoverRepairActions(input: {
     }
   }
 
-  const candidates: RepairActionCandidate[] = [];
+  const candidates: IRepairActionCandidate[] = [];
   for (const path of [...paths].sort()) {
     const loaded = await loadOptionalSchemaArtifact({
       root: input.root,
@@ -605,15 +605,15 @@ async function discoverRepairActions(input: {
 }
 
 function buildScorecard(input: {
-  readonly harness: LoadedArtifact;
+  readonly harness: ILoadedArtifact;
   readonly harnessDocument: JsonObject | undefined;
-  readonly doctorResult: LoadedArtifact | undefined;
-  readonly healthResult: LoadedArtifact | undefined;
-  readonly runResults: LoadedArtifact | undefined;
-  readonly trace: LoadedArtifact | undefined;
-  readonly scoreboard: LoadedArtifact | undefined;
-  readonly report: LoadedArtifact | undefined;
-  readonly repairActions: readonly RepairActionCandidate[];
+  readonly doctorResult: ILoadedArtifact | undefined;
+  readonly healthResult: ILoadedArtifact | undefined;
+  readonly runResults: ILoadedArtifact | undefined;
+  readonly trace: ILoadedArtifact | undefined;
+  readonly scoreboard: ILoadedArtifact | undefined;
+  readonly report: ILoadedArtifact | undefined;
+  readonly repairActions: readonly IRepairActionCandidate[];
   readonly trustedRepairActionId: string | undefined;
 }): ScorecardItem[] {
   const harness = input.harnessDocument;
@@ -807,7 +807,7 @@ function buildScorecard(input: {
 }
 
 function healthScorecardStatus(
-  healthResult: LoadedArtifact | undefined,
+  healthResult: ILoadedArtifact | undefined,
   harness: JsonObject | undefined,
   harnessPath: string,
 ): ScorecardItem['status'] {
@@ -824,7 +824,7 @@ function healthScorecardStatus(
 }
 
 function healthSummary(
-  healthResult: LoadedArtifact | undefined,
+  healthResult: ILoadedArtifact | undefined,
   harness: JsonObject | undefined,
   harnessPath: string,
 ): string {
@@ -846,7 +846,7 @@ function healthSummary(
 }
 
 function healthResultBindingIssues(
-  healthResult: LoadedArtifact,
+  healthResult: ILoadedArtifact,
   harness: JsonObject | undefined,
   harnessPath: string,
 ): readonly string[] {
@@ -949,7 +949,7 @@ function stableJson(value: JsonValue): string {
 }
 
 function doctorScorecardStatus(
-  doctorResult: LoadedArtifact | undefined,
+  doctorResult: ILoadedArtifact | undefined,
   configuredCheckCount: number,
 ): ScorecardItem['status'] {
   if (doctorResult === undefined) {
@@ -962,7 +962,7 @@ function doctorScorecardStatus(
 }
 
 function doctorSummary(
-  doctorResult: LoadedArtifact | undefined,
+  doctorResult: ILoadedArtifact | undefined,
   configuredCheckCount: number,
 ): string {
   if (doctorResult === undefined) {
@@ -980,7 +980,7 @@ function doctorSummary(
 }
 
 function runResultsScorecardStatus(
-  runResults: LoadedArtifact | undefined,
+  runResults: ILoadedArtifact | undefined,
 ): ScorecardItem['status'] {
   if (runResults === undefined || runResults.status === 'missing') {
     return 'missing';
@@ -999,7 +999,7 @@ function runResultsScorecardStatus(
     : 'partial';
 }
 
-function runResultsSummary(runResults: LoadedArtifact | undefined): string {
+function runResultsSummary(runResults: ILoadedArtifact | undefined): string {
   if (runResults === undefined) {
     return 'No run-result ledger is available.';
   }
@@ -1024,8 +1024,8 @@ function runResultsSummary(runResults: LoadedArtifact | undefined): string {
 }
 
 function scoreboardReportStatus(
-  scoreboard: LoadedArtifact | undefined,
-  report: LoadedArtifact | undefined,
+  scoreboard: ILoadedArtifact | undefined,
+  report: ILoadedArtifact | undefined,
 ): ScorecardItem['status'] {
   if (scoreboard === undefined && report === undefined) {
     return 'missing';
@@ -1041,8 +1041,8 @@ function scoreboardReportStatus(
 }
 
 function scoreboardReportSummary(
-  scoreboard: LoadedArtifact | undefined,
-  report: LoadedArtifact | undefined,
+  scoreboard: ILoadedArtifact | undefined,
+  report: ILoadedArtifact | undefined,
 ): string {
   if (scoreboard === undefined && report === undefined) {
     return 'Provide both scoreboard and report artifacts for reviewer-friendly assessment.';
@@ -1078,14 +1078,14 @@ function maturityForScorecard(scorecard: readonly ScorecardItem[]): JsonObject {
     level,
     label: labels[level] ?? 'unknown',
     score,
-    max_score: maxScore,
+    ['max_score']: maxScore,
   };
 }
 
 function implementationRoutingFor(
   harness: JsonObject | undefined,
   harnessPath: string,
-  repairActions: readonly RepairActionCandidate[],
+  repairActions: readonly IRepairActionCandidate[],
   scorecard: readonly ScorecardItem[],
   trustedRepairActionId: string | undefined,
 ): JsonObject {
@@ -1110,13 +1110,14 @@ function implementationRoutingFor(
       kind: 'repair-action',
       status: repairActionRouteStatus(approvalState, applicability, approvalTrust),
       summary: repairActionRouteSummary(approvalState, applicability, approvalTrust),
-      approval_state: approvalState,
-      approval_trust: approvalTrust,
-      risk_class: getString(repairAction.document, 'risk_class') ?? 'critical',
-      repair_mode: getString(repairAction.document, 'repair_mode') ?? 'preview-backed',
-      sandbox_requirement: getString(repairAction.document, 'sandbox_requirement') ?? 'worktree',
-      trust_requirements: getObject(repairAction.document, 'trust_requirements') ?? {},
-      target_files: targetFiles,
+      ['approval_state']: approvalState,
+      ['approval_trust']: approvalTrust,
+      ['risk_class']: getString(repairAction.document, 'risk_class') ?? 'critical',
+      ['repair_mode']: getString(repairAction.document, 'repair_mode') ?? 'preview-backed',
+      ['sandbox_requirement']:
+        getString(repairAction.document, 'sandbox_requirement') ?? 'worktree',
+      ['trust_requirements']: getObject(repairAction.document, 'trust_requirements') ?? {},
+      ['target_files']: targetFiles,
       applicability,
       evidence: [
         artifact(repairAction.path, mediaType(repairAction.path), 'Repair-action artifact.'),
@@ -1160,7 +1161,7 @@ function implementationRoutingFor(
         ? 'execution-loop'
         : 'cli-fallback';
   return {
-    selected_route: selectedRoute,
+    ['selected_route']: selectedRoute,
     routes,
   };
 }
@@ -1256,7 +1257,7 @@ function rolloutPlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
   });
 }
 
-function statusFor(harness: LoadedArtifact, scorecard: readonly ScorecardItem[]): string {
+function statusFor(harness: ILoadedArtifact, scorecard: readonly ScorecardItem[]): string {
   if (harness.status === 'missing') {
     return 'missing-harness';
   }
@@ -1353,7 +1354,7 @@ function assessmentGapTargets(scorecard: readonly ScorecardItem[]): ReadonlySet<
 }
 
 function repairActionAppliesToTargets(
-  candidate: RepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
+  candidate: IRepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
   targets: ReadonlySet<string>,
 ): boolean {
   if (targets.size === 0) {
@@ -1365,7 +1366,7 @@ function repairActionAppliesToTargets(
 }
 
 function repairActionTargetFiles(
-  candidate: RepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
+  candidate: IRepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
 ): string[] {
   return (getArray(candidate.document, 'target_files') ?? []).filter(
     (value): value is string => typeof value === 'string',
@@ -1381,8 +1382,8 @@ function normalizeArtifactPath(path: string): string {
 }
 
 function isValidRepairAction(
-  candidate: RepairActionCandidate,
-): candidate is RepairActionCandidate & {
+  candidate: IRepairActionCandidate,
+): candidate is IRepairActionCandidate & {
   readonly document: JsonObject;
   readonly status: 'loaded';
 } {
@@ -1390,8 +1391,8 @@ function isValidRepairAction(
 }
 
 function rejectDuplicateRepairActionIds(
-  candidates: readonly RepairActionCandidate[],
-): RepairActionCandidate[] {
+  candidates: readonly IRepairActionCandidate[],
+): IRepairActionCandidate[] {
   const pathsByActionId = new Map<string, string[]>();
   for (const candidate of candidates) {
     if (!isValidRepairAction(candidate)) {
@@ -1435,13 +1436,13 @@ function rejectDuplicateRepairActionIds(
 }
 
 function isApprovedRepairAction(
-  candidate: RepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
+  candidate: IRepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
 ): boolean {
   return getString(candidate.document, 'approval_state') === 'approved';
 }
 
 function isTrustedApprovedRepairAction(
-  candidate: RepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
+  candidate: IRepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
   trustedRepairActionId: string | undefined,
 ): boolean {
   return (
@@ -1452,8 +1453,11 @@ function isTrustedApprovedRepairAction(
 }
 
 function sortRepairActions<
-  T extends RepairActionCandidate & { readonly document: JsonObject; readonly status: 'loaded' },
->(candidates: readonly T[]): T[] {
+  TRepairActionCandidate extends IRepairActionCandidate & {
+    readonly document: JsonObject;
+    readonly status: 'loaded';
+  },
+>(candidates: readonly TRepairActionCandidate[]): TRepairActionCandidate[] {
   return [...candidates].sort(
     (left, right) =>
       approvalRank(getString(left.document, 'approval_state')) -
@@ -1498,12 +1502,12 @@ function riskRank(riskClass: string | undefined): number {
 }
 
 function repairRoutingScorecardStatus(input: {
-  readonly invalidRepairActions: readonly RepairActionCandidate[];
-  readonly applicableRepairActions: readonly (RepairActionCandidate & {
+  readonly invalidRepairActions: readonly IRepairActionCandidate[];
+  readonly applicableRepairActions: readonly (IRepairActionCandidate & {
     readonly document: JsonObject;
     readonly status: 'loaded';
   })[];
-  readonly applicableTrustedApprovedRepairActions: readonly (RepairActionCandidate & {
+  readonly applicableTrustedApprovedRepairActions: readonly (IRepairActionCandidate & {
     readonly document: JsonObject;
     readonly status: 'loaded';
   })[];
@@ -1521,16 +1525,16 @@ function repairRoutingScorecardStatus(input: {
 }
 
 function repairRoutingSummary(input: {
-  readonly invalidRepairActions: readonly RepairActionCandidate[];
-  readonly validRepairActions: readonly (RepairActionCandidate & {
+  readonly invalidRepairActions: readonly IRepairActionCandidate[];
+  readonly validRepairActions: readonly (IRepairActionCandidate & {
     readonly document: JsonObject;
     readonly status: 'loaded';
   })[];
-  readonly applicableRepairActions: readonly (RepairActionCandidate & {
+  readonly applicableRepairActions: readonly (IRepairActionCandidate & {
     readonly document: JsonObject;
     readonly status: 'loaded';
   })[];
-  readonly applicableTrustedApprovedRepairActions: readonly (RepairActionCandidate & {
+  readonly applicableTrustedApprovedRepairActions: readonly (IRepairActionCandidate & {
     readonly document: JsonObject;
     readonly status: 'loaded';
   })[];
@@ -1608,7 +1612,7 @@ function repairActionRouteSummary(
   }
 }
 
-function repairActionIssues(candidates: readonly RepairActionCandidate[]): string {
+function repairActionIssues(candidates: readonly IRepairActionCandidate[]): string {
   return candidates
     .map((candidate) => {
       const issueSummary =
@@ -1629,7 +1633,7 @@ function sortedArtifacts(artifacts: readonly ArtifactRead[]): ArtifactRead[] {
 function artifact(path: string, mediaTypeValue: string, description: string): ArtifactRead {
   return {
     path,
-    media_type: mediaTypeValue,
+    ['media_type']: mediaTypeValue,
     description,
   };
 }
@@ -1661,15 +1665,15 @@ function assessmentIdFor(input: {
   const digest = createHash('sha256')
     .update(
       JSON.stringify({
-        cli_version: input.cliVersion,
+        ['cli_version']: input.cliVersion,
         harness: input.harnessPath,
         scorecard: input.scorecard.map((item) => ({
           id: item.id,
           status: item.status,
           summary: item.summary,
         })),
-        selected_route: getString(input.implementationRouting, 'selected_route'),
-        artifacts_read: input.artifactsRead.map((artifact) => artifact.path),
+        ['selected_route']: getString(input.implementationRouting, 'selected_route'),
+        ['artifacts_read']: input.artifactsRead.map((artifact) => artifact.path),
       }),
     )
     .digest('hex')

@@ -11,14 +11,14 @@ import { getString, isObject, type JsonObject } from '../lib/json.ts';
 import { hasFlag, optionValue, parseOptions } from '../lib/options.ts';
 import { resolveInsideRoot, resolveRootForInspectionCommand } from '../lib/paths.ts';
 import { readPackageVersion } from '../lib/project.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set(['root', 'file', 'from', 'to', 'output']);
 const flagOptions = new Set(['dry-run', 'apply']);
 
 export async function runMigrate(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 1) {
@@ -47,20 +47,20 @@ export async function runMigrate(
   const fromVersion = optionValue(options, 'from') ?? schemaVersion ?? 'unknown';
   const toVersion = optionValue(options, 'to') ?? schemaVersion ?? 'unknown';
   const evidence: JsonObject = {
-    schema_version: '0.1.0',
+    ['schema_version']: '0.1.0',
     kind: 'migration-evidence',
     stability: 'provisional',
     harness: harnessPath,
-    cli_version: cliVersion,
-    from_schema_version: fromVersion,
-    to_schema_version: toVersion,
-    dry_run: true,
-    would_change: false,
+    ['cli_version']: cliVersion,
+    ['from_schema_version']: fromVersion,
+    ['to_schema_version']: toVersion,
+    ['dry_run']: true,
+    ['would_change']: false,
     changes: [],
     artifacts: [
       {
         path: harnessPath,
-        media_type: 'application/yaml',
+        ['media_type']: 'application/yaml',
         description: 'Harness configuration inspected for no-op migration.',
       },
     ],

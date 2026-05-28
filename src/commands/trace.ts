@@ -16,14 +16,14 @@ import {
 } from '../lib/paths.ts';
 import { readPackageVersion } from '../lib/project.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set(['root', 'file', 'format', 'input', 'output']);
 const flagOptions = new Set<string>();
 
 export async function runTraceCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const [subcommand, ...subcommandArgs] = args;
   switch (subcommand) {
@@ -44,7 +44,7 @@ export async function runTraceCommand(
 
 async function runTraceValidate(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 1) {
@@ -75,7 +75,7 @@ async function runTraceValidate(
   }
   const status = results.every((result) => result.status === 'passed') ? 'passed' : 'failed';
   const output: JsonObject = {
-    schema_version: '0.1.0',
+    ['schema_version']: '0.1.0',
     status,
     traces: results,
   };
@@ -85,7 +85,10 @@ async function runTraceValidate(
   return status === 'passed' ? ExitCode.ok : ExitCode.validationError;
 }
 
-async function runTraceImport(args: readonly string[], context: CommandContext): Promise<ExitCode> {
+async function runTraceImport(
+  args: readonly string[],
+  context: ICommandContext,
+): Promise<ExitCode> {
   const options = parseOptions(args, valueOptions, flagOptions);
   if (options.positionals.length > 0) {
     throw new CliError('trace import only accepts --input and --output.', ExitCode.usageError);
@@ -124,7 +127,7 @@ async function runTraceImport(args: readonly string[], context: CommandContext):
 async function traceExamplesFromHarness(
   root: string,
   harnessPath: string,
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<readonly string[]> {
   const schemas = await loadSchemaRegistry(context.packageRoot);
   const cliVersion = await readPackageVersion(context.packageRoot);

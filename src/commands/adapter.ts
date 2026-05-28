@@ -9,7 +9,7 @@ import {
   resolveRootForInspectionCommand,
 } from '../lib/paths.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const defaultScopePath = 'examples/adapters/github-copilot-cli/adapter-scope.json';
 const defaultMatrixPath = 'examples/plugin-capabilities/agent-cli-capability-matrix.json';
@@ -18,7 +18,7 @@ const validateFlagOptions = new Set<string>();
 
 export async function runAdapterCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const [subcommand, ...subcommandArgs] = args;
   if (
@@ -38,7 +38,7 @@ export async function runAdapterCommand(
 
 async function runAdapterValidate(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, validateValueOptions, validateFlagOptions);
   if (options.positionals.length > 0) {

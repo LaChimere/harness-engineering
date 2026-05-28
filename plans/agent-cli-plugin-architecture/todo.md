@@ -2,7 +2,7 @@
 
 ## Status
 
-Gate 2 pending. These todos describe execution after the approved design; do not start executable implementation work until Gate 2 is approved.
+Gate 2 is approved, and PR 1 is complete. These todos track execution after the approved design.
 
 ## Legend
 
@@ -15,16 +15,18 @@ Gate 2 pending. These todos describe execution after the approved design; do not
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `gate-2-approval` | Gate 1 design approval | Review `plan.md` and `todo.md` for alignment with `design.md`. | User approves Gate 2 and implementation may begin. |
+| [x] | `gate-2-approval` | Gate 1 design approval | Review `plan.md` and `todo.md` for alignment with `design.md`. | User approved Gate 2 and implementation may begin. |
 
-## PR 1: Interface naming cleanup plan and rename-only slices
+## PR 1: Biome naming cleanup plan and rename-only interface slices
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr1-interface-inventory` | `gate-2-approval` | Run `bun biome lint --reporter=json` and extract `useNamingConvention` interface violations. | Every non-`I` interface violation is captured with current name, target name, affected files, and proposed slice. |
-| [ ] | `pr1-interface-plan` | `pr1-interface-inventory` | Create `plans/agent-cli-plugin-architecture/interface-rename-plan.md`. | The plan has a table with current interface, target interface, affected files, slice ID, grouping rationale, and verification checklist. |
-| [ ] | `pr1-interface-slices` | `pr1-interface-plan` | Apply rename-only slices by domain. | Each slice changes only interface names/imports/type references and preserves runtime behavior. |
-| [ ] | `pr1-verify` | `pr1-interface-slices` | Validate PR 1. | `bun run check`, `bun run test:unit`, and `git diff --check` pass; rerunning `bun biome lint --reporter=json` shows no remaining interface-declaration `useNamingConvention` diagnostics. |
+| [x] | `pr1-interface-inventory` | `gate-2-approval` | Run `bun biome lint --reporter=json` and extract `useNamingConvention` interface violations. | Every non-`I` interface violation is captured with current name, target name, affected files, and proposed slice. |
+| [x] | `pr1-interface-plan` | `pr1-interface-inventory` | Create `plans/agent-cli-plugin-architecture/interface-rename-plan.md`. | The plan has a table with current interface, target interface, affected files, slice ID, grouping rationale, and verification checklist. |
+| [x] | `pr1-interface-slices` | `pr1-interface-plan` | Apply rename-only slices by domain. | Each slice changes only interface names/imports/type references and preserves runtime behavior. |
+| [x] | `pr1-check-blockers` | `pr1-interface-slices` | Clear remaining Biome naming blockers required for `bun run check`. | External JSON/evidence field names keep their emitted snake_case or CONSTANT_CASE wire shape by using computed literal property keys in TypeScript, and the remaining non-conforming type parameter is renamed to a `T*` name. |
+| [x] | `pr1-external-key-convention` | `pr1-check-blockers` | Document the external-key convention and expanded cleanup inventory. | `interface-rename-plan.md` explains computed literal keys for external JSON/evidence/manifest fields, notes the type-only fixture-shape case, and includes a reviewer-verifiable key inventory command. |
+| [x] | `pr1-verify` | `pr1-external-key-convention` | Validate PR 1. | `bun run check`, `bun run test:unit`, and `git diff --check` pass; rerunning `bun biome lint --reporter=json` shows no remaining `useNamingConvention` diagnostics. |
 
 ## PR 2: Runner/model cleanup inventory and removal
 

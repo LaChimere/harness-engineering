@@ -8,8 +8,8 @@ import {
 import { CliError } from '../lib/errors.ts';
 import {
   discoverEvalTaskPathsFromHarness,
+  type IVerifierResultArtifact,
   runEvalValidation,
-  type VerifierResultArtifact,
 } from '../lib/eval.ts';
 import { ExitCode } from '../lib/exit-codes.ts';
 import {
@@ -27,7 +27,7 @@ import {
 } from '../lib/paths.ts';
 import { readPackageVersion } from '../lib/project.ts';
 import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
-import type { CommandContext } from './init.ts';
+import type { ICommandContext } from './init.ts';
 
 const validateValueOptions = new Set(['root', 'file', 'task', 'format', 'output', 'run-id']);
 const validateFlagOptions = new Set<string>();
@@ -44,7 +44,7 @@ const runFlagOptions = new Set<string>();
 
 export async function runEvalCommand(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const [subcommand, ...subcommandArgs] = args;
   switch (subcommand) {
@@ -63,7 +63,7 @@ export async function runEvalCommand(
   }
 }
 
-async function runEvalRun(args: readonly string[], context: CommandContext): Promise<ExitCode> {
+async function runEvalRun(args: readonly string[], context: ICommandContext): Promise<ExitCode> {
   const options = parseOptions(args, runValueOptions, runFlagOptions);
   if (options.positionals.length > 1) {
     throw new CliError(
@@ -138,7 +138,7 @@ async function runEvalRun(args: readonly string[], context: CommandContext): Pro
 
 async function runEvalValidate(
   args: readonly string[],
-  context: CommandContext,
+  context: ICommandContext,
 ): Promise<ExitCode> {
   const options = parseOptions(args, validateValueOptions, validateFlagOptions);
   if (options.positionals.length > 1) {
@@ -245,7 +245,7 @@ async function canonicalTaskPath(root: string, taskPath: string): Promise<string
 
 async function discoverTaskPathsFromHarness(input: {
   readonly root: string;
-  readonly context: CommandContext;
+  readonly context: ICommandContext;
   readonly schemas: Awaited<ReturnType<typeof loadSchemaRegistry>>;
   readonly cliVersion: string;
   readonly options: ReturnType<typeof parseOptions>;
@@ -275,7 +275,7 @@ async function writeEvalArtifacts(
   root: string,
   outputPath: string,
   runResults: readonly JsonObject[],
-  verifierResults: readonly VerifierResultArtifact[],
+  verifierResults: readonly IVerifierResultArtifact[],
 ): Promise<void> {
   const absoluteOutputPath = resolveInsideRoot(root, outputPath, 'Eval output');
   await assertNoSymlinkWithinRoot(root, absoluteOutputPath);

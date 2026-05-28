@@ -11,7 +11,7 @@ import {
 
 export type ExecutionLoopPhase = 'start' | 'complete';
 
-export interface ExecutionLoopValidationInput {
+export interface IExecutionLoopValidationInput {
   readonly phase: ExecutionLoopPhase;
   readonly harness: JsonObject;
   readonly continuity: JsonObject;
@@ -20,15 +20,15 @@ export interface ExecutionLoopValidationInput {
   readonly completionVerificationPath?: string;
 }
 
-export interface ExecutionLoopValidationSummary {
+export interface IExecutionLoopValidationSummary {
   readonly phase: ExecutionLoopPhase;
   readonly startupVerificationRef?: string;
   readonly completionVerificationPath?: string;
 }
 
-export interface ExecutionLoopValidationResult {
+export interface IExecutionLoopValidationResult {
   readonly errors: readonly string[];
-  readonly summary: ExecutionLoopValidationSummary;
+  readonly summary: IExecutionLoopValidationSummary;
 }
 
 const completionAcceptanceChecks = new Map([
@@ -61,8 +61,8 @@ export function executionLoopError(code: string, message: string): string {
 }
 
 export function validateExecutionLoopContract(
-  input: ExecutionLoopValidationInput,
-): ExecutionLoopValidationResult {
+  input: IExecutionLoopValidationInput,
+): IExecutionLoopValidationResult {
   const errors: string[] = [];
   const startup = getObject(input.continuity, 'startup_verification');
   const startupVerificationRef =
@@ -259,7 +259,7 @@ function validateStartupProgressOrder(
   }
 }
 
-function validateCompletionGate(input: ExecutionLoopValidationInput, errors: string[]): void {
+function validateCompletionGate(input: IExecutionLoopValidationInput, errors: string[]): void {
   if (input.completionVerification === undefined) {
     errors.push(
       executionLoopError(

@@ -8,7 +8,7 @@ import {
   type JsonValue,
 } from './json.ts';
 
-export interface AdapterScopeValidationSummary {
+export interface IAdapterScopeValidationSummary {
   readonly selectedHostId: string;
   readonly capabilityTier: string;
   readonly implementedCount: number;
@@ -16,9 +16,9 @@ export interface AdapterScopeValidationSummary {
   readonly writeModes: Readonly<Record<string, string>>;
 }
 
-export interface AdapterScopeValidationResult {
+export interface IAdapterScopeValidationResult {
   readonly errors: readonly string[];
-  readonly summary?: AdapterScopeValidationSummary;
+  readonly summary?: IAdapterScopeValidationSummary;
 }
 
 const capabilityDimensions = [
@@ -59,7 +59,7 @@ export function adapterScopeError(code: string, message: string): string {
 export function validateAdapterScopeAgainstMatrix(
   scopeDocument: JsonValue | unknown,
   matrixDocument: JsonValue | unknown,
-): AdapterScopeValidationResult {
+): IAdapterScopeValidationResult {
   if (!isObject(scopeDocument)) {
     return {
       errors: [adapterScopeError('ASM_SCOPE_TYPE', 'adapter scope must be an object')],

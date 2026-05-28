@@ -16,7 +16,7 @@ import type { JsonObject, JsonValue } from './json.ts';
 import { getArray, getObject, getString, isObject } from './json.ts';
 import { relativePathFromRoot, resolveInsideRoot } from './paths.ts';
 import { runShellCommand } from './process.ts';
-import { formatValidationIssue, type SchemaRegistry } from './schema-registry.ts';
+import { formatValidationIssue, type ISchemaRegistry } from './schema-registry.ts';
 
 type AgentRunStatus = 'passed' | 'failed' | 'error';
 type AgentCaseKind = 'oracle' | 'broken-twin';
@@ -33,11 +33,11 @@ type FailureCode =
   | 'verifier-error'
   | 'verification-failure';
 
-export interface AgentRunRequest {
+export interface IAgentRunRequest {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runnerPath?: string;
   readonly taskPath?: string;
   readonly runId?: string;
@@ -47,18 +47,18 @@ export interface AgentRunRequest {
   readonly externalModelId?: string;
 }
 
-export interface AgentEvalRunRequest {
+export interface IAgentEvalRunRequest {
   readonly root: string;
   readonly harnessPath: string;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runnerPath?: string;
   readonly taskPath?: string;
   readonly runId?: string;
   readonly sessionId?: string;
 }
 
-export interface AgentRunArtifacts {
+export interface IAgentRunArtifacts {
   readonly status: AgentRunStatus;
   readonly expectationMet: boolean;
   readonly summary: JsonObject;
@@ -71,26 +71,26 @@ export interface AgentRunArtifacts {
   readonly agentOutputPath: string;
 }
 
-export interface AgentEvalRunArtifacts {
+export interface IAgentEvalRunArtifacts {
   readonly status: AgentRunStatus;
   readonly result: JsonObject;
   readonly markdown: string;
-  readonly runs: readonly AgentRunArtifacts[];
+  readonly runs: readonly IAgentRunArtifacts[];
   readonly scoreboard: JsonObject;
   readonly scoreboardPath: string;
   readonly runResultOutputPath: string;
 }
 
-interface RunnerContext {
+interface IRunnerContext {
   readonly root: string;
   readonly harnessPath: string;
   readonly harness: JsonObject;
   readonly cliVersion: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
   readonly runnerPath: string;
   readonly runner: JsonObject;
   readonly taskPath: string;
-  readonly task: EvalTaskData;
+  readonly task: IEvalTaskData;
   readonly modelProfilePath: string;
   readonly modelProfile: JsonObject;
   readonly runResultOutputPath: string;
@@ -101,7 +101,7 @@ interface RunnerContext {
   readonly sessionId: string;
 }
 
-interface EvalTaskData {
+interface IEvalTaskData {
   readonly taskPath: string;
   readonly document: JsonObject;
   readonly suiteId: string;
@@ -113,16 +113,16 @@ interface EvalTaskData {
   readonly environment: string;
   readonly timeoutSeconds: number;
   readonly verifier: JsonObject;
-  readonly oracle?: EvalTaskArtifact;
-  readonly baseline?: EvalTaskArtifact;
+  readonly oracle?: IEvalTaskArtifact;
+  readonly baseline?: IEvalTaskArtifact;
 }
 
-interface EvalTaskArtifact {
+interface IEvalTaskArtifact {
   readonly kind: string;
   readonly artifact: string;
 }
 
-interface AgentExecution {
+interface IAgentExecution {
   readonly mode: AgentExecutionMode;
   readonly status: AgentRunStatus;
   readonly failureCode?: FailureCode;
@@ -158,7 +158,7 @@ const supportedFailureBuckets = [
   'credential-missing',
 ] as const;
 
-export async function runAgentTask(request: AgentRunRequest): Promise<AgentRunArtifacts> {
+export async function runAgentTask(request: IAgentRunRequest): Promise<IAgentRunArtifacts> {
   const context = await loadRunnerContext(request);
   const runId = runIdForCase(
     request.runId ??
@@ -190,8 +190,8 @@ export async function runAgentTask(request: AgentRunRequest): Promise<AgentRunAr
 }
 
 export async function runAgentEvalSuite(
-  request: AgentEvalRunRequest,
-): Promise<AgentEvalRunArtifacts> {
+  request: IAgentEvalRunRequest,
+): Promise<IAgentEvalRunArtifacts> {
   const context = await loadRunnerContext(request);
   if (request.taskPath === undefined) {
     const discovery = await discoverEvalTaskPathsFromHarness({
@@ -232,7 +232,7 @@ export async function runAgentEvalSuite(
       ),
     ),
   );
-  const runs: AgentRunArtifacts[] = [];
+  const runs: IAgentRunArtifacts[] = [];
   for (const taskPath of taskPaths) {
     const taskContext =
       taskPath === context.taskPath ? context : await loadRunnerContext({ ...request, taskPath });
@@ -258,14 +258,14 @@ export async function runAgentEvalSuite(
     runResultOutputPath: context.runResultOutputPath,
   });
   const result: JsonObject = {
-    schema_version: schemaVersion,
-    run_id: baseRunId,
-    session_id: context.sessionId,
+    ['schema_version']: schemaVersion,
+    ['run_id']: baseRunId,
+    ['session_id']: context.sessionId,
     status,
     scoreboard: scoreboardPath,
-    run_results: runs.map((run) => run.runResult),
+    ['run_results']: runs.map((run) => run.runResult),
     traces: runs.map((run) => run.tracePath),
-    verifier_results: runs.map((run) => run.verifierResultPath),
+    ['verifier_results']: runs.map((run) => run.verifierResultPath),
   };
 
   return {
@@ -282,7 +282,7 @@ export async function runAgentEvalSuite(
 function executionParticipants(
   mode: AgentExecutionMode,
   status: 'passed' | 'failed' | 'error',
-): Pick<AgentExecution, 'agentStatus' | 'modelStatus'> {
+): Pick<IAgentExecution, 'agentStatus' | 'modelStatus'> {
   if (mode === 'external-import') {
     return {};
   }
@@ -297,7 +297,7 @@ function executionParticipants(
 
 export async function writeAgentRunArtifacts(
   root: string,
-  runs: readonly AgentRunArtifacts[],
+  runs: readonly IAgentRunArtifacts[],
 ): Promise<void> {
   const runResultsByOutput = new Map<string, JsonObject[]>();
   for (const run of runs) {
@@ -325,7 +325,7 @@ export async function writeScoreboardArtifact(
   await writeJsonArtifact(root, scoreboardPath, scoreboard);
 }
 
-export function renderRunMarkdown(run: AgentRunArtifacts): string {
+export function renderRunMarkdown(run: IAgentRunArtifacts): string {
   const execution = getObject(run.runResult, 'execution');
   const mode = execution === undefined ? 'unknown' : (getString(execution, 'mode') ?? 'unknown');
   return [
@@ -345,7 +345,7 @@ export function renderRunMarkdown(run: AgentRunArtifacts): string {
   ].join('\n');
 }
 
-async function loadRunnerContext(request: AgentRunRequest): Promise<RunnerContext> {
+async function loadRunnerContext(request: IAgentRunRequest): Promise<IRunnerContext> {
   const canonicalHarnessPath = relativePathFromRoot(
     request.root,
     resolveInsideRoot(request.root, request.harnessPath, 'Harness file'),
@@ -452,10 +452,10 @@ async function loadRunnerContext(request: AgentRunRequest): Promise<RunnerContex
 }
 
 async function runAgentCase(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly runId: string;
   readonly caseKind: AgentCaseKind;
-}): Promise<AgentRunArtifacts> {
+}): Promise<IAgentRunArtifacts> {
   const candidatePath = candidatePathForCase(
     input.context.root,
     input.context.task,
@@ -509,14 +509,14 @@ async function runAgentCase(input: {
     status: execution.status,
     expectationMet,
     summary: {
-      run_id: input.runId,
+      ['run_id']: input.runId,
       case: input.caseKind,
-      expected_status: input.caseKind === 'oracle' ? 'passed' : 'failed',
-      actual_status: execution.status,
-      expectation_met: expectationMet,
-      agent_output: agentOutputPath,
+      ['expected_status']: input.caseKind === 'oracle' ? 'passed' : 'failed',
+      ['actual_status']: execution.status,
+      ['expectation_met']: expectationMet,
+      ['agent_output']: agentOutputPath,
       trace: tracePath,
-      verifier_result: verifierResultPath,
+      ['verifier_result']: verifierResultPath,
     },
     runResult,
     trace,
@@ -529,12 +529,12 @@ async function runAgentCase(input: {
 }
 
 async function runExternalCandidateCase(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly runId: string;
   readonly caseKind: AgentCaseKind;
   readonly externalCandidatePath: string;
   readonly externalModelId: string;
-}): Promise<AgentRunArtifacts> {
+}): Promise<IAgentRunArtifacts> {
   const agentOutputPath = `${input.context.agentOutputDir}/${input.runId}.txt`;
   const tracePath = `${input.context.traceOutputDir}/${input.runId}.json`;
   const verifierResultPath = `${input.context.verifierOutputDir}/${input.runId}.json`;
@@ -584,15 +584,15 @@ async function runExternalCandidateCase(input: {
     status: execution.status,
     expectationMet,
     summary: {
-      run_id: input.runId,
+      ['run_id']: input.runId,
       case: input.caseKind,
-      expected_status: input.caseKind === 'oracle' ? 'passed' : 'failed',
-      actual_status: execution.status,
-      expectation_met: expectationMet,
-      source_candidate: execution.importedCandidate?.sourcePath ?? input.externalCandidatePath,
-      agent_output: agentOutputPath,
+      ['expected_status']: input.caseKind === 'oracle' ? 'passed' : 'failed',
+      ['actual_status']: execution.status,
+      ['expectation_met']: expectationMet,
+      ['source_candidate']: execution.importedCandidate?.sourcePath ?? input.externalCandidatePath,
+      ['agent_output']: agentOutputPath,
       trace: tracePath,
-      verifier_result: verifierResultPath,
+      ['verifier_result']: verifierResultPath,
     },
     runResult,
     trace,
@@ -605,13 +605,13 @@ async function runExternalCandidateCase(input: {
 }
 
 async function executeVerifierForAgentOutput(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly candidatePath: string;
   readonly caseKind: AgentCaseKind;
   readonly mode: AgentExecutionMode;
   readonly externalModelId?: string;
-  readonly importedCandidate?: AgentExecution['importedCandidate'];
-}): Promise<AgentExecution> {
+  readonly importedCandidate?: IAgentExecution['importedCandidate'];
+}): Promise<IAgentExecution> {
   const command = requiredObject(input.context.task.verifier, 'command');
   const timeoutSeconds = Math.min(
     getNumber(command, 'timeout_seconds') ?? input.context.task.timeoutSeconds,
@@ -629,15 +629,15 @@ async function executeVerifierForAgentOutput(input: {
     processLabel: 'Verifier process',
     environment: {
       ...stringMap(getObject(command, 'environment')),
-      HARNESS_EVAL_CASE: input.caseKind,
-      HARNESS_EVAL_EXPECTED_STATUS: input.caseKind === 'oracle' ? 'passed' : 'failed',
-      HARNESS_EVAL_CANDIDATE: input.candidatePath,
-      HARNESS_EVAL_TASK: input.context.task.taskPath,
-      HARNESS_EVAL_SUITE_ID: input.context.task.suiteId,
-      HARNESS_EVAL_TASK_ID: input.context.task.taskId,
-      HARNESS_EVAL_TASK_VERSION: input.context.task.taskVersion,
-      HARNESS_EVAL_DATASET_HASH: input.context.task.datasetHash,
-      HARNESS_EVAL_SPLIT: input.context.task.split,
+      ['HARNESS_EVAL_CASE']: input.caseKind,
+      ['HARNESS_EVAL_EXPECTED_STATUS']: input.caseKind === 'oracle' ? 'passed' : 'failed',
+      ['HARNESS_EVAL_CANDIDATE']: input.candidatePath,
+      ['HARNESS_EVAL_TASK']: input.context.task.taskPath,
+      ['HARNESS_EVAL_SUITE_ID']: input.context.task.suiteId,
+      ['HARNESS_EVAL_TASK_ID']: input.context.task.taskId,
+      ['HARNESS_EVAL_TASK_VERSION']: input.context.task.taskVersion,
+      ['HARNESS_EVAL_DATASET_HASH']: input.context.task.datasetHash,
+      ['HARNESS_EVAL_SPLIT']: input.context.task.split,
     },
   });
 
@@ -727,11 +727,11 @@ async function executeVerifierForAgentOutput(input: {
 }
 
 async function emitStubOutputAndExecuteVerifier(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly candidatePath: string;
   readonly agentOutputPath: string;
   readonly caseKind: AgentCaseKind;
-}): Promise<AgentExecution> {
+}): Promise<IAgentExecution> {
   const candidateAbsolutePath = resolveInsideRoot(
     input.context.root,
     input.candidatePath,
@@ -753,12 +753,12 @@ async function emitStubOutputAndExecuteVerifier(input: {
 }
 
 async function importExternalCandidateAndExecuteVerifier(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly externalCandidatePath: string;
   readonly agentOutputPath: string;
   readonly caseKind: AgentCaseKind;
   readonly externalModelId: string;
-}): Promise<AgentExecution> {
+}): Promise<IAgentExecution> {
   const sourcePath = canonicalArtifactPath(
     input.context.root,
     input.externalCandidatePath,
@@ -799,7 +799,7 @@ async function importExternalCandidateAndExecuteVerifier(input: {
 function harnessRefusalExecution(
   summary: string,
   mode: AgentExecutionMode = 'agent-run',
-): AgentExecution {
+): IAgentExecution {
   return {
     mode,
     status: 'error',
@@ -816,52 +816,52 @@ function harnessRefusalExecution(
   };
 }
 
-function hasAgentOutput(execution: AgentExecution): boolean {
+function hasAgentOutput(execution: IAgentExecution): boolean {
   return execution.harnessStatus !== 'failed' && execution.verifierStatus !== 'skipped';
 }
 
 function runResultForAgentCase(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly runId: string;
   readonly caseKind: AgentCaseKind;
   readonly agentOutputPath: string;
   readonly tracePath: string;
   readonly verifierResultPath: string;
-  readonly execution: AgentExecution;
+  readonly execution: IAgentExecution;
 }): JsonObject {
   return {
-    schema_version: schemaVersion,
-    run_id: input.runId,
+    ['schema_version']: schemaVersion,
+    ['run_id']: input.runId,
     kind: input.execution.mode === 'external-import' ? 'external-import' : 'eval',
-    suite_id: input.context.task.suiteId,
-    task_id: input.context.task.taskId,
-    task_version: input.context.task.taskVersion,
-    dataset_hash: input.context.task.datasetHash,
+    ['suite_id']: input.context.task.suiteId,
+    ['task_id']: input.context.task.taskId,
+    ['task_version']: input.context.task.taskVersion,
+    ['dataset_hash']: input.context.task.datasetHash,
     split: input.context.task.split,
-    model_profile: modelProfileRefForExecution(input.context, input.execution),
-    harness_version: input.context.cliVersion,
+    ['model_profile']: modelProfileRefForExecution(input.context, input.execution),
+    ['harness_version']: input.context.cliVersion,
     status: input.execution.status,
     ...(input.execution.failureCode === undefined
       ? {}
-      : { failure_code: input.execution.failureCode }),
+      : { ['failure_code']: input.execution.failureCode }),
     trace: input.tracePath,
-    verifier_result: input.verifierResultPath,
+    ['verifier_result']: input.verifierResultPath,
     execution: {
       mode: input.execution.mode,
-      harness_status: input.execution.harnessStatus,
-      verifier_status: input.execution.verifierStatus,
+      ['harness_status']: input.execution.harnessStatus,
+      ['verifier_status']: input.execution.verifierStatus,
       ...(input.execution.agentStatus === undefined
         ? {}
-        : { agent_status: input.execution.agentStatus }),
+        : { ['agent_status']: input.execution.agentStatus }),
       ...(input.execution.modelStatus === undefined
         ? {}
-        : { model_status: input.execution.modelStatus }),
+        : { ['model_status']: input.execution.modelStatus }),
     },
     usage: usageForExecution(input.context.modelProfile, input.execution),
     artifacts: [
       {
         path: input.context.task.taskPath,
-        media_type: mediaTypeForPath(input.context.task.taskPath),
+        ['media_type']: mediaTypeForPath(input.context.task.taskPath),
         description:
           input.execution.mode === 'external-import'
             ? 'Eval task verified against an externally imported candidate.'
@@ -869,7 +869,7 @@ function runResultForAgentCase(input: {
       },
       {
         path: input.context.runnerPath,
-        media_type: mediaTypeForPath(input.context.runnerPath),
+        ['media_type']: mediaTypeForPath(input.context.runnerPath),
         description:
           input.execution.mode === 'external-import'
             ? 'Runner declaration referenced as import context; it did not execute this candidate.'
@@ -880,7 +880,7 @@ function runResultForAgentCase(input: {
         : [
             {
               path: input.execution.importedCandidate.sourcePath,
-              media_type: mediaTypeForPath(input.execution.importedCandidate.sourcePath),
+              ['media_type']: mediaTypeForPath(input.execution.importedCandidate.sourcePath),
               description: `Original external candidate (${input.execution.importedCandidate.sha256}).`,
             },
           ]),
@@ -888,7 +888,7 @@ function runResultForAgentCase(input: {
         ? [
             {
               path: input.agentOutputPath,
-              media_type: 'text/plain',
+              ['media_type']: 'text/plain',
               description:
                 input.execution.mode === 'external-import'
                   ? 'Imported candidate copied into the harness agent-output area.'
@@ -901,7 +901,7 @@ function runResultForAgentCase(input: {
 }
 
 function traceForAgentCase(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly runId: string;
   readonly caseKind: AgentCaseKind;
   readonly agentOutputPath: string;
@@ -909,46 +909,50 @@ function traceForAgentCase(input: {
   readonly runResultOutputPath: string;
   readonly startedAt: Date;
   readonly completedAt: Date;
-  readonly execution: AgentExecution;
+  readonly execution: IAgentExecution;
 }): JsonObject {
   const usage = usageForExecution(input.context.modelProfile, input.execution);
   return {
-    schema_version: schemaVersion,
-    session_id: input.context.sessionId,
-    run_id: input.runId,
-    harness_version: input.context.cliVersion,
+    ['schema_version']: schemaVersion,
+    ['session_id']: input.context.sessionId,
+    ['run_id']: input.runId,
+    ['harness_version']: input.context.cliVersion,
     inputs: {
       task: input.context.task.taskPath,
       runner: input.context.runnerPath,
     },
-    environment_snapshot: {
+    ['environment_snapshot']: {
       environment: input.context.task.environment,
       sandbox: requiredString(input.context.runner, 'sandbox'),
-      approval_policy: requiredString(input.context.runner, 'approval_policy'),
-      model_profile: modelProfileRefForExecution(input.context, input.execution),
+      ['approval_policy']: requiredString(input.context.runner, 'approval_policy'),
+      ['model_profile']: modelProfileRefForExecution(input.context, input.execution),
       runner: input.context.runnerPath,
     },
-    started_at: input.startedAt.toISOString(),
-    completed_at: input.completedAt.toISOString(),
-    duration_ms: Math.max(0, input.completedAt.getTime() - input.startedAt.getTime()),
-    exit_code: input.execution.status === 'passed' ? 0 : 1,
-    determinism_level: input.execution.mode === 'external-import' ? 'external-import' : 'recorded',
-    credential_reference: credentialReferenceForExecution(input.execution, input.context.runner),
+    ['started_at']: input.startedAt.toISOString(),
+    ['completed_at']: input.completedAt.toISOString(),
+    ['duration_ms']: Math.max(0, input.completedAt.getTime() - input.startedAt.getTime()),
+    ['exit_code']: input.execution.status === 'passed' ? 0 : 1,
+    ['determinism_level']:
+      input.execution.mode === 'external-import' ? 'external-import' : 'recorded',
+    ['credential_reference']: credentialReferenceForExecution(
+      input.execution,
+      input.context.runner,
+    ),
     budgets: requiredObject(input.context.runner, 'budgets'),
     usage,
     actions: traceActionsForAgentCase({ ...input, usage }),
     logs: [],
-    artifact_links: [
+    ['artifact_links']: [
       {
         path: input.runResultOutputPath,
-        media_type: 'application/jsonl',
+        ['media_type']: 'application/jsonl',
         description: 'Run-result ledger containing this run result.',
       },
       ...(hasAgentOutput(input.execution)
         ? [
             {
               path: input.agentOutputPath,
-              media_type: 'text/plain',
+              ['media_type']: 'text/plain',
               description:
                 input.execution.mode === 'external-import'
                   ? 'Imported candidate copied into the harness agent-output area.'
@@ -961,13 +965,13 @@ function traceForAgentCase(input: {
         : [
             {
               path: input.execution.importedCandidate.sourcePath,
-              media_type: mediaTypeForPath(input.execution.importedCandidate.sourcePath),
+              ['media_type']: mediaTypeForPath(input.execution.importedCandidate.sourcePath),
               description: `Original external candidate (${input.execution.importedCandidate.sha256}).`,
             },
           ]),
       {
         path: input.verifierResultPath,
-        media_type: 'application/json',
+        ['media_type']: 'application/json',
         description: 'Verifier result for this run.',
       },
     ],
@@ -975,14 +979,14 @@ function traceForAgentCase(input: {
 }
 
 function traceActionsForAgentCase(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly runId: string;
   readonly caseKind: AgentCaseKind;
   readonly agentOutputPath: string;
   readonly verifierResultPath: string;
   readonly startedAt: Date;
   readonly completedAt: Date;
-  readonly execution: AgentExecution;
+  readonly execution: IAgentExecution;
   readonly usage: JsonObject;
 }): JsonObject[] {
   if (input.execution.harnessStatus === 'failed') {
@@ -995,7 +999,7 @@ function traceActionsForAgentCase(input: {
         artifacts: [
           {
             path: input.verifierResultPath,
-            media_type: 'application/json',
+            ['media_type']: 'application/json',
             description: 'Skipped verifier result for this refused run.',
           },
         ],
@@ -1014,19 +1018,19 @@ function traceActionsForAgentCase(input: {
             ? [
                 {
                   path: input.agentOutputPath,
-                  media_type: 'text/plain',
+                  ['media_type']: 'text/plain',
                   description: 'Imported candidate copied into the harness agent-output area.',
                 },
               ]
             : [
                 {
                   path: input.execution.importedCandidate.sourcePath,
-                  media_type: mediaTypeForPath(input.execution.importedCandidate.sourcePath),
+                  ['media_type']: mediaTypeForPath(input.execution.importedCandidate.sourcePath),
                   description: `Original external candidate (${input.execution.importedCandidate.sha256}).`,
                 },
                 {
                   path: input.agentOutputPath,
-                  media_type: 'text/plain',
+                  ['media_type']: 'text/plain',
                   description: 'Imported candidate copied into the harness agent-output area.',
                 },
               ],
@@ -1039,7 +1043,7 @@ function traceActionsForAgentCase(input: {
         artifacts: [
           {
             path: input.verifierResultPath,
-            media_type: 'application/json',
+            ['media_type']: 'application/json',
             description: 'Verifier result for this run.',
           },
         ],
@@ -1052,16 +1056,16 @@ function traceActionsForAgentCase(input: {
       type: 'model',
       timestamp: input.startedAt.toISOString(),
       summary: `Deterministic stub emitted ${input.caseKind} recorded output.`,
-      model_call: {
-        model_id: requiredString(input.context.modelProfile, 'model_id'),
-        request_id: `${input.runId}-stub-request`,
+      ['model_call']: {
+        ['model_id']: requiredString(input.context.modelProfile, 'model_id'),
+        ['request_id']: `${input.runId}-stub-request`,
         usage: input.usage,
-        latency_ms: 0,
+        ['latency_ms']: 0,
       },
       artifacts: [
         {
           path: input.agentOutputPath,
-          media_type: 'text/plain',
+          ['media_type']: 'text/plain',
           description: 'Recorded stub output.',
         },
       ],
@@ -1074,7 +1078,7 @@ function traceActionsForAgentCase(input: {
       artifacts: [
         {
           path: input.verifierResultPath,
-          media_type: 'application/json',
+          ['media_type']: 'application/json',
           description: 'Verifier result for this run.',
         },
       ],
@@ -1083,24 +1087,24 @@ function traceActionsForAgentCase(input: {
 }
 
 function verifierResultForAgentCase(input: {
-  readonly context: RunnerContext;
+  readonly context: IRunnerContext;
   readonly runId: string;
   readonly caseKind: AgentCaseKind;
   readonly candidatePath: string;
-  readonly execution: AgentExecution;
+  readonly execution: IAgentExecution;
 }): JsonObject {
   return {
-    schema_version: schemaVersion,
-    verifier_id: input.context.task.taskId,
-    run_id: input.runId,
+    ['schema_version']: schemaVersion,
+    ['verifier_id']: input.context.task.taskId,
+    ['run_id']: input.runId,
     case: input.caseKind,
-    expected_status: input.caseKind === 'oracle' ? 'passed' : 'failed',
+    ['expected_status']: input.caseKind === 'oracle' ? 'passed' : 'failed',
     candidate: input.candidatePath,
     status: input.execution.verifierStatus,
-    harness_status: input.execution.harnessStatus,
+    ['harness_status']: input.execution.harnessStatus,
     summary: input.execution.summary,
-    timed_out: input.execution.timedOut,
-    ...(input.execution.exitCode === undefined ? {} : { exit_code: input.execution.exitCode }),
+    ['timed_out']: input.execution.timedOut,
+    ...(input.execution.exitCode === undefined ? {} : { ['exit_code']: input.execution.exitCode }),
     ...(input.execution.signal === undefined ? {} : { signal: input.execution.signal }),
   };
 }
@@ -1110,17 +1114,17 @@ function scoreboardForRuns(input: {
   readonly sessionId: string;
   readonly cliVersion: string;
   readonly status: AgentRunStatus;
-  readonly runs: readonly AgentRunArtifacts[];
+  readonly runs: readonly IAgentRunArtifacts[];
   readonly runResultOutputPath: string;
 }): JsonObject {
   const splits = ['optimization', 'holdout'] as const;
   return {
-    schema_version: schemaVersion,
-    scoreboard_id: `scoreboard-${input.runId}`,
-    run_id: input.runId,
-    session_id: input.sessionId,
-    harness_version: input.cliVersion,
-    generated_at: new Date().toISOString(),
+    ['schema_version']: schemaVersion,
+    ['scoreboard_id']: `scoreboard-${input.runId}`,
+    ['run_id']: input.runId,
+    ['session_id']: input.sessionId,
+    ['harness_version']: input.cliVersion,
+    ['generated_at']: new Date().toISOString(),
     status: input.status,
     splits: splits.map((split) =>
       summarizeRuns(
@@ -1129,24 +1133,24 @@ function scoreboardForRuns(input: {
       ),
     ),
     totals: summarizeRuns(input.runs),
-    run_results: [
+    ['run_results']: [
       {
         path: input.runResultOutputPath,
-        media_type: 'application/jsonl',
+        ['media_type']: 'application/jsonl',
         description: 'Run-result ledger summarized by this scoreboard.',
       },
     ],
   };
 }
 
-function summarizeRuns(runs: readonly AgentRunArtifacts[], split?: string): JsonObject {
+function summarizeRuns(runs: readonly IAgentRunArtifacts[], split?: string): JsonObject {
   const summary: JsonObject = {
     ...(split === undefined ? {} : { split }),
     total: runs.length,
     passed: runs.filter((run) => run.status === 'passed').length,
     failed: runs.filter((run) => run.status === 'failed').length,
     error: runs.filter((run) => run.status === 'error').length,
-    failure_buckets: emptyFailureBuckets(),
+    ['failure_buckets']: emptyFailureBuckets(),
   };
   const buckets = requiredObject(summary, 'failure_buckets');
   for (const run of runs) {
@@ -1187,7 +1191,7 @@ function emptyFailureBuckets(): JsonObject {
   return buckets;
 }
 
-function statusForRuns(runs: readonly AgentRunArtifacts[]): AgentRunStatus {
+function statusForRuns(runs: readonly IAgentRunArtifacts[]): AgentRunStatus {
   if (runs.some((run) => run.status === 'error')) {
     return 'error';
   }
@@ -1314,7 +1318,7 @@ function runResultIdentityForPreflight(
   mode: AgentExecutionMode,
 ): JsonObject {
   return {
-    run_id: runId,
+    ['run_id']: runId,
     kind,
     execution: {
       mode,
@@ -1432,7 +1436,7 @@ function validateStubModelProfile(modelProfile: JsonObject): void {
   }
 }
 
-async function validateTaskDatasetHash(root: string, task: EvalTaskData): Promise<void> {
+async function validateTaskDatasetHash(root: string, task: IEvalTaskData): Promise<void> {
   const computed = await computeEvalTaskDatasetHash(root, task.document);
   if (computed !== task.datasetHash) {
     throw new CliError(
@@ -1447,7 +1451,7 @@ async function loadSchemaDocument(input: {
   readonly path: string;
   readonly label: string;
   readonly schemaName: string;
-  readonly schemas: SchemaRegistry;
+  readonly schemas: ISchemaRegistry;
 }): Promise<JsonObject> {
   const absolutePath = resolveInsideRoot(input.root, input.path, input.label);
   if ((await pathKind(absolutePath)) !== 'file') {
@@ -1464,7 +1468,7 @@ async function loadSchemaDocument(input: {
   return document;
 }
 
-function taskData(taskPath: string, document: JsonObject): EvalTaskData {
+function taskData(taskPath: string, document: JsonObject): IEvalTaskData {
   return {
     taskPath,
     document,
@@ -1482,11 +1486,11 @@ function taskData(taskPath: string, document: JsonObject): EvalTaskData {
   };
 }
 
-function agentCasesForTask(task: EvalTaskData): readonly AgentCaseKind[] {
+function agentCasesForTask(task: IEvalTaskData): readonly AgentCaseKind[] {
   return task.baseline === undefined ? ['oracle'] : ['oracle', 'broken-twin'];
 }
 
-function candidatePathForCase(root: string, task: EvalTaskData, caseKind: AgentCaseKind): string {
+function candidatePathForCase(root: string, task: IEvalTaskData, caseKind: AgentCaseKind): string {
   if (caseKind === 'oracle') {
     if (task.oracle === undefined) {
       throw new CliError(
@@ -1505,7 +1509,7 @@ function candidatePathForCase(root: string, task: EvalTaskData, caseKind: AgentC
   return canonicalArtifactPath(root, task.baseline.artifact, 'Baseline artifact');
 }
 
-function validateVerifierTrust(context: RunnerContext, candidatePath: string): string | undefined {
+function validateVerifierTrust(context: IRunnerContext, candidatePath: string): string | undefined {
   const kind = requiredString(context.task.verifier, 'kind');
   if (kind !== 'command') {
     return `deterministic runner only executes command verifiers, not ${kind} verifiers.`;
@@ -1544,7 +1548,7 @@ function validateVerifierTrust(context: RunnerContext, candidatePath: string): s
   return undefined;
 }
 
-function runIdForCase(baseRunId: string, task: EvalTaskData, caseKind: AgentCaseKind): string {
+function runIdForCase(baseRunId: string, task: IEvalTaskData, caseKind: AgentCaseKind): string {
   const digest = createHash('sha256')
     .update([task.taskPath, task.taskVersion, task.datasetHash, task.split, caseKind].join('\n'))
     .digest('hex')
@@ -1624,7 +1628,7 @@ function getBoolean(object: JsonObject, key: string): boolean | undefined {
 function optionalArtifact(
   object: JsonObject,
   key: 'oracle' | 'baseline',
-): { readonly oracle?: EvalTaskArtifact; readonly baseline?: EvalTaskArtifact } {
+): { readonly oracle?: IEvalTaskArtifact; readonly baseline?: IEvalTaskArtifact } {
   const artifact = getObject(object, key);
   if (artifact === undefined) {
     return {};
@@ -1672,14 +1676,14 @@ function stringMap(object: JsonObject | undefined): Record<string, string> {
   return result;
 }
 
-function modelProfileRefForExecution(context: RunnerContext, execution: AgentExecution): string {
+function modelProfileRefForExecution(context: IRunnerContext, execution: IAgentExecution): string {
   return execution.mode === 'external-import'
     ? `harness://external-import/${encodeURIComponent(execution.externalModelId ?? 'external-candidate')}`
     : context.modelProfilePath;
 }
 
 function credentialReferenceForExecution(
-  execution: AgentExecution,
+  execution: IAgentExecution,
   runner: JsonObject,
 ): JsonObject {
   if (execution.mode !== 'external-import') {
@@ -1693,15 +1697,15 @@ function credentialReferenceForExecution(
   };
 }
 
-function usageForExecution(modelProfile: JsonObject, execution: AgentExecution): JsonObject {
+function usageForExecution(modelProfile: JsonObject, execution: IAgentExecution): JsonObject {
   if (execution.mode === 'external-import') {
     return {
-      billed_model_id: execution.externalModelId ?? 'external-candidate',
-      input_tokens: 0,
-      output_tokens: 0,
-      total_tokens: 0,
+      ['billed_model_id']: execution.externalModelId ?? 'external-candidate',
+      ['input_tokens']: 0,
+      ['output_tokens']: 0,
+      ['total_tokens']: 0,
       requests: 0,
-      incurred_cost_usd: 0,
+      ['incurred_cost_usd']: 0,
       source: 'external',
     };
   }
@@ -1710,12 +1714,12 @@ function usageForExecution(modelProfile: JsonObject, execution: AgentExecution):
 
 function stubUsage(modelProfile: JsonObject, requests = 1): JsonObject {
   return {
-    billed_model_id: requiredString(modelProfile, 'model_id'),
-    input_tokens: 0,
-    output_tokens: 0,
-    total_tokens: 0,
+    ['billed_model_id']: requiredString(modelProfile, 'model_id'),
+    ['input_tokens']: 0,
+    ['output_tokens']: 0,
+    ['total_tokens']: 0,
     requests,
-    incurred_cost_usd: 0,
+    ['incurred_cost_usd']: 0,
     source: 'stub',
   };
 }

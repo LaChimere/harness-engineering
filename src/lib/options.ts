@@ -1,7 +1,7 @@
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 
-export interface ParsedOptions {
+export interface IParsedOptions {
   readonly values: ReadonlyMap<string, string>;
   readonly flags: ReadonlySet<string>;
   readonly positionals: readonly string[];
@@ -11,7 +11,7 @@ export function parseOptions(
   args: readonly string[],
   valueOptions: ReadonlySet<string>,
   flagOptions: ReadonlySet<string>,
-): ParsedOptions {
+): IParsedOptions {
   const values = new Map<string, string>();
   const flags = new Set<string>();
   const positionals: string[] = [];
@@ -58,11 +58,11 @@ export function parseOptions(
   return { values, flags, positionals };
 }
 
-export function optionValue(options: ParsedOptions, name: string): string | undefined {
+export function optionValue(options: IParsedOptions, name: string): string | undefined {
   return options.values.get(name);
 }
 
-export function hasFlag(options: ParsedOptions, name: string): boolean {
+export function hasFlag(options: IParsedOptions, name: string): boolean {
   return options.flags.has(name);
 }
 

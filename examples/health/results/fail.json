@@ -1,12 +1,21 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "run_id": "health-docs-missing",
   "harness_version": "0.1.0",
+  "generated_at": "2026-05-29T00:00:00.000Z",
   "status": "failed",
+  "issues": [
+    {
+      "code": "command-failed",
+      "severity": "error",
+      "message": "Health check command exited 1.",
+      "evidence": []
+    }
+  ],
   "sandbox_enforcement": "declarative",
   "runtime_enforced": false,
   "source": {
-    "harness": "examples/harness.yaml",
+    "harness": "examples/fixtures/health/failing-harness.yaml",
     "approval_policy": "examples/policies/approval-policy.yaml",
     "sandbox_policy": "examples/policies/sandbox-policy.yaml"
   },
@@ -19,9 +28,9 @@
       },
       "timeout_seconds": 30,
       "status": "failed",
-      "failure_code": "command-failed",
       "sandbox_enforcement": "declarative",
       "runtime_enforced": false,
+      "failure_code": "command-failed",
       "duration_ms": 0,
       "exit_code": 1,
       "summary": "Health check command exited 1.",
@@ -30,14 +39,25 @@
       "stderr": "",
       "stderr_truncated": false,
       "evidence": [],
-      "artifacts": [],
+      "artifacts": [
+        {
+          "path": "README.md",
+          "media_type": "text/markdown",
+          "description": "User-facing project README."
+        },
+        {
+          "path": "AGENTS.md",
+          "media_type": "text/markdown",
+          "description": "Agent instruction file."
+        }
+      ],
       "trust_requirements": {
         "trust_level": "sandboxed",
         "sandbox_required": "process",
         "network_access": false,
         "secret_access": false,
         "host_file_access": false,
-        "allowed_inputs": [],
+        "allowed_inputs": ["README.md", "AGENTS.md"],
         "allowed_outputs": [".harness/outputs/health"]
       }
     }

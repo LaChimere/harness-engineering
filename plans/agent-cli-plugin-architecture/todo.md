@@ -53,11 +53,11 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr4a-doctor-json` | `pr3-verify` | Apply the migration plan to `harness doctor --format json`. | Doctor output validates against schema, preserves `checks`, exposes structured `issues` only as planned, and replaces renamed legacy command-result fields cleanly without dual-field compatibility shims. |
-| [ ] | `pr4a-health-json` | `pr3-verify` | Apply the migration plan to `harness health --format json`. | Health output validates against schema, preserves per-check details, exposes structured `issues` only as planned, and replaces renamed legacy command-result fields cleanly without dual-field compatibility shims. |
-| [ ] | `pr4a-assess-json` | `pr3-verify` | Apply the migration plan to `harness assess --format json`. | Assessment output validates against schema, does not conflate recommendations with command failures, and replaces renamed legacy command-result fields cleanly without dual-field compatibility shims. |
-| [ ] | `pr4a-fixtures-tests` | PR 4A command tasks | Add structural command golden fixtures and schema validation tests. | Each command has at least one success and one failure/non-passing fixture validated by tests. |
-| [ ] | `pr4a-verify` | `pr4a-fixtures-tests` | Validate PR 4A. | `bun run check`, `bun run test:unit`, `bun run build`, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, and `git diff --check` pass. |
+| [x] | `pr4a-doctor-json` | `pr3-verify` | Apply the migration plan to `harness doctor --format json`. | Doctor output validates against schema, preserves `checks`, exposes structured `issues` only as planned, and replaces renamed legacy command-result fields cleanly without dual-field compatibility shims. |
+| [x] | `pr4a-health-json` | `pr3-verify` | Apply the migration plan to `harness health --format json`. | Health output validates against schema, preserves per-check details, exposes structured `issues` only as planned, and replaces renamed legacy command-result fields cleanly without dual-field compatibility shims. |
+| [x] | `pr4a-assess-json` | `pr3-verify` | Apply the migration plan to `harness assess --format json`. | Assessment output validates against schema, does not conflate recommendations with command failures, and replaces renamed legacy command-result fields cleanly without dual-field compatibility shims. |
+| [x] | `pr4a-fixtures-tests` | PR 4A command tasks | Add structural command golden fixtures and schema validation tests. | Each command has at least one success and one failure/non-passing fixture validated by tests. |
+| [x] | `pr4a-verify` | `pr4a-fixtures-tests` | Validate PR 4A. | `bun run check`, `bun run test:unit`, `bun run build`, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, and `git diff --check` pass. |
 
 ## PR 4B: Evidence command JSON hardening
 

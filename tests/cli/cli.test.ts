@@ -313,9 +313,16 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
   ]);
   expect(result.code).toBe(ExitCode.ok);
   const assessment = JSON.parse(result.stdout);
+  const assessmentSource = getObject(assessment, 'source') ?? {};
+  expect(getString(assessment, 'schema_version')).toBe('0.2.0');
+  expect(getString(assessment, 'harness_version')).toBe('0.1.0');
+  expect(getString(assessment, 'generated_at')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   expect(getString(assessment, 'status')).toBe('ready');
   expect(getString(getObject(assessment, 'adapter_path') ?? {}, 'kind')).toBe('cli-command');
-  expect(getString(getObject(assessment, 'source') ?? {}, 'harness')).toBe('examples/harness.yaml');
+  expect(getString(assessmentSource, 'harness')).toBe('examples/harness.yaml');
+  expect(getString(assessmentSource, 'harness_version')).toBe('0.1.0');
+  expect('cli_version' in assessmentSource).toBe(false);
+  expect(getArray(assessment, 'issues')).toBeUndefined();
   expect(getString(getObject(assessment, 'implementation_routing') ?? {}, 'selected_route')).toBe(
     'execution-loop',
   );
@@ -1397,6 +1404,8 @@ test('doctor emits schema-valid JSON for a healthy harness', async () => {
   const result = await run(['doctor', '--format', 'json', '--file', 'examples/harness.yaml']);
   expect(result.code).toBe(ExitCode.ok);
   const doctorResult = JSON.parse(result.stdout);
+  expect(getString(doctorResult, 'schema_version')).toBe('0.2.0');
+  expect(getString(doctorResult, 'generated_at')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   expect(doctorResult.status).toBe('passed');
   expect(checkOutcome(doctorResult, 'schema-validity')).toBe('passed');
   expect(checkOutcome(doctorResult, 'engine-compatibility')).toBe('passed');
@@ -1414,6 +1423,7 @@ test('doctor emits schema-valid JSON for a healthy harness', async () => {
     ['allowed_inputs']: ['README.md', 'AGENTS.md'],
     ['allowed_outputs']: ['.harness/outputs/doctor/doc-links.json'],
   });
+  expect(getArray(doctorResult, 'issues')).toBeUndefined();
 
   const schemas = await loadSchemaRegistry(process.cwd());
   expect(schemas.validate('doctor-result', doctorResult).length).toBe(0);
@@ -1452,7 +1462,10 @@ test('health emits schema-valid JSON and can feed assess', async () => {
   expect(health.code).toBe(ExitCode.ok);
   expect(health.stdout).toContain('harness health passed');
   const healthResult = JSON.parse(await readFile(join(root, healthPath), 'utf8'));
+  expect(getString(healthResult, 'schema_version')).toBe('0.2.0');
+  expect(getString(healthResult, 'generated_at')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   expect(getString(healthResult, 'status')).toBe('passed');
+  expect(getArray(healthResult, 'issues')).toBeUndefined();
   expect(getString(healthResult, 'sandbox_enforcement')).toBe('declarative');
   expect(healthResult.runtime_enforced).toBe(false);
   const healthCheck = jsonObjects(getArray(healthResult, 'checks'))[0] ?? {};
@@ -1550,6 +1563,10 @@ test('health reports failed checks with a distinct exit code', async () => {
   expect(getString(jsonObjects(getArray(healthResult, 'checks'))[0] ?? {}, 'failure_code')).toBe(
     'command-failed',
   );
+  const issues = jsonObjects(getArray(healthResult, 'issues'));
+  expect(issues.length).toBe(1);
+  expect(getString(issues[0] ?? {}, 'code')).toBe('command-failed');
+  expect(getString(issues[0] ?? {}, 'severity')).toBe('error');
 });
 
 test('health refuses unsafe and policy-mismatched declarations', async () => {
@@ -2416,7 +2433,11 @@ test('doctor canonicalizes harness paths for deterministic output', async () => 
   const second = await run(['doctor', '--format', 'json', '--file', './examples/./harness.yaml']);
   expect(first.code).toBe(ExitCode.ok);
   expect(second.code).toBe(ExitCode.ok);
-  expect(second.stdout).toBe(first.stdout);
+  const firstResult = JSON.parse(first.stdout);
+  const secondResult = JSON.parse(second.stdout);
+  delete firstResult['generated_at'];
+  delete secondResult['generated_at'];
+  expect(secondResult).toEqual(firstResult);
 });
 
 test('doctor accepts explicit non-empty run ids', async () => {
@@ -2527,6 +2548,104 @@ test('report cites the artifact paths it summarizes', async () => {
   expect(result.stdout).toContain(expectedReportPrefix.trimEnd());
   expect(result.stdout).toContain('- cited paths:');
   expect(result.stdout).toContain('  - harness.yaml');
+});
+
+test('doctor, health, and assess JSON fixtures match normalized command output', async () => {
+  const doctorPass = await run(['doctor', '--format', 'json', '--file', 'examples/harness.yaml']);
+  expect(doctorPass.code).toBe(ExitCode.ok);
+  expect(normalizeGeneratedAt(JSON.parse(doctorPass.stdout))).toEqual(
+    normalizeGeneratedAt(await loadJsonFixture('examples/doctor/results/pass.json')),
+  );
+
+  const doctorFail = await run([
+    'doctor',
+    '--format',
+    'json',
+    '--file',
+    'examples/fixtures/doctor/missing-reference.yaml',
+  ]);
+  expect(doctorFail.code).toBe(ExitCode.validationError);
+  expect(normalizeGeneratedAt(JSON.parse(doctorFail.stdout))).toEqual(
+    normalizeGeneratedAt(await loadJsonFixture('examples/doctor/results/fail.json')),
+  );
+
+  const healthPass = await run([
+    'health',
+    '--file',
+    'examples/harness.yaml',
+    '--run-id',
+    'health-docs-present',
+    '--accept-unsandboxed-execution',
+    '--format',
+    'json',
+  ]);
+  expect(healthPass.code).toBe(ExitCode.ok);
+  expect(normalizeHealthGolden(JSON.parse(healthPass.stdout))).toEqual(
+    normalizeHealthGolden(await loadJsonFixture('examples/health/results/pass.json')),
+  );
+
+  const healthFail = await run([
+    'health',
+    '--file',
+    'examples/fixtures/health/failing-harness.yaml',
+    '--run-id',
+    'health-docs-missing',
+    '--accept-unsandboxed-execution',
+    '--format',
+    'json',
+  ]);
+  expect(healthFail.code).toBe(ExitCode.healthFailure);
+  expect(normalizeHealthGolden(JSON.parse(healthFail.stdout))).toEqual(
+    normalizeHealthGolden(await loadJsonFixture('examples/health/results/fail.json')),
+  );
+
+  const assessReady = await run([
+    'assess',
+    '--file',
+    'examples/harness.yaml',
+    '--format',
+    'json',
+    '--doctor-result',
+    'examples/doctor/results/pass.json',
+    '--health-result',
+    'examples/health/results/pass.json',
+    '--run-results',
+    'examples/run-results/run-result.json',
+    '--trace',
+    'examples/traces/recorded-external-trace.json',
+    '--scoreboard',
+    'examples/scoreboards/self-test.json',
+    '--report',
+    'examples/reports/harness-report.md',
+  ]);
+  expect(assessReady.code).toBe(ExitCode.ok);
+  expect(normalizeGeneratedAt(JSON.parse(assessReady.stdout))).toEqual(
+    normalizeGeneratedAt(await loadJsonFixture('examples/assessments/ready.json')),
+  );
+
+  const assessNeedsWork = await run([
+    'assess',
+    '--file',
+    'examples/fixtures/invalid/harness-with-plugin-key.yaml',
+    '--format',
+    'json',
+    '--doctor-result',
+    'examples/doctor/results/pass.json',
+    '--health-result',
+    'examples/health/results/pass.json',
+    '--run-results',
+    'examples/run-results/run-result.json',
+    '--trace',
+    'examples/traces/recorded-external-trace.json',
+    '--scoreboard',
+    'examples/scoreboards/self-test.json',
+    '--report',
+    'examples/reports/harness-report.md',
+  ]);
+  expect(assessNeedsWork.code).toBe(ExitCode.ok);
+  expect(normalizeGeneratedAt(JSON.parse(assessNeedsWork.stdout))).toEqual(
+    normalizeGeneratedAt(await loadJsonFixture('examples/assessments/repair-action-routing.json')),
+  );
 });
 
 test('report validates judge policy and advisory or blocking judge results', async () => {
@@ -3330,6 +3449,36 @@ function objectWithString(
   value: string,
 ): JsonObject | undefined {
   return objects.find((object) => getString(object, key) === value);
+}
+
+async function loadJsonFixture(path: string): Promise<JsonObject> {
+  const parsed: unknown = JSON.parse(await readFile(path, 'utf8'));
+  if (!isObject(parsed)) {
+    throw new Error(`${path} must contain a JSON object`);
+  }
+  return parsed;
+}
+
+function normalizeGeneratedAt(object: JsonObject): JsonObject {
+  const normalized = cloneJsonObject(object);
+  delete normalized['generated_at'];
+  return normalized;
+}
+
+function normalizeHealthGolden(object: JsonObject): JsonObject {
+  const normalized = normalizeGeneratedAt(object);
+  for (const check of jsonObjects(getArray(normalized, 'checks'))) {
+    check['duration_ms'] = 0;
+  }
+  return normalized;
+}
+
+function cloneJsonObject(object: JsonObject): JsonObject {
+  const cloned: unknown = JSON.parse(JSON.stringify(object));
+  if (!isObject(cloned)) {
+    throw new Error('Expected JSON object clone');
+  }
+  return cloned;
 }
 
 function invalidExternalSourceMaterialAssessment(

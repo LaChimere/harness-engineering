@@ -8,6 +8,7 @@
     "schema_version",
     "run_id",
     "harness_version",
+    "generated_at",
     "status",
     "sandbox_enforcement",
     "runtime_enforced",
@@ -24,9 +25,20 @@
     "harness_version": {
       "$ref": "common.schema.json#/$defs/semver"
     },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "status": {
       "type": "string",
       "enum": ["passed", "failed", "error"]
+    },
+    "issues": {
+      "description": "Normalized summary of non-passing health checks. Omitted when all checks pass; checks remain the canonical health detail.",
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/cliJsonIssue"
+      }
     },
     "sandbox_enforcement": {
       "$ref": "common.schema.json#/$defs/nonEmptyString"

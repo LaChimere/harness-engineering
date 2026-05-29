@@ -68,6 +68,42 @@
       },
       "additionalProperties": false
     },
+    "cliJsonIssue": {
+      "type": "object",
+      "description": "Structured command-result issue for agent-facing JSON output. Command-specific detail arrays remain canonical for domain reasoning.",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "message": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          }
+        },
+        "details": {
+          "type": "object"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidenceLinks"
+        }
+      },
+      "additionalProperties": false
+    },
     "evidenceLinks": {
       "type": "array",
       "items": {

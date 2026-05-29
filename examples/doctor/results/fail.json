@@ -1,12 +1,27 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "run_id": "doctor-0558a10602ac",
   "harness_version": "0.1.0",
+  "generated_at": "2026-05-29T00:00:00.000Z",
   "status": "failed",
+  "issues": [
+    {
+      "code": "reference-exists",
+      "severity": "error",
+      "message": "Restore missing referenced artifacts or update harness.yaml references.",
+      "evidence": [
+        {
+          "path": "examples/fixtures/doctor/missing-reference.yaml",
+          "media_type": "application/yaml",
+          "description": "Reference checks failed with 1 issue(s): environment not found: examples/environments/missing.yaml"
+        }
+      ]
+    }
+  ],
   "checks": [
     {
       "id": "schema-validity",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "schema",
       "inputs": ["examples/fixtures/doctor/missing-reference.yaml"],
       "determinism": "deterministic",
@@ -39,7 +54,7 @@
     },
     {
       "id": "engine-compatibility",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "compatibility",
       "inputs": ["examples/fixtures/doctor/missing-reference.yaml"],
       "determinism": "deterministic",
@@ -72,7 +87,7 @@
     },
     {
       "id": "reference-exists",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "references",
       "inputs": [
         "AGENTS.md",
@@ -116,7 +131,7 @@
     },
     {
       "id": "builtin-check-supported",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "doctor-registration",
       "inputs": ["examples/fixtures/doctor/missing-reference.yaml"],
       "determinism": "deterministic",

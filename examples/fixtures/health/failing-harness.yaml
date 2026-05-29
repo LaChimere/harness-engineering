@@ -1,6 +1,7 @@
 schema_version: "0.1.0"
 harness:
-  name: invalid-plugin-key
+  name: harness-engineering
+  description: Harness-as-code platform for AI coding agents.
   failure_taxonomy: examples/failure-taxonomy.yaml
 engines:
   cli: ">=0.1 <0.2"
@@ -17,6 +18,7 @@ engines:
     eval-task: ">=0.1 <0.2"
     trace: ">=0.1 <0.2"
     run-result: ">=0.1 <0.2"
+    verifier-result: ">=0.1 <0.2"
     scoreboard: ">=0.1 <0.2"
     judge-policy: ">=0.1 <0.2"
     judge-result: ">=0.1 <0.2"
@@ -25,12 +27,13 @@ engines:
     profile-run: ">=0.1 <0.2"
 context:
   maps:
+    - AGENTS.md
     - README.md
 environment: examples/environments/local.yaml
 approval_policy: examples/policies/approval-policy.yaml
 sandbox: examples/policies/sandbox-policy.yaml
 traces:
-  output_dir: .harness/traces
+  output_dir: .harness/outputs/traces
   examples:
     - examples/traces/recorded-external-trace.json
     - examples/traces/external-import.json
@@ -39,13 +42,23 @@ evals:
     - id: harness-self-test
       version: "1.0.0"
       tasks: examples/evals/harness-self-test/v1.0.0/
-  run_results: .harness/run-results.jsonl
-  scoreboards: .harness/scoreboards
+  run_results: .harness/outputs/run-results.jsonl
+  scoreboards: .harness/outputs/scoreboards
+judges:
+  policies:
+    - examples/judges/policy.yaml
 doctor:
   checks:
     - builtin:schema-validity
-    - id: local-doc-link-check
-      path: examples/checks/doc-links.yaml
+    - builtin:engine-compatibility
+    - builtin:reference-exists
+health:
+  output_dir: .harness/outputs/health
+  checks:
+    - id: docs-present
+      command:
+        command: test -f missing-health-file.md
+        timeout_seconds: 30
       trust_requirements:
         trust_level: sandboxed
         sandbox_required: process
@@ -54,15 +67,26 @@ doctor:
         host_file_access: false
         allowed_inputs:
           - README.md
+          - AGENTS.md
         allowed_outputs:
-          - .harness/doctor/doc-links.json
+          - .harness/outputs/health
+      artifacts:
+        - path: README.md
+          media_type: text/markdown
+          description: User-facing project README.
+        - path: AGENTS.md
+          media_type: text/markdown
+          description: Agent instruction file.
 continuity:
-  state_dir: .harness/continuity
+  state_dir: .harness/outputs/continuity
   startup_smoke_test:
     command: harness validate
     timeout_seconds: 300
+  handoff_dir: .harness/outputs/handoffs
+  session_id_env: HARNESS_SESSION_ID
 gc:
-  evidence_dir: .harness/gc
-plugins:
-  copilot:
-    enabled: true
+  evidence_dir: .harness/outputs/gc
+recurring_profiles:
+  output_dir: .harness/outputs/profile-runs
+  profiles:
+    - examples/profiles/gc-stability.yaml

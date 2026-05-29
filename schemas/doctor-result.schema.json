@@ -3,7 +3,7 @@
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/doctor-result.schema.json",
   "title": "Doctor result",
   "type": "object",
-  "required": ["schema_version", "run_id", "harness_version", "status", "checks"],
+  "required": ["schema_version", "run_id", "harness_version", "generated_at", "status", "checks"],
   "properties": {
     "schema_version": {
       "$ref": "common.schema.json#/$defs/schemaVersion"
@@ -14,9 +14,20 @@
     "harness_version": {
       "$ref": "common.schema.json#/$defs/semver"
     },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "status": {
       "type": "string",
       "enum": ["passed", "failed", "warning"]
+    },
+    "issues": {
+      "description": "Normalized summary of failed checks. Omitted when no checks fail; checks remain the canonical doctor detail.",
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/cliJsonIssue"
+      }
     },
     "checks": {
       "type": "array",

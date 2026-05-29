@@ -1,12 +1,13 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "run_id": "doctor-a4b9d59c951a",
   "harness_version": "0.1.0",
+  "generated_at": "2026-05-29T00:00:00.000Z",
   "status": "passed",
   "checks": [
     {
       "id": "schema-validity",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "schema",
       "inputs": ["examples/harness.yaml"],
       "determinism": "deterministic",
@@ -39,7 +40,7 @@
     },
     {
       "id": "engine-compatibility",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "compatibility",
       "inputs": ["examples/harness.yaml"],
       "determinism": "deterministic",
@@ -72,7 +73,7 @@
     },
     {
       "id": "reference-exists",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "references",
       "inputs": [
         "AGENTS.md",
@@ -119,7 +120,7 @@
     },
     {
       "id": "builtin-check-supported",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "doctor-registration",
       "inputs": ["examples/harness.yaml"],
       "determinism": "deterministic",
@@ -152,7 +153,7 @@
     },
     {
       "id": "local-doc-link-check",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "local-check-registration",
       "inputs": ["AGENTS.md", "README.md", "examples/checks/doc-links.yaml"],
       "determinism": "deterministic",

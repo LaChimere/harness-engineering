@@ -31,6 +31,7 @@ export interface IAssessmentRequest {
   readonly repairActionPath?: string;
   readonly repairActionsDir?: string;
   readonly trustedRepairActionId?: string;
+  readonly generatedAt?: string;
 }
 
 type ArtifactRead = JsonObject & {
@@ -61,7 +62,7 @@ interface IRepairActionCandidate {
   readonly issues: readonly string[];
 }
 
-const schemaVersion = '0.1.0';
+const schemaVersion = '0.2.0';
 const defaultRepairActionsDir = 'examples/repair-actions';
 
 export async function buildAssessment(request: IAssessmentRequest): Promise<JsonObject> {
@@ -160,6 +161,8 @@ export async function buildAssessment(request: IAssessmentRequest): Promise<Json
       implementationRouting,
       artifactsRead: sortedArtifactsRead,
     }),
+    ['harness_version']: request.cliVersion,
+    ['generated_at']: request.generatedAt ?? new Date().toISOString(),
     ['adapter_path']: {
       kind: 'cli-command',
       command: 'harness assess --format json',
@@ -172,7 +175,7 @@ export async function buildAssessment(request: IAssessmentRequest): Promise<Json
     source: {
       root: '.',
       harness: harness.path,
-      ['cli_version']: request.cliVersion,
+      ['harness_version']: request.cliVersion,
     },
     status: statusFor(harness, scorecard),
     maturity,

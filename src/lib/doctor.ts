@@ -19,6 +19,7 @@ export interface IDoctorRunInput {
   readonly cliVersion: string;
   readonly schemas: ISchemaRegistry;
   readonly runId?: string;
+  readonly generatedAt?: string;
 }
 
 interface IDoctorDeclaration {
@@ -28,7 +29,7 @@ interface IDoctorDeclaration {
   readonly trustRequirements?: JsonObject;
 }
 
-const schemaVersion = '0.1.0';
+const schemaVersion = '0.2.0';
 const supportedBuiltinChecks = new Set([
   'schema-validity',
   'engine-compatibility',
@@ -75,13 +76,16 @@ export async function runDoctor(input: IDoctorRunInput): Promise<IDoctorRun> {
     ...localCheckDeclarations(validation.schemaIssues, declarations),
   ];
   const status = statusForChecks(checks);
+  const issues = doctorIssues(checks);
   const result: JsonObject = {
     ['schema_version']: schemaVersion,
     ['run_id']:
       input.runId ??
       defaultRunId(input.harnessPath, input.cliVersion, input.schemas.schemaVersion, checks),
     ['harness_version']: input.cliVersion,
+    ['generated_at']: input.generatedAt ?? new Date().toISOString(),
     status,
+    ...(issues.length === 0 ? {} : { issues }),
     checks,
   };
   return {
@@ -348,6 +352,19 @@ function statusForChecks(checks: readonly JsonObject[]): DoctorStatus {
     }
   }
   return hasWarning ? 'warning' : 'passed';
+}
+
+function doctorIssues(checks: readonly JsonObject[]): JsonObject[] {
+  return checks
+    .filter((check) => getString(check, 'outcome') === 'failed')
+    .map((check) => ({
+      code: getString(check, 'id') ?? 'doctor-check',
+      severity: getString(check, 'severity') ?? 'error',
+      message:
+        getString(check, 'remediation') ??
+        `Doctor check ${getString(check, 'id') ?? 'unknown'} did not pass.`,
+      evidence: (getArray(check, 'evidence') ?? []).filter(isObject),
+    }));
 }
 
 function defaultRunId(

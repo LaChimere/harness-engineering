@@ -157,6 +157,10 @@
       "schema": "schemas/self-verification.schema.json"
     },
     {
+      "path": "examples/fixtures/health/failing-harness.yaml",
+      "schema": "schemas/harness.schema.json"
+    },
+    {
       "path": "examples/doctor/results/pass.json",
       "schema": "schemas/doctor-result.schema.json"
     },
@@ -294,6 +298,10 @@
     },
     {
       "path": "examples/assessments/repair-action-routing.json",
+      "schema": "schemas/assessment.schema.json"
+    },
+    {
+      "path": "examples/assessments/ready.json",
       "schema": "schemas/assessment.schema.json"
     },
     {

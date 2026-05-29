@@ -70,7 +70,7 @@ Changes:
 
 Issue mapping:
 
-- For each check whose `outcome` is not `passed`, create an issue:
+- For each check whose `outcome` is `failed`, create an issue:
   - `code`: check `id`
   - `severity`: check `severity`
   - `message`: check `remediation` or a deterministic summary from the outcome

@@ -8,6 +8,8 @@
     "schema_version",
     "x-stability",
     "assessment_id",
+    "harness_version",
+    "generated_at",
     "adapter_path",
     "source",
     "status",
@@ -29,6 +31,13 @@
     },
     "assessment_id": {
       "$ref": "common.schema.json#/$defs/nonEmptyString"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
     },
     "adapter_path": {
       "type": "object",
@@ -54,7 +63,7 @@
     },
     "source": {
       "type": "object",
-      "required": ["root", "harness", "cli_version"],
+      "required": ["root", "harness", "harness_version"],
       "properties": {
         "root": {
           "$ref": "common.schema.json#/$defs/artifactRef"
@@ -62,7 +71,7 @@
         "harness": {
           "$ref": "common.schema.json#/$defs/artifactRef"
         },
-        "cli_version": {
+        "harness_version": {
           "$ref": "common.schema.json#/$defs/semver"
         }
       },
@@ -71,6 +80,13 @@
     "status": {
       "type": "string",
       "enum": ["ready", "needs-work", "missing-harness"]
+    },
+    "issues": {
+      "description": "Command or contract problems that block machine consumption. Product gaps stay in missing_primitives and recommendations.",
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/cliJsonIssue"
+      }
     },
     "maturity": {
       "type": "object",

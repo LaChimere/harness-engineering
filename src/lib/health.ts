@@ -52,6 +52,7 @@ export interface IHealthRunInput {
   readonly cliVersion: string;
   readonly schemas: ISchemaRegistry;
   readonly runId?: string;
+  readonly generatedAt?: string;
   readonly allowDeclarativeExecution?: boolean;
   readonly outputPath?: string;
 }
@@ -63,7 +64,7 @@ export interface IHealthRun {
   readonly exitClass: HealthExitClass;
 }
 
-const schemaVersion = '0.1.0';
+const schemaVersion = '0.2.0';
 const defaultTimeoutSeconds = 60;
 
 export async function runHealth(input: IHealthRunInput): Promise<IHealthRun> {
@@ -111,11 +112,14 @@ export async function runHealth(input: IHealthRunInput): Promise<IHealthRun> {
     checks.push(await runHealthCheck(input.root, outputDir, sandboxPolicy, declaration));
   }
   const status = healthStatusForChecks(checks);
+  const issues = healthIssues(checks);
   const result: JsonObject = {
     ['schema_version']: schemaVersion,
     ['run_id']: input.runId ?? defaultRunId(input.harnessPath, input.cliVersion, checks),
     ['harness_version']: input.cliVersion,
+    ['generated_at']: input.generatedAt ?? new Date().toISOString(),
     status,
+    ...(issues.length === 0 ? {} : { issues }),
     ['sandbox_enforcement']: 'declarative',
     ['runtime_enforced']: false,
     source: {
@@ -510,6 +514,17 @@ function healthCheckJson(check: IHealthCheckRun): JsonObject {
     artifacts: [...check.artifacts],
     ['trust_requirements']: check.trustRequirements,
   };
+}
+
+function healthIssues(checks: readonly IHealthCheckRun[]): JsonObject[] {
+  return checks
+    .filter((check) => check.status !== 'passed')
+    .map((check) => ({
+      code: check.failureCode ?? check.id,
+      severity: check.status === 'skipped' ? 'warning' : 'error',
+      message: check.summary,
+      evidence: [...check.evidence],
+    }));
 }
 
 function renderHealthMarkdown(result: JsonObject): string {

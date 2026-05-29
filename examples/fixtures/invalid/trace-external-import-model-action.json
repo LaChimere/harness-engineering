@@ -5,14 +5,14 @@
   "harness_version": "0.1.0",
   "inputs": {
     "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
-    "runner": "examples/agent-runners/stub.yaml"
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "environment_snapshot": {
     "environment": "examples/environments/local.yaml",
     "sandbox": "examples/policies/sandbox-policy.yaml",
     "approval_policy": "examples/policies/approval-policy.yaml",
     "model_profile": "harness://external-import/copilot-cli",
-    "runner": "examples/agent-runners/stub.yaml"
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "started_at": "2026-05-21T00:00:00Z",
   "completed_at": "2026-05-21T00:00:01Z",

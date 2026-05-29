@@ -40,27 +40,12 @@ codes:
   - code: credential-missing
     category: credential
     description: A run could not start because an explicit credential reference was missing or unsupported.
-  - code: credential-unsupported
-    category: credential
-    description: A runner declared a credential source that this readiness slice cannot support.
-  - code: budget-missing
-    category: budget
-    description: A runner is missing explicit hard cost, token, or request budget declarations.
-  - code: trace-redaction-missing
-    category: context
-    description: A live-runner readiness check is missing trace output or redaction/scoping declarations.
-  - code: trace-output-invalid
-    category: context
-    description: A runner declared trace output that is missing, external, or outside the repository root.
   - code: agent-failure
     category: agent
     description: The agent-produced output failed the task verifier or did not satisfy the requested behavior.
   - code: model-failure
     category: model
     description: The model call failed independently of harness, verifier, budget, approval, or sandbox handling.
-  - code: model-profile-stub
-    category: model
-    description: Live runner readiness was requested with a deterministic stub model profile.
   - code: sandbox-violation
     category: sandbox
     description: A run attempted an action outside its declared sandbox policy.

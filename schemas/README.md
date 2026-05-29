@@ -1,6 +1,6 @@
 # Harness schema conventions
 
-The machine-checkable substrate is defined before any CLI, plugin, CI adapter, or skill consumes it. Deterministic CLI commands and offline report validation consume the runner, trace, run-result, scoreboard, judge-policy, and judge-result schemas. The agent/CLI capability matrix revalidates the provisional plugin-capability and repair-action posture before any adapter consumes it. The adapter-scope manifest and subset validator cover the selected limited-adapter target without making the adapter a separate source of truth. Native execution-loop validation consumes the existing continuity-state and self-verification schemas as the evidence contract rather than adding a skill-only artifact shape.
+The machine-checkable substrate is defined before any CLI, plugin, CI adapter, or skill consumes it. Deterministic CLI commands and offline report validation consume trace, run-result, scoreboard, judge-policy, and judge-result evidence schemas. The agent/CLI capability matrix revalidates the provisional plugin-capability and repair-action posture before any adapter consumes it. The adapter-scope manifest and subset validator cover the selected limited-adapter target without making the adapter a separate source of truth. Native execution-loop validation consumes the existing continuity-state and self-verification schemas as the evidence contract rather than adding a skill-only artifact shape.
 
 All schemas use JSON Schema draft 2020-12 and local relative `$ref` links. Validation tools should load every file in `schemas/` into an offline registry keyed by each schema's versioned `$id`; validation must not require network access.
 
@@ -12,7 +12,7 @@ Every machine-readable harness artifact includes `schema_version`. Compatibility
 engines:
   schemas:
     harness: ">=0.1 <0.2"
-    agent-runner: ">=0.1 <0.2"
+    run-result: ">=0.1 <0.2"
 ```
 
 The schema validates artifact shape; the CLI enforces compatibility ranges and migration rules. Canonical schema IDs include the schema family version, for example `https://lachimere.github.io/harness-engineering/schemas/0.1/harness.schema.json`; future releases may add aliases, but validation must resolve the versioned IDs offline.
@@ -21,7 +21,7 @@ Schemas marked `x-stability: provisional` are still allowed to evolve within the
 
 ## Composition
 
-`harness.yaml` composes repo-local artifact references rather than embedding all details. This keeps policies, evals, traces, runners, continuity state, and GC evidence independently versioned and reviewable.
+`harness.yaml` composes repo-local artifact references rather than embedding all details. This keeps policies, evals, traces, continuity state, and GC evidence independently versioned and reviewable.
 
 The root harness schema is closed with `unevaluatedProperties: false`. Adapter-specific keys such as plugin or CI configuration are not valid in the harness root; those adapters must be added only after their contracts are defined.
 
@@ -29,25 +29,23 @@ The root harness schema is closed with `unevaluatedProperties: false`. Adapter-s
 
 Local doctor checks, eval verifiers, and repair actions all reuse the same `trustRequirements` shape from `common.schema.json`. Each declaration states the trust level, required sandbox tier, network access, secret access, host-file access, and allowed inputs/outputs.
 
-## Credentials and budgets
+## External provenance, usage, and budgets
 
-Agent runners reference credentials with `credential_reference`; they must not embed secret values. Model execution also requires `budgets` with cost, request, and token limits so `harness run` can refuse unbounded runs deterministically. The deterministic runner accepts only non-secret `source: stub` credential references and recorded fixture outputs; live model credentials remain out of scope. External candidate imports use `source: external` to show that the model output was produced outside harness and imported for verification.
+Trace and run-result evidence can record credential references, usage, and budgets for work performed outside the Harness CLI. Credential references must not embed secret values. Budget fields remain audit metadata for imported agent/model evidence; Harness validates them when present but does not execute provider-backed models.
 
-Trace and run-result artifacts record aggregate usage evidence with token, request, model, and cost fields so budgets can be audited after execution. Agent-run traces also require the credential reference and budget contract that governed the run.
+Trace and run-result artifacts record aggregate usage evidence with token, request, model, and cost fields so externally produced evidence can be audited after execution.
 
 ## Eval and run-result execution semantics
 
-Eval tasks declare suite/task identity, task version, dataset hash, optimization or holdout split, verifier command, timeout, oracle/baseline artifacts, and verifier trust requirements. `harness eval validate` recomputes the dataset hash before execution and refuses to run verifier commands whose trust declaration asks for network, secret, host-file, or any sandbox tier other than `process`. It enforces the declaration contract before execution; runtime sandbox enforcement belongs to future runner hardening.
+Eval tasks declare suite/task identity, task version, dataset hash, optimization or holdout split, verifier command, timeout, oracle/baseline artifacts, and verifier trust requirements. `harness eval validate` recomputes the dataset hash before execution and refuses to run verifier commands whose trust declaration asks for network, secret, host-file, or any sandbox tier other than `process`. It enforces the declaration contract before execution; stronger runtime sandbox enforcement belongs to a future substrate contract.
 
-Run results include an `execution` block. `verifier-only` records separate `harness_status` and `verifier_status` fields. `agent-run` records `harness_status`, `verifier_status`, `agent_status`, and `model_status`, and must link to a real trace artifact rather than the verifier-only sentinel trace. `external-import` records a candidate generated outside harness, keeps `model_status` absent, requires external zero-usage accounting, and cannot be labeled as an `eval` agent run. Assessment treats external imports as separately labelled import evidence rather than counted agent-run evidence. Linked deterministic verifier evidence is shaped by `verifier-result.schema.json`.
+Run results include an `execution` block. `verifier-only` records separate `harness_status` and `verifier_status` fields. Imported or externally produced records may include agent/model provenance, but those fields do not imply Harness executed the agent or model. Linked deterministic verifier evidence is shaped by `verifier-result.schema.json`.
 
-Scoreboards summarize agent-run ledgers by optimization/holdout split and total counts. Their failure buckets explicitly separate `agent-failure`, `model-failure`, `harness-error`, `verifier-error`, `verification-failure`, `budget-exceeded`, and `credential-missing` so behavioral regressions do not collapse into one opaque failure class. The broken-twin fixture intentionally contributes an `agent-failure` bucket while the overall eval run can still pass because that negative control failed as expected.
+Scoreboards summarize externally produced or calibration eval ledgers by optimization/holdout split and total counts. Their failure buckets explicitly separate `agent-failure`, `model-failure`, `harness-error`, `verifier-error`, `verification-failure`, `budget-exceeded`, and `credential-missing` so behavioral regressions do not collapse into one opaque failure class.
 
 ## Project health evidence
 
-`health-result.schema.json` records local project health checks executed by `harness health`. Health checks are declared in the optional `health` block of `harness.yaml` and reuse the shared `trustRequirements` shape plus the harness's approval and sandbox policy artifacts. The current health runner is declaration-gated and records `sandbox_enforcement: declarative` plus `runtime_enforced: false`; it refuses network, secret, host-file, missing artifact, and unsafe declarations rather than pretending to enforce a stronger runtime sandbox. `harness assess` consumes health-result evidence through scorecard version `0.2.0` as a distinct `project-health` dimension, separate from structural doctor evidence.
-
-`runner-readiness.schema.json` records non-executing readiness checks for agent runners. `harness runner readiness` preserves the deterministic stub path while validating that a future live runner has an explicit environment credential reference, hard cost/token/request budgets, approval and sandbox policy artifacts, a live model profile, repo-local trace output, exact env-only credential scoping, and a schema-defined trace-redaction allowlist that refuses credential environment variable references.
+`health-result.schema.json` records local project health checks executed by `harness health`. Health checks are declared in the optional `health` block of `harness.yaml` and reuse the shared `trustRequirements` shape plus the harness's approval and sandbox policy artifacts. The current health execution path is declaration-gated and records `sandbox_enforcement: declarative` plus `runtime_enforced: false`; it refuses network, secret, host-file, missing artifact, and unsafe declarations rather than pretending to enforce a stronger runtime sandbox. `harness assess` consumes health-result evidence through scorecard version `0.2.0` as a distinct `project-health` dimension, separate from structural doctor evidence.
 
 `recurring-profile.schema.json` defines deterministic maintenance profile contracts with structured evidence inputs, trigger thresholds, stop conditions, allowed actions, handoff metadata, and trust requirements. Recurring profiles are single-run CLI consumers of substrate artifacts; scheduling and persistence are external. `profile-run.schema.json` records one profile execution with hashed evidence inputs, trigger and stop-condition observations, deterministic summary actions, optional previous-run continuity, and a handoff decision. The GC stability MVP consumes GC and health evidence; it does not run cleanup, mutate the capability ledger, call models, or create prompt-only profile state.
 

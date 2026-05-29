@@ -1,6 +1,6 @@
 # CLI guide
 
-The deterministic `harness` CLI validates harness configuration, runs local evidence-producing checks, and summarizes existing artifacts. It consumes local schemas and examples; it does not install host plugins, run CI services, schedule profiles, or execute provider-backed live models.
+The deterministic `harness` CLI validates harness configuration, runs local evidence-producing checks, and summarizes existing artifacts. It consumes local schemas and examples; it does not install host plugins, run CI services, schedule profiles, or execute models.
 
 ## Invocation
 
@@ -20,8 +20,8 @@ Behavior is identical across the three forms.
 - **Evidence**: schema-validated JSON or Markdown the CLI writes to `.harness/outputs/**`.
 - **GC** (garbage collection): `harness gc audit` looks for entropy in evidence and proposes reviewable cleanup slices; it never deletes.
 - **Profile**: a recurring maintenance contract (see `.harness/profiles/gc-stability.yaml` after `harness init`) that consumes existing evidence and emits a handoff artifact. Profiles do not schedule themselves.
-- **Scoreboard**: behavioral eval summary written by `harness eval run`.
-- **External-import**: candidate output produced outside the harness CLI and imported via `harness run --external-candidate`; recorded as evidence without claiming provider usage.
+- **Scoreboard**: behavioral eval summary evidence produced outside the Harness CLI or provided as calibration data.
+- **External evidence**: candidate output, traces, scoreboards, or reports produced outside the Harness CLI and then supplied to evidence-consuming commands.
 - **Broken-twin**: an eval fixture that is expected to fail verification (the inverse of an oracle), used to prove the verifier discriminates.
 
 ## Command overview
@@ -32,14 +32,11 @@ harness validate
 harness doctor --format json --output .harness/outputs/doctor/doctor.json
 harness health --accept-unsandboxed-execution --format json --output .harness/outputs/health/health.json
 harness verify --spec path/to/self-verification.yaml
-harness run .harness/evals/harness-self-test/v1.0.0/task.yaml
 harness eval validate --output .harness/outputs/run-results.jsonl
-harness eval run
 harness trace validate
 harness gc audit --format json --output .harness/outputs/gc/gc.json
 harness profile validate .harness/profiles/gc-stability.yaml
 harness profile run .harness/profiles/gc-stability.yaml --gc-evidence .harness/outputs/gc/gc.json --health-result .harness/outputs/health/health.json --output .harness/outputs/profile-runs/gc-stability.json
-harness runner readiness
 harness assess --format json --health-result .harness/outputs/health/health.json
 harness report --doctor-result .harness/outputs/doctor/doctor.json
 ```
@@ -62,15 +59,11 @@ These examples assume you are in a repository after `harness init`. The packaged
 
 `harness verify` consumes an explicit self-verification spec (see this repository's `examples/verification/self-verification.yaml`) and records the spec's declared statuses. It does not execute checks itself; failed or blocked acceptance checks cause a `validation-error` exit.
 
-## Evaluation and runs
+## Evaluation evidence
 
 `harness eval validate` runs verifier-only eval validation against oracle and broken-twin candidates. It records verifier evidence and a run-result ledger but does not run agents or produce scoreboards. With `--output <path>`, it appends run-results to `<path>` (typically `.harness/outputs/run-results.jsonl`) and writes verifier artifacts under `.harness/outputs/verifier-results/`.
 
-`harness run` executes the deterministic stub runner and writes run-result, trace, verifier-result, and agent-output artifacts.
-
-`harness eval run` runs the configured deterministic eval suite end-to-end and writes a scoreboard.
-
-`harness run --external-candidate <path>` imports a candidate generated outside harness, verifies it, and records `external-import` evidence without claiming a model provider call or usage.
+Run-result, trace, and scoreboard artifacts can also be produced by external agent workflows and supplied to `harness assess` or `harness report`. Harness validates these artifacts as evidence; it does not execute the agent or model that produced them.
 
 ## Trace, report, and assessment
 
@@ -85,10 +78,6 @@ These examples assume you are in a repository after `harness init`. The packaged
 `harness gc audit` emits reviewable findings and proposed cleanup slices. It is read-only and exits successfully even when findings are present, so use the JSON evidence for review or a separate explicit policy gate.
 
 `harness profile validate` validates a recurring-profile contract. `harness profile run` executes one deterministic profile run against supplied evidence and emits profile-run handoff evidence. Profiles do not schedule themselves, run cleanup, call models, or mutate the capability ledger.
-
-## Runner readiness
-
-`harness runner readiness` validates future live-runner prerequisites without calling a model. Live readiness is a non-executing gate over credentials, budgets, policies, sandbox declarations, trace output, redaction policy, and model profile kind.
 
 ## Exit semantics
 

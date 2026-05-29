@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { spawn } from 'node:child_process';
 import { cp, mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 interface ICliResult {
@@ -246,61 +246,8 @@ test(
         'passed',
       ]);
 
-      const firstRun = await runAndParseJson(root, [
-        'run',
-        '--run-id',
-        'e2e-run',
-        '--session-id',
-        'e2e-session',
-        '--format',
-        'json',
-      ]);
-      expect(getString(firstRun, 'actual_status')).toBe('passed');
-      const firstRunId = requiredString(firstRun, 'run_id');
-      const firstRunTrace = requiredString(firstRun, 'trace');
-      const firstRunVerifier = requiredString(firstRun, 'verifier_result');
-      await expectArtifactFileInsideRoot(root, firstRunTrace);
-      await expectArtifactFileInsideRoot(root, firstRunVerifier);
-
-      const repeatedRun = await runAndParseJson(root, [
-        'run',
-        '--run-id',
-        'e2e-run',
-        '--session-id',
-        'e2e-session',
-        '--format',
-        'json',
-      ]);
-      expect(getString(repeatedRun, 'run_id')).toBe(firstRunId);
-
-      const evalRun = await runAndParseJson(root, [
-        'eval',
-        'run',
-        '--run-id',
-        'e2e-eval-run',
-        '--session-id',
-        'e2e-session',
-        '--format',
-        'json',
-      ]);
-      expect(getString(evalRun, 'status')).toBe('passed');
-      const scoreboardPath = requiredString(evalRun, 'scoreboard');
-      await expectArtifactFileInsideRoot(root, scoreboardPath);
-      expect(getString(await readJsonObject(join(root, scoreboardPath)), 'status')).toBe('passed');
-
-      const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-      const firstRunLedgerEntry = runResults.find(
-        (runResult) => getString(runResult, 'run_id') === firstRunId,
-      );
-      if (firstRunLedgerEntry === undefined) {
-        throw new Error(`Expected run-result ledger entry for ${firstRunId}.`);
-      }
-      expect(
-        runResults.filter((runResult) => getString(runResult, 'run_id') === firstRunId).length,
-      ).toBe(1);
-      expect(
-        runResults.some((runResult) => getString(runResult, 'run_id')?.startsWith('e2e-eval-run-')),
-      ).toBe(true);
+      const scoreboardPath = '.harness/judges/calibration/scoreboard-self-test.json';
+      await expectFile(root, scoreboardPath);
 
       const traceValidation = await runAndParseJson(root, [
         'trace',
@@ -313,7 +260,7 @@ test(
       const report = await runHarness(root, [
         'report',
         '--trace',
-        '.harness/traces/samples/native-cli-trace.json',
+        '.harness/traces/samples/recorded-external-trace.json',
         '--scoreboard',
         scoreboardPath,
         '--doctor-result',
@@ -321,7 +268,7 @@ test(
       ]);
       expectSuccess(report, ['report']);
       expect(report.stdout).toContain(
-        '- scoreboard: .harness/outputs/scoreboards/e2e-eval-run.json',
+        '- scoreboard: .harness/judges/calibration/scoreboard-self-test.json',
       );
       expect(report.stdout).toContain('- doctor result: .harness/outputs/doctor/e2e-doctor.json');
       await mkdir(join(root, '.harness/outputs/reports'), { recursive: true });
@@ -374,7 +321,7 @@ evidence_links:
         '--run-results',
         '.harness/outputs/run-results.jsonl',
         '--trace',
-        firstRunTrace,
+        '.harness/traces/samples/recorded-external-trace.json',
         '--scoreboard',
         scoreboardPath,
         '--report',
@@ -398,12 +345,7 @@ evidence_links:
       );
       expect(getString(mixedProjectHealth ?? {}, 'status')).toBe('present');
 
-      const assessmentRunResultPath = '.harness/outputs/run-results/e2e-assessment-run-result.json';
-      await mkdir(join(root, '.harness/outputs/run-results'), { recursive: true });
-      await writeFile(
-        join(root, assessmentRunResultPath),
-        JSON.stringify(firstRunLedgerEntry, null, 2),
-      );
+      const assessmentRunResultPath = '.harness/judges/calibration/run-result.json';
       const assessment = await runAndParseJson(root, [
         'assess',
         '--format',
@@ -415,7 +357,7 @@ evidence_links:
         '--run-results',
         assessmentRunResultPath,
         '--trace',
-        firstRunTrace,
+        '.harness/traces/samples/recorded-external-trace.json',
         '--scoreboard',
         scoreboardPath,
         '--report',
@@ -486,18 +428,18 @@ evidence_links:
 );
 
 test(
-  'built CLI rejects invalid trace, report, and eval-run inputs',
+  'built CLI rejects invalid trace and report inputs',
   async () => {
     await withFixtureProject(async (root) => {
       expectSuccess(await runHarness(root, ['init']), ['init']);
 
-      const tracePath = join(root, '.harness/traces/samples/native-cli-trace.json');
+      const tracePath = join(root, '.harness/traces/samples/recorded-external-trace.json');
       const originalTrace = await readFile(tracePath, 'utf8');
       await writeFile(tracePath, '{ "schema_version": "0.1.0" }\n');
       const traceResult = await runHarness(root, ['trace', 'validate', '--format', 'json']);
       expectValidationFailure(traceResult, ['trace', 'validate']);
       expect(traceResult.stderr).toContain('Trace discovery failed');
-      expect(traceResult.stderr).toContain('.harness/traces/samples/native-cli-trace.json');
+      expect(traceResult.stderr).toContain('.harness/traces/samples/recorded-external-trace.json');
       await writeFile(tracePath, originalTrace);
 
       const runResultsPath = join(root, '.harness/outputs/run-results.jsonl');
@@ -510,21 +452,6 @@ test(
       expectValidationFailure(reportResult, ['report', '--run-result']);
       expect(reportResult.stderr).toContain('run result artifact failed schema validation');
       await writeFile(runResultsPath, '');
-
-      const modelProfilePath = join(root, '.harness/model-profiles/stub.yaml');
-      const modelProfile = await readFile(modelProfilePath, 'utf8');
-      await writeFile(
-        modelProfilePath,
-        modelProfile.replace('provider: harness-fixture', 'provider: external-model'),
-      );
-      const evalRunResult = await runHarness(root, [
-        'eval',
-        'run',
-        '--run-id',
-        'invalid-model-profile',
-      ]);
-      expectValidationFailure(evalRunResult, ['eval', 'run']);
-      expect(evalRunResult.stderr).toContain('harness-fixture model profiles');
     });
   },
   e2eTestTimeoutMs,
@@ -1016,17 +943,6 @@ function formatUnexpectedResult(
 async function expectFile(root: string, path: string): Promise<void> {
   const entry = await stat(join(root, path));
   expect(entry.isFile()).toBe(true);
-}
-
-async function expectArtifactFileInsideRoot(root: string, path: string): Promise<void> {
-  expect(isAbsolute(path)).toBe(false);
-  await expectFile(root, path);
-  const rootReal = await realpath(root);
-  const artifactReal = await realpath(join(root, path));
-  const relativeArtifact = relative(rootReal, artifactReal);
-  expect(relativeArtifact).not.toBe('..');
-  expect(relativeArtifact.startsWith(`..${sep}`)).toBe(false);
-  expect(isAbsolute(relativeArtifact)).toBe(false);
 }
 
 async function pathExists(path: string): Promise<boolean> {

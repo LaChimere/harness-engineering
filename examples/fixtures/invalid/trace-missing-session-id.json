@@ -4,14 +4,14 @@
   "harness_version": "0.1.0",
   "inputs": {
     "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
-    "runner": "examples/agent-runners/stub.yaml"
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "environment_snapshot": {
     "environment": "examples/environments/local.yaml",
     "sandbox": "examples/policies/sandbox-policy.yaml",
     "approval_policy": "examples/policies/approval-policy.yaml",
-    "model_profile": "examples/model-profiles/stub.yaml",
-    "runner": "examples/agent-runners/stub.yaml"
+    "model_profile": "harness://external-model/recorded-fixture",
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "started_at": "2026-05-20T00:00:00Z",
   "completed_at": "2026-05-20T00:00:01Z",
@@ -19,8 +19,8 @@
   "exit_code": 0,
   "determinism_level": "recorded",
   "credential_reference": {
-    "source": "stub",
-    "name": "deterministic-stub",
+    "source": "external",
+    "name": "external-recorded",
     "purpose": "CI-safe recorded response fixture",
     "scope": "per-run"
   },
@@ -32,13 +32,13 @@
     "scope": "per-run"
   },
   "usage": {
-    "billed_model_id": "stub-v1",
+    "billed_model_id": "external-recorded-v1",
     "input_tokens": 0,
     "output_tokens": 0,
     "total_tokens": 0,
     "requests": 0,
     "incurred_cost_usd": 0,
-    "source": "stub"
+    "source": "computed"
   },
   "actions": [],
   "logs": [],

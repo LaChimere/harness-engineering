@@ -21,7 +21,6 @@ verifier:
     allowed_inputs:
       - examples/evals/harness-self-test/v1.0.0/oracle.txt
       - examples/evals/harness-self-test/v1.0.0/broken-twin.txt
-      - .harness/outputs/agent-outputs
     allowed_outputs:
       - .harness/outputs/run-results.jsonl
       - .harness/outputs/verifier-results

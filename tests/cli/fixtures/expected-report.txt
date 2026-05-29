@@ -8,9 +8,7 @@ Harness report
   - .harness/environments/local.yaml
   - .harness/policies/approval-policy.yaml
   - .harness/policies/sandbox-policy.yaml
-  - .harness/model-profiles/stub.yaml
-  - .harness/agent-runners/stub.yaml
-  - .harness/traces/samples/native-cli-trace.json
+  - .harness/traces/samples/recorded-external-trace.json
   - .harness/traces/samples/external-import.json
   - .harness/evals/harness-self-test/v1.0.0/
   - .harness/judges/policy.yaml

@@ -77,15 +77,14 @@
       "inputs": [
         "AGENTS.md",
         "README.md",
-        "examples/agent-runners/stub.yaml",
         "examples/environments/missing.yaml",
         "examples/evals/harness-self-test/v1.0.0",
         "examples/failure-taxonomy.yaml",
         "examples/fixtures/doctor/missing-reference.yaml",
-        "examples/model-profiles/stub.yaml",
         "examples/policies/approval-policy.yaml",
         "examples/policies/sandbox-policy.yaml",
-        "examples/traces/native-cli-trace.json"
+        "examples/traces/external-import.json",
+        "examples/traces/recorded-external-trace.json"
       ],
       "determinism": "deterministic",
       "severity": "error",

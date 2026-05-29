@@ -149,7 +149,7 @@
       "properties": {
         "source": {
           "type": "string",
-          "enum": ["env", "file", "secret-manager", "host-vault", "stub", "external"]
+          "enum": ["env", "file", "secret-manager", "host-vault", "external"]
         },
         "name": {
           "$ref": "#/$defs/nonEmptyString"
@@ -166,7 +166,7 @@
     },
     "agentBudgets": {
       "type": "object",
-      "description": "Cost, token, and request budget gates for model execution.",
+      "description": "Cost, token, and request budget metadata for imported agent/model evidence. Harness validates these fields when present; it does not execute provider-backed models.",
       "required": ["max_cost_usd", "max_requests", "enforcement", "scope"],
       "anyOf": [
         {
@@ -249,7 +249,7 @@
         },
         "source": {
           "type": "string",
-          "enum": ["provider-reported", "computed", "stub", "external"]
+          "enum": ["provider-reported", "computed", "external"]
         }
       },
       "additionalProperties": false

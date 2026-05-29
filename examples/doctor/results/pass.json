@@ -77,16 +77,17 @@
       "inputs": [
         "AGENTS.md",
         "README.md",
-        "examples/agent-runners/stub.yaml",
         "examples/checks/doc-links.yaml",
         "examples/environments/local.yaml",
         "examples/evals/harness-self-test/v1.0.0",
         "examples/failure-taxonomy.yaml",
         "examples/harness.yaml",
-        "examples/model-profiles/stub.yaml",
+        "examples/judges/policy.yaml",
         "examples/policies/approval-policy.yaml",
         "examples/policies/sandbox-policy.yaml",
-        "examples/traces/native-cli-trace.json"
+        "examples/profiles/gc-stability.yaml",
+        "examples/traces/external-import.json",
+        "examples/traces/recorded-external-trace.json"
       ],
       "determinism": "deterministic",
       "severity": "error",
@@ -95,7 +96,7 @@
         {
           "path": "examples/harness.yaml",
           "media_type": "application/yaml",
-          "description": "11 composed reference(s) resolved and validated."
+          "description": "12 composed reference(s) resolved and validated."
         }
       ],
       "remediation": "No remediation required.",

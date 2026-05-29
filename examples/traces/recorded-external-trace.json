@@ -5,14 +5,14 @@
   "harness_version": "0.1.0",
   "inputs": {
     "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
-    "runner": "examples/agent-runners/stub.yaml"
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "environment_snapshot": {
     "environment": "examples/environments/local.yaml",
     "sandbox": "examples/policies/sandbox-policy.yaml",
     "approval_policy": "examples/policies/approval-policy.yaml",
-    "model_profile": "examples/model-profiles/stub.yaml",
-    "runner": "examples/agent-runners/stub.yaml"
+    "model_profile": "harness://external-model/recorded-fixture",
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "started_at": "2026-05-20T00:00:00Z",
   "completed_at": "2026-05-20T00:00:01Z",
@@ -20,8 +20,8 @@
   "exit_code": 0,
   "determinism_level": "recorded",
   "credential_reference": {
-    "source": "stub",
-    "name": "deterministic-stub",
+    "source": "external",
+    "name": "external-recorded",
     "purpose": "CI-safe recorded response fixture",
     "scope": "per-run"
   },
@@ -33,39 +33,39 @@
     "scope": "per-run"
   },
   "usage": {
-    "billed_model_id": "stub-v1",
+    "billed_model_id": "external-recorded-v1",
     "input_tokens": 0,
     "output_tokens": 0,
     "total_tokens": 0,
     "requests": 1,
     "incurred_cost_usd": 0,
-    "source": "stub"
+    "source": "computed"
   },
   "actions": [
     {
-      "id": "run-schema-smoke-001-oracle-81e3b51b6501-stub-model",
+      "id": "run-schema-smoke-001-oracle-81e3b51b6501-external-model",
       "type": "model",
       "timestamp": "2026-05-20T00:00:00Z",
-      "summary": "Deterministic stub emitted oracle recorded output.",
+      "summary": "External producer emitted oracle recorded output.",
       "model_call": {
-        "model_id": "stub-v1",
-        "request_id": "run-schema-smoke-001-oracle-81e3b51b6501-stub-request",
+        "model_id": "external-recorded-v1",
+        "request_id": "run-schema-smoke-001-oracle-81e3b51b6501-external-request",
         "usage": {
-          "billed_model_id": "stub-v1",
+          "billed_model_id": "external-recorded-v1",
           "input_tokens": 0,
           "output_tokens": 0,
           "total_tokens": 0,
           "requests": 1,
           "incurred_cost_usd": 0,
-          "source": "stub"
+          "source": "computed"
         },
         "latency_ms": 0
       },
       "artifacts": [
         {
-          "path": ".harness/outputs/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
+          "path": ".harness/outputs/imported-agent-artifacts/run-schema-smoke-001-oracle-81e3b51b6501.txt",
           "media_type": "text/plain",
-          "description": "Recorded stub output."
+          "description": "Recorded external output."
         }
       ]
     },
@@ -73,7 +73,7 @@
       "id": "run-schema-smoke-001-oracle-81e3b51b6501-verifier",
       "type": "verifier",
       "timestamp": "2026-05-20T00:00:01Z",
-      "summary": "Deterministic stub output satisfied the verifier.",
+      "summary": "Recorded external output satisfied the verifier.",
       "artifacts": [
         {
           "path": ".harness/outputs/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",
@@ -91,9 +91,9 @@
       "description": "Run-result ledger containing this run result."
     },
     {
-      "path": ".harness/outputs/agent-outputs/run-schema-smoke-001-oracle-81e3b51b6501.txt",
+      "path": ".harness/outputs/imported-agent-artifacts/run-schema-smoke-001-oracle-81e3b51b6501.txt",
       "media_type": "text/plain",
-      "description": "Deterministic stub output."
+      "description": "Recorded external output."
     },
     {
       "path": ".harness/outputs/verifier-results/run-schema-smoke-001-oracle-81e3b51b6501.json",

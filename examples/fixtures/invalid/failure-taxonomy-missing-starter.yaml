@@ -46,9 +46,6 @@ codes:
   - code: model-failure
     category: model
     description: Model failure is present.
-  - code: model-profile-stub
-    category: model
-    description: Model profile stub is present.
   - code: sandbox-violation
     category: sandbox
     description: Sandbox violation is present.

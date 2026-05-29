@@ -1,5 +1,11 @@
 # Design: Harness Engineering Platform
 
+> Current status: this document records the historical platform roadmap. Runner/model execution
+> surfaces from that roadmap (`harness run`, `harness eval run`, `agent-runner`,
+> `model_profiles`, and `agent_runners`) were removed by
+> `plans/agent-cli-plugin-architecture/` PR 2 before release; remaining mentions below are
+> historical context, not current product direction.
+
 ## Feature summary
 
 Establish `LaChimere/harness-engineering` as the canonical **harness-as-code platform for AI coding agents**.
@@ -7,8 +13,8 @@ Establish `LaChimere/harness-engineering` as the canonical **harness-as-code pla
 The core deliverable is not a new skill. The core deliverable is a versioned harness substrate:
 
 - `harness.yaml` as the repo-local source of truth.
-- JSON schemas for spec, policy, agent invocation, trace, eval task, run result, doctor result, plugin capability, repair actions, and GC evidence.
-- A deterministic `harness` CLI for init, validation, agent runs, doctor checks, project health checks, eval/trace validation, migrations, GC audits, and reports.
+- JSON schemas for spec, policy, trace, eval task, run result, doctor result, plugin capability, repair actions, and GC evidence.
+- A deterministic `harness` CLI for init, validation, doctor checks, project health checks, verifier-only eval validation, trace validation, migrations, GC audits, and reports.
 - Agent/CLI marketplace plugins as the default interactive product surface for users who want guided setup, dashboards, repairs, and trace/eval navigation, but only when a full-plugin capability tier is proven.
 - Optional CI adapters that turn harness drift into objective change feedback for teams that want enforcement.
 - Skills as portable agent-facing adapters over the same artifacts.

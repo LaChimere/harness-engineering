@@ -33,8 +33,10 @@ test('GitHub Actions CI recipe stays CLI-first and evidence-backed', async () =>
     expect(commands).toContain(expected);
   }
 
-  expect(commands.some((command) => command.includes('runner readiness'))).toBe(false);
-  expect(commands.some((command) => command.includes('eval run'))).toBe(false);
+  expect(commands.some((command) => command.includes(['runner', 'readiness'].join(' ')))).toBe(
+    false,
+  );
+  expect(commands.some((command) => command.includes(['eval', 'run'].join(' ')))).toBe(false);
   expect(commands.some((command) => command.includes('profile run'))).toBe(false);
   expect(
     commands.some((command) => command.includes('repair') || command.includes('cleanup')),

@@ -1,18 +1,18 @@
 {
   "schema_version": "0.1.0",
   "session_id": "invalid-external-import",
-  "run_id": "invalid-external-import-stub-credential",
+  "run_id": "invalid-external-import-nonexternal-model-provenance",
   "harness_version": "0.1.0",
   "inputs": {
     "task": "examples/evals/harness-self-test/v1.0.0/task.yaml",
-    "runner": "examples/agent-runners/stub.yaml"
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "environment_snapshot": {
     "environment": "examples/environments/local.yaml",
     "sandbox": "examples/policies/sandbox-policy.yaml",
     "approval_policy": "examples/policies/approval-policy.yaml",
-    "model_profile": "harness://external-import/imported-candidate",
-    "runner": "examples/agent-runners/stub.yaml"
+    "model_profile": "harness://external-model/recorded-fixture",
+    "runner": "harness://external-agent/recorded-fixture"
   },
   "started_at": "2026-05-21T00:00:00Z",
   "completed_at": "2026-05-21T00:00:01Z",
@@ -20,9 +20,9 @@
   "exit_code": 0,
   "determinism_level": "external-import",
   "credential_reference": {
-    "source": "stub",
-    "name": "imported-stub",
-    "purpose": "Invalid external-import credential fixture",
+    "source": "external",
+    "name": "imported-candidate",
+    "purpose": "Invalid external-import model profile fixture",
     "scope": "per-run"
   },
   "budgets": {

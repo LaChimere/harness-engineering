@@ -82,7 +82,7 @@ Unpack the tarball in a scratch directory and invoke the bundled `dist/index.js`
 - installable host plugin
 - CI enforcement package
 - scheduler daemon
-- provider-backed live model execution
+- model execution inside the Harness CLI
 
 ## Next steps
 

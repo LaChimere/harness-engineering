@@ -108,7 +108,7 @@
       "summary": "Explicit trace artifact is schema-valid.",
       "evidence": [
         {
-          "path": "examples/traces/native-cli-trace.json",
+          "path": "examples/traces/recorded-external-trace.json",
           "media_type": "application/json",
           "description": "Trace artifact."
         }
@@ -208,11 +208,11 @@
     },
     {
       "step": "behavioral-evidence",
-      "title": "Exercise eval, run, trace, and scoreboard evidence.",
+      "title": "Exercise eval, trace, run-result, and scoreboard evidence.",
       "status": "later",
       "actions": [
         "Run harness eval validate.",
-        "Run harness eval run.",
+        "Provide externally produced scoreboard evidence when needed.",
         "Generate harness report output."
       ]
     },
@@ -414,7 +414,7 @@
       "description": "scoreboard artifact."
     },
     {
-      "path": "examples/traces/native-cli-trace.json",
+      "path": "examples/traces/recorded-external-trace.json",
       "media_type": "application/json",
       "description": "trace artifact."
     }

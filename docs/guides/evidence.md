@@ -11,7 +11,7 @@ A typical adoption loop is:
 | 1 | `harness validate` | Confirm `harness.yaml`, schema versions, and local references are coherent before executing anything. | validation result / exit code |
 | 2 | `harness doctor` | Inspect deterministic harness structure without running repository commands. | `doctor-result` |
 | 3 | `harness health` | Run reviewed local project checks and record trust/sandbox evidence. | `health-result` |
-| 4 | `harness run` / `harness eval run` | Produce deterministic candidate, verifier, trace, and scoreboard evidence. | `run-result`, `trace`, `scoreboard` |
+| 4 | `harness eval validate` | Produce verifier-only eval evidence and a run-result ledger. | `run-result`, `verifier-result` |
 | 5 | `harness gc audit` | Find entropy and propose reviewable cleanup slices without applying them. | `gc-evidence` |
 | 6 | `harness profile run` | Consume existing evidence for a recurring profile handoff. | `profile-run` |
 | 7 | `harness assess` / `harness report` | Summarize maturity and cite evidence for review or CI. | `assessment`, report |
@@ -22,10 +22,10 @@ A typical adoption loop is:
 |---|---|---|
 | `doctor-result` | `harness doctor` | Structural harness checks. |
 | `health-result` | `harness health` | Declared local project health checks. |
-| `verifier-result` | `harness eval validate`, `harness run`, `harness eval run` | Deterministic verifier outcome. |
-| `run-result` | `harness run`, `harness eval run`, `harness eval validate` | Execution or verifier-only result ledger entry. |
-| `trace` | `harness run`, `harness eval run` | Normalized action and artifact trace. |
-| `scoreboard` | `harness eval run` | Behavioral eval summary. |
+| `verifier-result` | `harness eval validate` | Deterministic verifier outcome. |
+| `run-result` | `harness eval validate`, external evidence producers | Verifier-only or externally produced result ledger entry. |
+| `trace` | External evidence producers, `harness trace import` | Normalized action and artifact trace. |
+| `scoreboard` | External evidence producers or calibration fixtures | Behavioral eval summary. |
 | `gc-evidence` | `harness gc audit` | Entropy findings and reviewable cleanup slices. |
 | `profile-run` | `harness profile run` | Recurring profile trigger/stop/handoff evidence. |
 | `assessment` | `harness assess` | Read-only maturity and routing summary. |
@@ -35,7 +35,7 @@ Concrete example artifacts shipped with this repository:
 - `examples/doctor/results/pass.json`
 - `examples/health/results/pass.json`
 - `examples/gc/evidence.json`
-- `examples/traces/native-cli-trace.json`
+- `examples/traces/recorded-external-trace.json`
 - `examples/scoreboards/self-test.json`
 - `examples/profile-runs/gc-stability-clean.json`
 - `examples/assessments/repair-action-routing.json`
@@ -49,7 +49,6 @@ Concrete example artifacts shipped with this repository:
 - `.harness/outputs/gc/`
 - `.harness/outputs/verifier-results/`
 - `.harness/outputs/traces/`
-- `.harness/outputs/agent-outputs/`
 - `.harness/outputs/scoreboards/`
 - `.harness/outputs/profile-runs/`
 - `.harness/outputs/continuity/`
@@ -71,8 +70,7 @@ Commands that write artifacts constrain output paths to the selected repository 
 - `doctor` is structural and does not execute local checks.
 - `health` executes declared local commands only after explicit acknowledgement.
 - `eval validate` verifies oracle and broken-twin examples without running agents.
-- `run` and `eval run` use deterministic stub execution unless you explicitly import an external candidate.
-- `external-import` evidence records candidate provenance and zero provider usage; it is not live-model evidence.
+- External agent/model outputs can be supplied as explicit run-result, trace, scoreboard, report, or verification evidence; Harness validates and summarizes them but does not execute the agent/model.
 - `gc audit` is read-only and does not apply cleanup.
 - `profile run` consumes evidence and emits a handoff; it does not schedule itself or mutate repository files beyond a requested output artifact.
 

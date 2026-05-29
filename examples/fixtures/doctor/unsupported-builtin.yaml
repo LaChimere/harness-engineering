@@ -10,15 +10,12 @@ engines:
     approval-policy: ">=0.1 <0.2"
     sandbox-policy: ">=0.1 <0.2"
     environment: ">=0.1 <0.2"
-    model-profile: ">=0.1 <0.2"
     failure-taxonomy: ">=0.1 <0.2"
     continuity-state: ">=0.1 <0.2"
     self-verification: ">=0.1 <0.2"
     doctor-result: ">=0.1 <0.2"
     health-result: ">=0.1 <0.2"
     eval-task: ">=0.1 <0.2"
-    agent-runner: ">=0.1 <0.2"
-    runner-readiness: ">=0.1 <0.2"
     trace: ">=0.1 <0.2"
     run-result: ">=0.1 <0.2"
     scoreboard: ">=0.1 <0.2"
@@ -34,14 +31,10 @@ context:
 environment: examples/environments/local.yaml
 approval_policy: examples/policies/approval-policy.yaml
 sandbox: examples/policies/sandbox-policy.yaml
-model_profiles:
-  default: examples/model-profiles/stub.yaml
-agent_runners:
-  default: examples/agent-runners/stub.yaml
 traces:
   output_dir: .harness/traces
   examples:
-    - examples/traces/native-cli-trace.json
+    - examples/traces/recorded-external-trace.json
     - examples/traces/external-import.json
 evals:
   suites:

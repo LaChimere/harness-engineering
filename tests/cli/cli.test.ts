@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
-import { mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -305,7 +305,7 @@ test('assess emits schema-valid JSON and leaves unrelated repair actions unselec
     '--run-results',
     'examples/run-results/run-result.json',
     '--trace',
-    'examples/traces/native-cli-trace.json',
+    'examples/traces/recorded-external-trace.json',
     '--scoreboard',
     'examples/scoreboards/self-test.json',
     '--report',
@@ -502,7 +502,7 @@ test('assess markdown exposes repair route safety metadata', async () => {
     '--run-results',
     'examples/run-results/run-result.json',
     '--trace',
-    'examples/traces/native-cli-trace.json',
+    'examples/traces/recorded-external-trace.json',
     '--scoreboard',
     'examples/scoreboards/self-test.json',
     '--report',
@@ -595,7 +595,7 @@ test('assess requires harness-generated report text for scoreboard/report maturi
     '--run-results',
     'examples/run-results/run-result.json',
     '--trace',
-    'examples/traces/native-cli-trace.json',
+    'examples/traces/recorded-external-trace.json',
     '--scoreboard',
     'examples/scoreboards/self-test.json',
     '--report',
@@ -962,7 +962,7 @@ test('assess rejects symlinked artifact inputs', async () => {
   await run(['init'], root);
   await writeFile(
     join(outside, 'trace.json'),
-    await readFile('examples/traces/native-cli-trace.json', 'utf8'),
+    await readFile('examples/traces/recorded-external-trace.json', 'utf8'),
   );
   await symlink(join(outside, 'trace.json'), join(root, 'trace-link.json'));
 
@@ -1711,205 +1711,6 @@ test('health rejects symlinked harness before output preflight reads it', async 
   );
   expect(result.code).toBe(ExitCode.usageError);
   expect(result.stderr).toContain('Refusing to read through symlink');
-});
-
-test('runner readiness reports stub and live readiness without executing models', async () => {
-  const stub = await run([
-    'runner',
-    'readiness',
-    '--file',
-    'examples/harness.yaml',
-    '--format',
-    'json',
-  ]);
-  expect(stub.code).toBe(ExitCode.ok);
-  const stubReadiness = JSON.parse(stub.stdout);
-  expect(getString(stubReadiness, 'mode')).toBe('stub');
-  expect(getBoolean(stubReadiness, 'live_ready')).toBe(false);
-  expect(
-    getString(
-      objectWithString(
-        jsonObjects(getArray(stubReadiness, 'checks')),
-        'id',
-        'execution-boundary',
-      ) ?? {},
-      'status',
-    ),
-  ).toBe('passed');
-
-  const live = await run([
-    'runner',
-    'readiness',
-    '--file',
-    'examples/harness.yaml',
-    '--runner',
-    'examples/agent-runners/live-ready.yaml',
-    '--format',
-    'json',
-  ]);
-  expect(live.code).toBe(ExitCode.ok);
-  const liveReadiness = JSON.parse(live.stdout);
-  expect(getString(liveReadiness, 'mode')).toBe('live');
-  expect(getBoolean(liveReadiness, 'live_ready')).toBe(true);
-  const schemas = await loadSchemaRegistry(process.cwd());
-  expect(schemas.validate('runner-readiness', liveReadiness)).toEqual([]);
-});
-
-test('runner readiness refuses unsupported live prerequisites', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-  await mkdir(join(root, 'examples/model-profiles'), { recursive: true });
-  await mkdir(join(root, 'examples/policies'), { recursive: true });
-  await mkdir(join(root, 'examples/agent-runners'), { recursive: true });
-  await writeFile(
-    join(root, 'examples/model-profiles/live-ready.yaml'),
-    await readFile('examples/model-profiles/live-ready.yaml', 'utf8'),
-  );
-  await writeFile(
-    join(root, 'examples/policies/live-sandbox-policy.yaml'),
-    await readFile('examples/policies/live-sandbox-policy.yaml', 'utf8'),
-  );
-  await writeFile(
-    join(root, 'examples/agent-runners/live-missing-redaction.yaml'),
-    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
-      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
-      .replaceAll(
-        'examples/policies/approval-policy.yaml',
-        '.harness/policies/approval-policy.yaml',
-      )
-      .replaceAll(
-        'examples/evals/harness-self-test/v1.0.0/task.yaml',
-        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
-      )
-      .replace(
-        'sandbox: examples/policies/live-sandbox-policy.yaml',
-        'sandbox: .harness/policies/sandbox-policy.yaml',
-      )
-      .replace('trace_output: .harness/traces', 'trace_output: .harness/outputs/traces')
-      .replace(/trace_redaction:\n(?: {2}.+\n)+credential_reference:/, 'credential_reference:'),
-  );
-  const result = await run(
-    [
-      'runner',
-      'readiness',
-      '--runner',
-      'examples/agent-runners/live-missing-redaction.yaml',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(result.code).toBe(ExitCode.validationError);
-  const readiness = JSON.parse(result.stdout);
-  expect(getString(readiness, 'status')).toBe('failed');
-  expect(
-    getString(
-      objectWithString(jsonObjects(getArray(readiness, 'checks')), 'id', 'sandbox') ?? {},
-      'failure_code',
-    ),
-  ).toBe('sandbox-violation');
-  expect(
-    getString(
-      objectWithString(jsonObjects(getArray(readiness, 'checks')), 'id', 'trace-redaction') ?? {},
-      'failure_code',
-    ),
-  ).toBe('trace-redaction-missing');
-
-  await writeFile(
-    join(root, 'examples/agent-runners/live-stub-model.yaml'),
-    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
-      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
-      .replaceAll(
-        'examples/policies/approval-policy.yaml',
-        '.harness/policies/approval-policy.yaml',
-      )
-      .replaceAll(
-        'examples/evals/harness-self-test/v1.0.0/task.yaml',
-        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
-      )
-      .replace(
-        'model_profile: examples/model-profiles/live-ready.yaml',
-        'model_profile: .harness/model-profiles/stub.yaml',
-      )
-      .replace('trace_output: .harness/outputs/traces', 'trace_output: ../../traces'),
-  );
-  const stubModel = await run(
-    [
-      'runner',
-      'readiness',
-      '--runner',
-      'examples/agent-runners/live-stub-model.yaml',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(stubModel.code).toBe(ExitCode.validationError);
-  const stubModelReadiness = JSON.parse(stubModel.stdout);
-  expect(
-    getString(
-      objectWithString(
-        jsonObjects(getArray(stubModelReadiness, 'checks')),
-        'id',
-        'model-profile',
-      ) ?? {},
-      'failure_code',
-    ),
-  ).toBe('model-profile-stub');
-  expect(
-    getString(
-      objectWithString(jsonObjects(getArray(stubModelReadiness, 'checks')), 'id', 'trace-output') ??
-        {},
-      'failure_code',
-    ),
-  ).toBe('trace-output-invalid');
-
-  await writeFile(
-    join(root, 'examples/policies/live-sandbox-policy-extra-secret.yaml'),
-    (await readFile('examples/policies/live-sandbox-policy.yaml', 'utf8'))
-      .replace('    - HARNESS_LIVE_API_KEY', '    - HARNESS_LIVE_API_KEY\n    - EXTRA_API_KEY')
-      .replace('  allowed_secret_refs: []', '  allowed_secret_refs:\n    - vault://extra'),
-  );
-  await writeFile(
-    join(root, 'examples/agent-runners/live-extra-secret.yaml'),
-    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
-      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
-      .replaceAll(
-        'examples/policies/approval-policy.yaml',
-        '.harness/policies/approval-policy.yaml',
-      )
-      .replaceAll(
-        'examples/evals/harness-self-test/v1.0.0/task.yaml',
-        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
-      )
-      .replace(
-        'sandbox: examples/policies/live-sandbox-policy.yaml',
-        'sandbox: examples/policies/live-sandbox-policy-extra-secret.yaml',
-      )
-      .replace('trace_output: .harness/traces', 'trace_output: .harness/outputs/traces'),
-  );
-  const extraSecret = await run(
-    [
-      'runner',
-      'readiness',
-      '--runner',
-      'examples/agent-runners/live-extra-secret.yaml',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(extraSecret.code).toBe(ExitCode.validationError);
-  expect(
-    getString(
-      objectWithString(
-        jsonObjects(getArray(JSON.parse(extraSecret.stdout), 'checks')),
-        'id',
-        'sandbox',
-      ) ?? {},
-      'failure_code',
-    ),
-  ).toBe('sandbox-violation');
 });
 
 test('profile validates and runs gc stability evidence', async () => {
@@ -2957,7 +2758,7 @@ test('report validates judge results linked from run-result artifacts', async ()
           ['total_tokens']: 0,
           requests: 0,
           ['incurred_cost_usd']: 0,
-          source: 'stub',
+          source: 'computed',
         },
         trace: 'harness://verifier-only/no-agent-trace',
         ['verifier_result']: 'examples/verifier-results/schema-smoke.json',
@@ -3064,7 +2865,7 @@ test('eval validate proves oracle pass and broken twin fail deterministically', 
       ['total_tokens']: 0,
       requests: 0,
       ['incurred_cost_usd']: 0,
-      source: 'stub',
+      source: 'computed',
     });
     const execution = getObject(runResult, 'execution');
     expect(execution).toEqual({
@@ -3359,580 +3160,6 @@ test('eval validate refuses to write run results through symlinks', async () => 
   expect(result.stderr).toContain('Refusing to write through symlink');
 });
 
-test('run executes a deterministic stub task and writes agent artifacts', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-
-  const result = await run(
-    [
-      'run',
-      '.harness/evals/harness-self-test/v1.0.0/task.yaml',
-      '--run-id',
-      'stub-single',
-      '--session-id',
-      'session-stub',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(result.code).toBe(ExitCode.ok);
-  const summary = JSON.parse(result.stdout);
-  expect(getString(summary, 'case')).toBe('oracle');
-  expect(getString(summary, 'actual_status')).toBe('passed');
-
-  const tracePath = requiredStringForTest(summary, 'trace');
-  const verifierResultPath = requiredStringForTest(summary, 'verifier_result');
-  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-  expect(runResults.length).toBe(1);
-  const runResult = runResults[0] ?? {};
-  const schemas = await loadSchemaRegistry(process.cwd());
-  expect(schemas.validate('run-result', runResult)).toEqual([]);
-  expect(getString(runResult, 'trace')).toBe(tracePath);
-  expect(getString(runResult, 'verifier_result')).toBe(verifierResultPath);
-  expect(getObject(runResult, 'execution')).toEqual({
-    mode: 'agent-run',
-    ['harness_status']: 'passed',
-    ['verifier_status']: 'passed',
-    ['agent_status']: 'passed',
-    ['model_status']: 'passed',
-  });
-
-  const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
-  expect(schemas.validate('trace', trace)).toEqual([]);
-  expect(getString(trace, 'session_id')).toBe('session-stub');
-  expect(getString(getObject(trace, 'credential_reference') ?? {}, 'source')).toBe('stub');
-  expect(getNumberForTest(getObject(trace, 'budgets') ?? {}, 'max_requests')).toBe(1);
-  expect(getString(getObject(trace, 'usage') ?? {}, 'source')).toBe('stub');
-  expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(1);
-
-  const verifierResult = JSON.parse(await readFile(join(root, verifierResultPath), 'utf8'));
-  expect(schemas.validate('verifier-result', verifierResult)).toEqual([]);
-  expect(getString(verifierResult, 'status')).toBe('passed');
-  const agentOutputPath = requiredStringForTest(summary, 'agent_output');
-  expect(await readFile(join(root, agentOutputPath), 'utf8')).toContain('schema-smoke passes');
-});
-
-test('run imports an external candidate and writes external-import artifacts', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-  await writeFile(
-    join(root, 'candidate.txt'),
-    'schema-smoke passes\n\nGenerated outside harness by Copilot-as-model.\n',
-  );
-
-  const result = await run(
-    [
-      'run',
-      '--external-candidate',
-      'candidate.txt',
-      '--external-model-id',
-      'copilot-cli',
-      '--run-id',
-      'external-import-import',
-      '--session-id',
-      'session-external-import',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(result.code).toBe(ExitCode.ok);
-  const summary = JSON.parse(result.stdout);
-  expect(getString(summary, 'actual_status')).toBe('passed');
-  expect(getString(summary, 'source_candidate')).toBe('candidate.txt');
-
-  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-  expect(runResults.length).toBe(1);
-  const runResult = runResults[0] ?? {};
-  const schemas = await loadSchemaRegistry(process.cwd());
-  expect(schemas.validate('run-result', runResult)).toEqual([]);
-  expect(getString(runResult, 'kind')).toBe('external-import');
-  expect(getString(runResult, 'model_profile')).toBe('harness://external-import/copilot-cli');
-  expect(getObject(runResult, 'execution')).toEqual({
-    mode: 'external-import',
-    ['harness_status']: 'passed',
-    ['verifier_status']: 'passed',
-  });
-  expect(getString(getObject(runResult, 'usage') ?? {}, 'source')).toBe('external');
-  expect(getNumberForTest(getObject(runResult, 'usage') ?? {}, 'requests')).toBe(0);
-
-  const tracePath = requiredStringForTest(summary, 'trace');
-  const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
-  expect(schemas.validate('trace', trace)).toEqual([]);
-  expect(getString(trace, 'determinism_level')).toBe('external-import');
-  expect(getString(getObject(trace, 'credential_reference') ?? {}, 'source')).toBe('external');
-  expect(getString(getObject(trace, 'usage') ?? {}, 'source')).toBe('external');
-  expect(
-    jsonObjects(getArray(trace, 'actions')).some(
-      (action) => getString(action, 'id') === `${getString(summary, 'run_id')}-external-import`,
-    ),
-  ).toBe(true);
-
-  const verifierResult = JSON.parse(
-    await readFile(join(root, requiredStringForTest(summary, 'verifier_result')), 'utf8'),
-  );
-  expect(schemas.validate('verifier-result', verifierResult)).toEqual([]);
-  expect(getString(verifierResult, 'case')).toBe('oracle');
-  expect(getString(verifierResult, 'status')).toBe('passed');
-
-  const externalOnlyAssessment = await run(
-    ['assess', '--format', 'json', '--run-results', '.harness/outputs/run-results.jsonl'],
-    root,
-  );
-  expect(externalOnlyAssessment.code).toBe(ExitCode.ok);
-  const runResultsScore = objectWithString(
-    jsonObjects(getArray(JSON.parse(externalOnlyAssessment.stdout), 'scorecard')),
-    'id',
-    'run-results',
-  );
-  expect(getString(runResultsScore ?? {}, 'status')).toBe('partial');
-  expect(getString(runResultsScore ?? {}, 'summary')).toContain(
-    'not counted as agent-run evidence',
-  );
-
-  await mkdir(join(root, 'examples/model-profiles'), { recursive: true });
-  await mkdir(join(root, 'examples/policies'), { recursive: true });
-  await mkdir(join(root, 'examples/agent-runners'), { recursive: true });
-  await writeFile(
-    join(root, 'examples/model-profiles/live-ready.yaml'),
-    await readFile('examples/model-profiles/live-ready.yaml', 'utf8'),
-  );
-  await writeFile(
-    join(root, 'examples/policies/live-sandbox-policy.yaml'),
-    await readFile('examples/policies/live-sandbox-policy.yaml', 'utf8'),
-  );
-  await writeFile(
-    join(root, 'examples/agent-runners/live-ready.yaml'),
-    (await readFile('examples/agent-runners/live-ready.yaml', 'utf8'))
-      .replaceAll('examples/prompts/stub-task.md', '.harness/prompts/stub-task.md')
-      .replaceAll(
-        'examples/policies/approval-policy.yaml',
-        '.harness/policies/approval-policy.yaml',
-      )
-      .replaceAll(
-        'examples/evals/harness-self-test/v1.0.0/task.yaml',
-        '.harness/evals/harness-self-test/v1.0.0/task.yaml',
-      )
-      .replace('trace_output: .harness/traces', 'trace_output: .harness/outputs/traces'),
-  );
-  const liveRunnerImport = await run(
-    [
-      'run',
-      '--runner',
-      'examples/agent-runners/live-ready.yaml',
-      '--external-candidate',
-      'candidate.txt',
-      '--external-model-id',
-      'copilot-cli',
-      '--run-id',
-      'external-import-live-runner-import',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(liveRunnerImport.code).toBe(ExitCode.ok);
-  const liveRunnerRunResults = await readJsonLines(
-    join(root, '.harness/outputs/run-results.jsonl'),
-  );
-  const liveRunnerRunResult = liveRunnerRunResults.find((entry) =>
-    requiredStringForTest(entry, 'run_id').startsWith('external-import-live-runner-import'),
-  );
-  expect(liveRunnerRunResult).toBeDefined();
-  expect(getString(liveRunnerRunResult ?? {}, 'kind')).toBe('external-import');
-  expect(getString(getObject(liveRunnerRunResult ?? {}, 'usage') ?? {}, 'source')).toBe('external');
-});
-
-test('run refuses to replace agent-run evidence with external-import evidence', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-  await writeFile(join(root, 'candidate.txt'), 'schema-smoke passes\nexternal replacement\n');
-  const baseRunId = 'external-import-ledger-kind';
-
-  const agentRun = await run(['run', '--run-id', baseRunId, '--format', 'json'], root);
-  expect(agentRun.code).toBe(ExitCode.ok);
-  const agentOutputPath = requiredStringForTest(JSON.parse(agentRun.stdout), 'agent_output');
-  const originalAgentOutput = await readFile(join(root, agentOutputPath), 'utf8');
-  expect(originalAgentOutput).not.toContain('external replacement');
-
-  const externalImport = await run(
-    ['run', '--external-candidate', 'candidate.txt', '--run-id', baseRunId, '--format', 'json'],
-    root,
-  );
-  expect(externalImport.code).toBe(ExitCode.validationError);
-  expect(externalImport.stderr).toContain('Refusing to replace run-result');
-  expect(externalImport.stderr).toContain('eval/agent-run -> external-import/external-import');
-
-  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-  expect(runResults.length).toBe(1);
-  expect(getString(runResults[0] ?? {}, 'kind')).toBe('eval');
-  expect(await readFile(join(root, agentOutputPath), 'utf8')).toBe(originalAgentOutput);
-});
-
-test('eval run refuses to replace external-import evidence before writing artifacts', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-  await writeFile(join(root, 'candidate.txt'), 'schema-smoke passes\nexternal import remains\n');
-  const baseRunId = 'external-import-eval-ledger-kind';
-
-  const externalImport = await run(
-    ['run', '--external-candidate', 'candidate.txt', '--run-id', baseRunId, '--format', 'json'],
-    root,
-  );
-  expect(externalImport.code).toBe(ExitCode.ok);
-  const externalSummary = JSON.parse(externalImport.stdout);
-  const agentOutputPath = requiredStringForTest(externalSummary, 'agent_output');
-  const originalAgentOutput = await readFile(join(root, agentOutputPath), 'utf8');
-  expect(originalAgentOutput).toContain('external import remains');
-
-  const evalRun = await run(['eval', 'run', '--run-id', baseRunId, '--format', 'json'], root);
-  expect(evalRun.code).toBe(ExitCode.validationError);
-  expect(evalRun.stderr).toContain('Refusing to replace run-result');
-  expect(evalRun.stderr).toContain('external-import/external-import -> eval/agent-run');
-
-  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-  expect(runResults.length).toBe(1);
-  expect(getString(runResults[0] ?? {}, 'kind')).toBe('external-import');
-  expect(await readFile(join(root, agentOutputPath), 'utf8')).toBe(originalAgentOutput);
-});
-
-test('run refuses unsafe external candidates and records verifier failures honestly', async () => {
-  const parent = await tempRoot();
-  const root = join(parent, 'repo');
-  await mkdir(root);
-  await run(['init'], root);
-  await writeFile(join(parent, 'outside.txt'), 'schema-smoke passes outside root.\n');
-
-  const escaped = await run(
-    ['run', '--external-candidate', '../outside.txt', '--run-id', 'external-import-escape'],
-    root,
-  );
-  expect(escaped.code).toBe(ExitCode.usageError);
-  expect(escaped.stderr).toContain('External candidate escapes root');
-
-  await writeFile(join(root, 'bad-candidate.txt'), 'schema-smoke fails\n');
-  const failed = await run(
-    [
-      'run',
-      '--external-candidate',
-      'bad-candidate.txt',
-      '--run-id',
-      'external-import-failed',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(failed.code).toBe(ExitCode.validationError);
-  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-  const runResult = runResults[0] ?? {};
-  expect(getString(runResult, 'kind')).toBe('external-import');
-  expect(getString(runResult, 'status')).toBe('failed');
-  expect(getString(runResult, 'failure_code')).toBe('verification-failure');
-  expect(getObject(runResult, 'execution')).toEqual({
-    mode: 'external-import',
-    ['harness_status']: 'passed',
-    ['verifier_status']: 'failed',
-  });
-});
-
-test('run preserves explicit session association across separate runs', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-
-  const first = await run(
-    [
-      'run',
-      '--run-id',
-      'stub-session-a',
-      '--session-id',
-      'shared-stub-session',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  const second = await run(
-    [
-      'run',
-      '--run-id',
-      'stub-session-b',
-      '--session-id',
-      'shared-stub-session',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(first.code).toBe(ExitCode.ok);
-  expect(second.code).toBe(ExitCode.ok);
-
-  const firstTrace = JSON.parse(
-    await readFile(join(root, requiredStringForTest(JSON.parse(first.stdout), 'trace')), 'utf8'),
-  );
-  const secondTrace = JSON.parse(
-    await readFile(join(root, requiredStringForTest(JSON.parse(second.stdout), 'trace')), 'utf8'),
-  );
-  expect(getString(firstTrace, 'session_id')).toBe('shared-stub-session');
-  expect(getString(secondTrace, 'session_id')).toBe('shared-stub-session');
-});
-
-test('run replaces duplicate agent-run ledger entries for the same run id', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-
-  const args = [
-    'run',
-    '--run-id',
-    'stub-repeat',
-    '--session-id',
-    'session-stub-repeat',
-    '--format',
-    'json',
-  ];
-  const first = await run(args, root);
-  const second = await run(args, root);
-  expect(first.code).toBe(ExitCode.ok);
-  expect(second.code).toBe(ExitCode.ok);
-
-  const runResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-  expect(runResults.length).toBe(1);
-  expect(requiredStringForTest(runResults[0] ?? {}, 'run_id')).toContain('stub-repeat');
-});
-
-test('run rejects empty session ids and symlinked stub outputs', async () => {
-  const emptySession = await run(['run', '--session-id='], await tempRoot());
-  expect(emptySession.code).toBe(ExitCode.usageError);
-  expect(emptySession.stderr).toContain('run --session-id must not be empty');
-  const emptyEvalSession = await run(['eval', 'run', '--session-id='], await tempRoot());
-  expect(emptyEvalSession.code).toBe(ExitCode.usageError);
-  expect(emptyEvalSession.stderr).toContain('eval run --session-id must not be empty');
-  const externalModelWithoutCandidate = await run(
-    ['run', '--external-model-id', 'copilot-cli'],
-    await tempRoot(),
-  );
-  expect(externalModelWithoutCandidate.code).toBe(ExitCode.usageError);
-  expect(externalModelWithoutCandidate.stderr).toContain(
-    'run --external-model-id requires --external-candidate',
-  );
-
-  const parent = await tempRoot();
-  const root = join(parent, 'repo');
-  await mkdir(root);
-  await run(['init'], root);
-  await writeFile(join(parent, 'outside-oracle.txt'), 'schema-smoke passes outside root.\n');
-  await rm(join(root, '.harness/evals/harness-self-test/v1.0.0/oracle.txt'));
-  await symlink(
-    join(parent, 'outside-oracle.txt'),
-    join(root, '.harness/evals/harness-self-test/v1.0.0/oracle.txt'),
-  );
-  await refreshSelfTestDatasetHash(root);
-
-  const symlinkedOutput = await run(['run', '--format', 'json'], root);
-  expect(symlinkedOutput.code).toBe(ExitCode.usageError);
-  expect(symlinkedOutput.stderr).toContain('Refusing to write through symlink');
-});
-
-test('run rejects deterministic runners without explicit budgets', async () => {
-  const result = await run([
-    'run',
-    '--file',
-    'examples/harness.yaml',
-    '--runner',
-    'examples/fixtures/invalid/agent-runner-missing-budgets.yaml',
-    '--run-id',
-    'stub-missing-budgets',
-    '--format',
-    'json',
-  ]);
-  expect(result.code).toBe(ExitCode.validationError);
-  expect(result.stderr).toContain('Agent runner validation failed');
-  expect(result.stderr).toContain("must have required property 'budgets'");
-});
-
-test('run rejects non-stub credential sources', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-  const runnerPath = join(root, '.harness/agent-runners/stub.yaml');
-  const runner = await readFile(runnerPath, 'utf8');
-  await writeFile(runnerPath, runner.replace('source: stub', 'source: env'));
-
-  const result = await run(['run', '--run-id', 'stub-env-credential', '--format', 'json'], root);
-  expect(result.code).toBe(ExitCode.validationError);
-  expect(result.stderr).toContain(
-    'deterministic runner requires credential_reference.source: stub',
-  );
-});
-
-test('eval run emits agent-run results, traces, and a failure-bucket scoreboard', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-
-  const result = await run(
-    [
-      'eval',
-      'run',
-      '--run-id',
-      'agent-runner-suite',
-      '--session-id',
-      'session-stub-suite',
-      '--format',
-      'json',
-    ],
-    root,
-  );
-  expect(result.code).toBe(ExitCode.ok);
-  const evalRun = JSON.parse(result.stdout);
-  expect(getString(evalRun, 'status')).toBe('passed');
-  expect(getString(evalRun, 'session_id')).toBe('session-stub-suite');
-
-  const schemas = await loadSchemaRegistry(process.cwd());
-  const runResults = jsonObjects(getArray(evalRun, 'run_results'));
-  expect(runResults.length).toBe(2);
-  const ledgerRunResults = await readJsonLines(join(root, '.harness/outputs/run-results.jsonl'));
-  expect(ledgerRunResults.map((runResult) => getString(runResult, 'run_id')).sort()).toEqual(
-    runResults.map((runResult) => getString(runResult, 'run_id')).sort(),
-  );
-  const oracle = runResults.find((runResult) =>
-    requiredStringForTest(runResult, 'run_id').includes('-oracle-'),
-  );
-  const brokenTwin = runResults.find((runResult) =>
-    requiredStringForTest(runResult, 'run_id').includes('-broken-twin-'),
-  );
-  expect(getString(oracle ?? {}, 'status')).toBe('passed');
-  expect(getString(brokenTwin ?? {}, 'status')).toBe('failed');
-  expect(getString(brokenTwin ?? {}, 'failure_code')).toBe('agent-failure');
-  for (const runResult of runResults) {
-    expect(getString(runResult, 'trace')).not.toBe('harness://verifier-only/no-agent-trace');
-    expect(getString(getObject(runResult, 'execution') ?? {}, 'mode')).toBe('agent-run');
-    const tracePath = requiredStringForTest(runResult, 'trace');
-    const verifierResultPath = requiredStringForTest(runResult, 'verifier_result');
-    const trace = JSON.parse(await readFile(join(root, tracePath), 'utf8'));
-    expect(schemas.validate('trace', trace)).toEqual([]);
-    expect(getString(trace, 'session_id')).toBe('session-stub-suite');
-    expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(1);
-    const modelActions = jsonObjects(getArray(trace, 'actions')).filter(
-      (action) => getString(action, 'type') === 'model',
-    );
-    expect(modelActions.length).toBe(1);
-    expect(getObject(getObject(modelActions[0] ?? {}, 'model_call') ?? {}, 'usage')).toEqual(
-      getObject(trace, 'usage'),
-    );
-    const verifierResult = JSON.parse(await readFile(join(root, verifierResultPath), 'utf8'));
-    expect(getString(verifierResult, 'run_id')).toBe(getString(runResult, 'run_id'));
-  }
-
-  const scoreboardPath = requiredStringForTest(evalRun, 'scoreboard');
-  const scoreboard = JSON.parse(await readFile(join(root, scoreboardPath), 'utf8'));
-  expect(schemas.validate('scoreboard', scoreboard)).toEqual([]);
-  expect(getString(scoreboard, 'status')).toBe('passed');
-  const totals = getObject(scoreboard, 'totals') ?? {};
-  expect(getNumberForTest(totals, 'total')).toBe(2);
-  expect(getNumberForTest(totals, 'passed')).toBe(1);
-  expect(getNumberForTest(totals, 'failed')).toBe(1);
-  const buckets = getObject(totals, 'failure_buckets') ?? {};
-  expect(getNumberForTest(buckets, 'agent-failure')).toBe(1);
-  expect(getNumberForTest(buckets, 'model-failure')).toBe(0);
-  expect(getNumberForTest(buckets, 'harness-error')).toBe(0);
-  expect(getNumberForTest(buckets, 'verifier-error')).toBe(0);
-  expect(getNumberForTest(buckets, 'verification-failure')).toBe(0);
-  expect(getNumberForTest(buckets, 'budget-exceeded')).toBe(0);
-  expect(getNumberForTest(buckets, 'credential-missing')).toBe(0);
-  const splits = jsonObjects(getArray(scoreboard, 'splits'));
-  const optimization = objectWithString(splits, 'split', 'optimization');
-  const holdout = objectWithString(splits, 'split', 'holdout');
-  expect(getNumberForTest(optimization ?? {}, 'total')).toBe(2);
-  expect(getNumberForTest(holdout ?? {}, 'total')).toBe(0);
-});
-
-test('eval run maps harness refusals into scoreboard failure buckets', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
-  const task = await readFile(taskPath, 'utf8');
-  await writeFile(taskPath, task.replace('network_access: false', 'network_access: true'));
-
-  const result = await run(
-    ['eval', 'run', '--run-id', 'agent-runner-sandbox', '--format', 'json'],
-    root,
-  );
-  expect(result.code).toBe(ExitCode.validationError);
-  const evalRun = JSON.parse(result.stdout);
-  expect(getString(evalRun, 'status')).toBe('error');
-  const runResults = jsonObjects(getArray(evalRun, 'run_results'));
-  expect(runResults.length).toBe(2);
-  for (const runResult of runResults) {
-    expect(getString(runResult, 'failure_code')).toBe('sandbox-violation');
-    expect(getObject(runResult, 'execution')).toEqual({
-      mode: 'agent-run',
-      ['harness_status']: 'failed',
-      ['verifier_status']: 'skipped',
-      ['agent_status']: 'skipped',
-      ['model_status']: 'skipped',
-    });
-  }
-
-  const trace = JSON.parse(
-    await readFile(join(root, requiredStringForTest(runResults[0] ?? {}, 'trace')), 'utf8'),
-  );
-  expect(getNumberForTest(getObject(trace, 'usage') ?? {}, 'requests')).toBe(0);
-  expect(
-    jsonObjects(getArray(trace, 'actions')).map((action) => getString(action, 'type')),
-  ).toEqual(['system']);
-  expect(await readdir(join(root, '.harness/outputs/agent-outputs'))).toEqual([]);
-
-  const scoreboard = JSON.parse(
-    await readFile(join(root, requiredStringForTest(evalRun, 'scoreboard')), 'utf8'),
-  );
-  const buckets = getObject(getObject(scoreboard, 'totals') ?? {}, 'failure_buckets') ?? {};
-  expect(getNumberForTest(buckets, 'harness-error')).toBe(2);
-  expect(getNumberForTest(buckets, 'verifier-error')).toBe(0);
-  expect(getNumberForTest(buckets, 'agent-failure')).toBe(0);
-});
-
-test('eval run maps verifier command errors into scoreboard failure buckets', async () => {
-  const root = await tempRoot();
-  await run(['init'], root);
-  const taskPath = join(root, '.harness/evals/harness-self-test/v1.0.0/task.yaml');
-  const task = await readFile(taskPath, 'utf8');
-  await writeFile(
-    taskPath,
-    task.replace(
-      `command: grep -q '^schema-smoke passes' "$HARNESS_EVAL_CANDIDATE"`,
-      'command: definitely-not-a-harness-verifier-command',
-    ),
-  );
-
-  const result = await run(
-    ['eval', 'run', '--run-id', 'agent-runner-verifier-error', '--format', 'json'],
-    root,
-  );
-  expect(result.code).toBe(ExitCode.validationError);
-  const evalRun = JSON.parse(result.stdout);
-  expect(getString(evalRun, 'status')).toBe('error');
-  const runResults = jsonObjects(getArray(evalRun, 'run_results'));
-  expect(runResults.length).toBe(2);
-  for (const runResult of runResults) {
-    expect(getString(runResult, 'failure_code')).toBe('verifier-error');
-    expect(getObject(runResult, 'execution')).toEqual({
-      mode: 'agent-run',
-      ['harness_status']: 'passed',
-      ['verifier_status']: 'error',
-      ['agent_status']: 'skipped',
-      ['model_status']: 'passed',
-    });
-  }
-  const scoreboard = JSON.parse(
-    await readFile(join(root, requiredStringForTest(evalRun, 'scoreboard')), 'utf8'),
-  );
-  const buckets = getObject(getObject(scoreboard, 'totals') ?? {}, 'failure_buckets') ?? {};
-  expect(getNumberForTest(buckets, 'verifier-error')).toBe(2);
-  expect(getNumberForTest(buckets, 'model-failure')).toBe(0);
-  expect(getNumberForTest(buckets, 'harness-error')).toBe(0);
-  expect(getNumberForTest(buckets, 'agent-failure')).toBe(0);
-});
-
 test('trace validates configured examples and imports normalized traces', async () => {
   const validate = await run([
     'trace',
@@ -3998,7 +3225,7 @@ test('trace commands reject directory and symlink inputs', async () => {
   await mkdir(root);
   await run(['init'], root);
   await symlink(
-    join(root, '.harness/traces/samples/native-cli-trace.json'),
+    join(root, '.harness/traces/samples/recorded-external-trace.json'),
     join(root, 'trace-link.json'),
   );
 
@@ -4030,10 +3257,7 @@ test('usage and missing input errors use stable exit codes', async () => {
   );
   expect(help.stdout).toContain('doctor     Run deterministic structural harness checks.');
   expect(help.stdout).toContain('health     Run declared local project health checks.');
-  expect(help.stdout).toContain('run        Run deterministic stub agent tasks.');
-  expect(help.stdout).toContain(
-    'eval       Run eval validation or deterministic behavioral evals.',
-  );
+  expect(help.stdout).toContain('eval       Run verifier-only eval validation.');
   expect(help.stdout).toContain('trace      Validate or import normalized traces.');
   expect(help.stdout).toContain('version    Print CLI version.');
 });
@@ -4141,23 +3365,6 @@ function getBoolean(object: JsonObject, key: string): boolean | undefined {
 function getNumberForTest(object: JsonObject, key: string): number | undefined {
   const value = object[key];
   return typeof value === 'number' ? value : undefined;
-}
-
-function requiredStringForTest(object: JsonObject, key: string): string {
-  const value = getString(object, key);
-  if (value === undefined) {
-    throw new Error(`Expected ${key} to be a string`);
-  }
-  return value;
-}
-
-async function readJsonLines(path: string): Promise<JsonObject[]> {
-  return (await readFile(path, 'utf8'))
-    .trim()
-    .split('\n')
-    .filter((line) => line.length > 0)
-    .map((line) => JSON.parse(line))
-    .filter(isObject);
 }
 
 async function refreshSelfTestDatasetHash(root: string): Promise<void> {

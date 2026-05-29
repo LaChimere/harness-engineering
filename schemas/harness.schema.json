@@ -12,8 +12,6 @@
     "environment",
     "approval_policy",
     "sandbox",
-    "model_profiles",
-    "agent_runners",
     "traces",
     "evals",
     "doctor",
@@ -54,15 +52,12 @@
             "approval-policy",
             "sandbox-policy",
             "environment",
-            "model-profile",
             "failure-taxonomy",
             "continuity-state",
             "self-verification",
             "doctor-result",
             "health-result",
             "eval-task",
-            "agent-runner",
-            "runner-readiness",
             "recurring-profile",
             "profile-run",
             "trace",
@@ -101,20 +96,6 @@
     },
     "sandbox": {
       "$ref": "common.schema.json#/$defs/artifactRef"
-    },
-    "model_profiles": {
-      "type": "object",
-      "minProperties": 1,
-      "additionalProperties": {
-        "$ref": "common.schema.json#/$defs/artifactRef"
-      }
-    },
-    "agent_runners": {
-      "type": "object",
-      "minProperties": 1,
-      "additionalProperties": {
-        "$ref": "common.schema.json#/$defs/artifactRef"
-      }
     },
     "traces": {
       "type": "object",

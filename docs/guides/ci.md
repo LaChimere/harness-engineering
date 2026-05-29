@@ -58,7 +58,7 @@ The CI recipe does not:
 
 - install or enable a host plugin;
 - provide CI-specific schemas or rule engines;
-- run provider-backed live models;
+- execute models inside the Harness CLI;
 - require secrets;
 - apply cleanup or repairs;
 - schedule recurring profiles.

@@ -1017,10 +1017,10 @@ function runResultsSummary(runResults: ILoadedArtifact | undefined): string {
   const externalImportFailed = numberValue(document, 'external_import_failed');
   const externalImportError = numberValue(document, 'external_import_error');
   const externalImportSkipped = numberValue(document, 'external_import_skipped');
-  const summary = `${total} run-result record(s) counted as agent/eval evidence: ${passed} passed, ${failed} failed, ${error} error, ${skipped} skipped.${externalImportTotal > 0 ? ` External-import records: ${externalImportTotal} total (${externalImportPassed} passed, ${externalImportFailed} failed, ${externalImportError} error, ${externalImportSkipped} skipped), not counted as agent-run evidence.` : ''}`;
+  const summary = `${total} run-result record(s) counted as verifier/evaluation evidence: ${passed} passed, ${failed} failed, ${error} error, ${skipped} skipped.${externalImportTotal > 0 ? ` External-import records: ${externalImportTotal} total (${externalImportPassed} passed, ${externalImportFailed} failed, ${externalImportError} error, ${externalImportSkipped} skipped), not counted as verifier/evaluation evidence.` : ''}`;
   return total > 0 && passed === total && failed === 0 && error === 0 && skipped === 0
     ? summary
-    : `${summary} At least one non-external agent/eval run-result record must be passed, and all counted records must be passed, before treating run evidence as present.`;
+    : `${summary} At least one non-external verifier or evaluation run-result record must be passed, and all counted records must be passed, before treating run evidence as present.`;
 }
 
 function scoreboardReportStatus(
@@ -1217,11 +1217,11 @@ function rolloutPlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
     },
     {
       step: 'behavioral-evidence',
-      title: 'Exercise eval, run, trace, and scoreboard evidence.',
+      title: 'Exercise eval, trace, run-result, and scoreboard evidence.',
       required: ['eval-plans', 'run-results', 'trace-evidence', 'scoreboard-report'],
       actions: [
         'Run harness eval validate.',
-        'Run harness eval run.',
+        'Provide externally produced scoreboard evidence when needed.',
         'Generate harness report output.',
       ],
     },
@@ -1279,7 +1279,7 @@ function recommendationForPrimitive(id: string): string {
     case 'project-health':
       return 'Review configured health commands, then run harness health --accept-unsandboxed-execution --format json and provide the health-result artifact.';
     case 'run-results':
-      return 'Run harness run or harness eval run to produce a run-result ledger.';
+      return 'Run harness eval validate or provide an externally produced run-result ledger.';
     case 'trace-evidence':
       return 'Provide trace examples or a trace artifact validated by harness trace validate.';
     case 'scoreboard-report':

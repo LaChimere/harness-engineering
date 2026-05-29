@@ -36,8 +36,6 @@ const starterFiles: ReadonlyArray<{ readonly source: string; readonly target: st
     source: 'examples/policies/sandbox-policy.yaml',
     target: '.harness/policies/sandbox-policy.yaml',
   },
-  { source: 'examples/model-profiles/stub.yaml', target: '.harness/model-profiles/stub.yaml' },
-  { source: 'examples/agent-runners/stub.yaml', target: '.harness/agent-runners/stub.yaml' },
   { source: 'examples/profiles/gc-stability.yaml', target: '.harness/profiles/gc-stability.yaml' },
   { source: 'examples/judges/policy.yaml', target: '.harness/judges/policy.yaml' },
   {
@@ -61,10 +59,9 @@ const starterFiles: ReadonlyArray<{ readonly source: string; readonly target: st
     target: '.harness/judges/calibration/scoreboard-self-test.json',
   },
   { source: 'examples/checks/doc-links.yaml', target: '.harness/checks/doc-links.yaml' },
-  { source: 'examples/prompts/stub-task.md', target: '.harness/prompts/stub-task.md' },
   {
-    source: 'examples/traces/native-cli-trace.json',
-    target: '.harness/traces/samples/native-cli-trace.json',
+    source: 'examples/traces/recorded-external-trace.json',
+    target: '.harness/traces/samples/recorded-external-trace.json',
   },
   {
     source: 'examples/traces/external-import.json',
@@ -86,7 +83,6 @@ const starterFiles: ReadonlyArray<{ readonly source: string; readonly target: st
 
 const starterDirectories = [
   '.harness/outputs/traces',
-  '.harness/outputs/agent-outputs',
   '.harness/outputs/continuity',
   '.harness/outputs/handoffs',
   '.harness/outputs/gc',
@@ -112,8 +108,6 @@ const starterPathReplacements: ReadonlyArray<readonly [string, string]> = [
   ['examples/environments/local.yaml', '.harness/environments/local.yaml'],
   ['examples/policies/approval-policy.yaml', '.harness/policies/approval-policy.yaml'],
   ['examples/policies/sandbox-policy.yaml', '.harness/policies/sandbox-policy.yaml'],
-  ['examples/model-profiles/stub.yaml', '.harness/model-profiles/stub.yaml'],
-  ['examples/agent-runners/stub.yaml', '.harness/agent-runners/stub.yaml'],
   ['examples/profiles/gc-stability.yaml', '.harness/profiles/gc-stability.yaml'],
   ['examples/judges/policy.yaml', '.harness/judges/policy.yaml'],
   ['examples/run-results/run-result.json', '.harness/judges/calibration/run-result.json'],
@@ -132,8 +126,10 @@ const starterPathReplacements: ReadonlyArray<readonly [string, string]> = [
   ['examples/scoreboards/self-test.json', '.harness/judges/calibration/scoreboard-self-test.json'],
   ['examples/harness.yaml', 'harness.yaml'],
   ['examples/checks/doc-links.yaml', '.harness/checks/doc-links.yaml'],
-  ['examples/prompts/stub-task.md', '.harness/prompts/stub-task.md'],
-  ['examples/traces/native-cli-trace.json', '.harness/traces/samples/native-cli-trace.json'],
+  [
+    'examples/traces/recorded-external-trace.json',
+    '.harness/traces/samples/recorded-external-trace.json',
+  ],
   ['examples/traces/external-import.json', '.harness/traces/samples/external-import.json'],
   ['trace_output: .harness/traces', 'trace_output: .harness/outputs/traces'],
   ['output_dir: .harness/traces', 'output_dir: .harness/outputs/traces'],
@@ -144,7 +140,6 @@ const starterPathReplacements: ReadonlyArray<readonly [string, string]> = [
   ['    - .harness/profiles\n', '    - .harness/outputs/profile-runs\n'],
   ['output_dir: .harness/profiles', 'output_dir: .harness/outputs/profile-runs'],
   ['.harness/run-results.jsonl', '.harness/outputs/run-results.jsonl'],
-  ['.harness/agent-outputs', '.harness/outputs/agent-outputs'],
   ['.harness/verifier-results', '.harness/outputs/verifier-results'],
   ['.harness/scoreboards', '.harness/outputs/scoreboards'],
   ['.harness/doctor', '.harness/outputs/doctor'],
@@ -311,7 +306,7 @@ async function assertNoExamplesReferencesInStarterFiles(root: string): Promise<v
 }
 
 const flatHarnessOutputPathPattern =
-  /\.harness\/(?:(?:traces(?!\/samples))|agent-outputs|verifier-results|scoreboards|doctor|health|gc|continuity|handoffs|approvals|run-results(?:\.jsonl)?)(?:\/|["'\s]|$)|\.harness\/profiles(?:\/[^"'\s]+\.json|\/?(?=["'\s]|$))/;
+  /\.harness\/(?:(?:traces(?!\/samples))|verifier-results|scoreboards|doctor|health|gc|continuity|handoffs|approvals|run-results(?:\.jsonl)?)(?:\/|["'\s]|$)|\.harness\/profiles(?:\/[^"'\s]+\.json|\/?(?=["'\s]|$))/;
 
 async function rootGitignoreIgnoresHarness(root: string): Promise<boolean> {
   const gitignorePath = join(root, '.gitignore');

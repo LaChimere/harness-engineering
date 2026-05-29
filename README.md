@@ -9,12 +9,11 @@ The product gives a repository a versioned `harness.yaml`, machine-checkable sch
 - Initialize a downstream repository with `harness init`.
 - Validate `harness.yaml`, schema ranges, and local artifact references.
 - Run structural doctor checks and declared local health checks.
-- Run deterministic stub agent tasks, verifier-only evals, behavioral evals, trace validation, and reports.
-- Import externally generated candidate output as evidence without pretending it was a live model call.
+- Run verifier-only evals, trace validation, reports, and evidence assessment.
 - Run GC audits and recurring GC-stability profiles over existing evidence.
 - Use an optional GitHub Actions recipe that calls the same CLI and uploads `.harness/outputs/**` evidence.
 
-Current limits are explicit: the package is not published to a registry, no host plugin or native skill package is shipped, no scheduler daemon is included, and provider-backed live model execution is not implemented.
+Current limits are explicit: the package is not published to a registry, no host plugin or native skill package is shipped, no scheduler daemon is included, and model execution is outside the Harness CLI boundary.
 
 ## Prerequisites
 
@@ -63,14 +62,11 @@ These commands run from this repository against the bundled `examples/` fixtures
 node dist/index.js validate --file examples/harness.yaml
 node dist/index.js doctor --file examples/harness.yaml
 node dist/index.js health --file examples/harness.yaml --accept-unsandboxed-execution
-node dist/index.js run examples/evals/harness-self-test/v1.0.0/task.yaml --file examples/harness.yaml
 node dist/index.js eval validate --file examples/harness.yaml
-node dist/index.js eval run --file examples/harness.yaml
 node dist/index.js trace validate --file examples/harness.yaml
 node dist/index.js gc audit --file examples/harness.yaml
 node dist/index.js profile validate examples/profiles/gc-stability.yaml
 node dist/index.js profile run examples/profiles/gc-stability.yaml --gc-evidence examples/gc/evidence.json --health-result examples/health/results/pass.json
-node dist/index.js runner readiness --file examples/harness.yaml
 node dist/index.js report --file examples/harness.yaml --doctor-result examples/doctor/results/pass.json
 ```
 
@@ -117,4 +113,4 @@ Package metadata includes `dist`, `schemas`, `examples`, `docs`, `README.md`, an
 
 Harness Engineering does not install or run external skill packs such as `LaChimere/agent-coding`. Those workflows may inform future harness-native capabilities, but this repository currently provides only the CLI, schemas, examples, and evidence artifacts described above.
 
-If you want to use an external agent workflow today, run it separately and import its output with `harness run --external-candidate` where appropriate. Adapter design rules for that path live in [docs/dev/architecture.md](docs/dev/architecture.md).
+If you want to use an external agent workflow today, run it separately and pass its explicit evidence artifacts to Harness commands such as `verify`, `trace validate`, `report`, and `assess`. Adapter design rules for that path live in [docs/dev/architecture.md](docs/dev/architecture.md).

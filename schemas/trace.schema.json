@@ -43,6 +43,7 @@
           "$ref": "common.schema.json#/$defs/artifactRef"
         },
         "runner": {
+          "description": "Read-only imported provenance for the external agent or tool that produced the trace. Harness does not resolve this as configured execution.",
           "$ref": "common.schema.json#/$defs/artifactRef"
         }
       },
@@ -62,9 +63,11 @@
           "$ref": "common.schema.json#/$defs/artifactRef"
         },
         "model_profile": {
+          "description": "Read-only imported provenance for the external model profile associated with the trace. Harness does not resolve this as configured execution.",
           "$ref": "common.schema.json#/$defs/artifactRef"
         },
         "runner": {
+          "description": "Read-only imported provenance for the external agent or tool that produced the trace. Harness does not resolve this as configured execution.",
           "$ref": "common.schema.json#/$defs/artifactRef"
         },
         "dependencies_hash": {

@@ -45,10 +45,6 @@
       "schema": "schemas/sandbox-policy.schema.json"
     },
     {
-      "path": "examples/policies/live-sandbox-policy.yaml",
-      "schema": "schemas/sandbox-policy.schema.json"
-    },
-    {
       "path": "examples/environments/local.yaml",
       "schema": "schemas/environment.schema.json"
     },
@@ -57,28 +53,8 @@
       "schema": "schemas/environment.schema.json"
     },
     {
-      "path": "examples/model-profiles/stub.yaml",
-      "schema": "schemas/model-profile.schema.json"
-    },
-    {
-      "path": "examples/model-profiles/live-ready.yaml",
-      "schema": "schemas/model-profile.schema.json"
-    },
-    {
       "path": "examples/failure-taxonomy.yaml",
       "schema": "schemas/failure-taxonomy.schema.json"
-    },
-    {
-      "path": "examples/agent-runners/stub.yaml",
-      "schema": "schemas/agent-runner.schema.json"
-    },
-    {
-      "path": "examples/agent-runners/live-ready.yaml",
-      "schema": "schemas/agent-runner.schema.json"
-    },
-    {
-      "path": "examples/runner-readiness/live-ready.json",
-      "schema": "schemas/runner-readiness.schema.json"
     },
     {
       "path": "examples/profiles/gc-stability.yaml",
@@ -197,7 +173,7 @@
       "schema": "schemas/health-result.schema.json"
     },
     {
-      "path": "examples/traces/native-cli-trace.json",
+      "path": "examples/traces/recorded-external-trace.json",
       "schema": "schemas/trace.schema.json"
     },
     {
@@ -206,10 +182,6 @@
     },
     {
       "path": "examples/run-results/run-result.json",
-      "schema": "schemas/run-result.schema.json"
-    },
-    {
-      "path": "examples/run-results/ad-hoc-run-result.json",
       "schema": "schemas/run-result.schema.json"
     },
     {
@@ -344,51 +316,6 @@
       "expected_path": []
     },
     {
-      "path": "examples/fixtures/invalid/agent-runner-missing-budgets.yaml",
-      "schema": "schemas/agent-runner.schema.json",
-      "reason": "Agent runs must require cost, token, and request budgets.",
-      "expected_keyword": "required",
-      "expected_path": [],
-      "expected_message_contains": "'budgets'"
-    },
-    {
-      "path": "examples/fixtures/invalid/agent-runner-inline-secret.yaml",
-      "schema": "schemas/agent-runner.schema.json",
-      "reason": "Agent runners must reference credentials without inline secret material.",
-      "expected_keyword": "additionalProperties",
-      "expected_path": ["credential_reference"]
-    },
-    {
-      "path": "examples/fixtures/invalid/agent-runner-external-credential.yaml",
-      "schema": "schemas/agent-runner.schema.json",
-      "reason": "External credential provenance is only valid on imported evidence, not runner configuration.",
-      "expected_keyword": "not",
-      "expected_path": ["credential_reference"]
-    },
-    {
-      "path": "examples/fixtures/invalid/agent-runner-budget-missing-token.yaml",
-      "schema": "schemas/agent-runner.schema.json",
-      "reason": "Budget blocks must include at least one token limit.",
-      "expected_keyword": "anyOf",
-      "expected_path": ["budgets"]
-    },
-    {
-      "path": "examples/fixtures/invalid/agent-runner-budget-missing-cost.yaml",
-      "schema": "schemas/agent-runner.schema.json",
-      "reason": "Budget blocks must include a cost limit.",
-      "expected_keyword": "required",
-      "expected_path": ["budgets"],
-      "expected_message_contains": "'max_cost_usd'"
-    },
-    {
-      "path": "examples/fixtures/invalid/agent-runner-budget-missing-requests.yaml",
-      "schema": "schemas/agent-runner.schema.json",
-      "reason": "Budget blocks must include a request limit.",
-      "expected_keyword": "required",
-      "expected_path": ["budgets"],
-      "expected_message_contains": "'max_requests'"
-    },
-    {
       "path": "examples/fixtures/invalid/eval-task-missing-dataset-hash.yaml",
       "schema": "schemas/eval-task.schema.json",
       "reason": "Eval tasks must identify the dataset version they belong to.",
@@ -413,16 +340,16 @@
       "expected_message_contains": "'session_id'"
     },
     {
-      "path": "examples/fixtures/invalid/trace-external-import-stub-credential.json",
+      "path": "examples/fixtures/invalid/trace-external-import-nonexternal-credential.json",
       "schema": "schemas/trace.schema.json",
-      "reason": "External-import traces must not claim stub credential provenance.",
+      "reason": "External-import traces must not claim nonexternal credential provenance.",
       "expected_keyword": "const",
       "expected_path": ["credential_reference", "source"]
     },
     {
-      "path": "examples/fixtures/invalid/trace-external-import-stub-model-profile.json",
+      "path": "examples/fixtures/invalid/trace-external-import-nonexternal-model-provenance.json",
       "schema": "schemas/trace.schema.json",
-      "reason": "External-import traces must not claim a stub model profile artifact.",
+      "reason": "External-import traces must not claim a nonexternal model provenance.",
       "expected_keyword": "pattern",
       "expected_path": ["environment_snapshot", "model_profile"]
     },
@@ -436,23 +363,9 @@
     {
       "path": "examples/fixtures/invalid/run-result-external-import-kind-eval.json",
       "schema": "schemas/run-result.schema.json",
-      "reason": "External-import execution must not be mislabeled as an eval agent run.",
+      "reason": "External-import execution must not be mislabeled as a verifier-only eval record.",
       "expected_keyword": "const",
       "expected_path": ["kind"]
-    },
-    {
-      "path": "examples/fixtures/invalid/runner-readiness-live-ready-stub-mode.json",
-      "schema": "schemas/runner-readiness.schema.json",
-      "reason": "Runner readiness evidence must not claim live readiness for stub mode.",
-      "expected_keyword": "const",
-      "expected_path": ["mode"]
-    },
-    {
-      "path": "examples/fixtures/invalid/runner-readiness-live-passed-not-ready.json",
-      "schema": "schemas/runner-readiness.schema.json",
-      "reason": "Passed live runner readiness evidence must mark live_ready true.",
-      "expected_keyword": "const",
-      "expected_path": ["live_ready"]
     },
     {
       "path": "examples/fixtures/invalid/recurring-profile-cleanup-action.yaml",
@@ -582,53 +495,23 @@
       "expected_path": ["execution", "mode"]
     },
     {
-      "path": "examples/fixtures/invalid/run-result-agent-run-missing-agent-status.json",
-      "schema": "schemas/run-result.schema.json",
-      "reason": "Agent-run results must include agent execution status.",
-      "expected_keyword": "required",
-      "expected_path": ["execution"],
-      "expected_message_contains": "'agent_status'"
-    },
-    {
-      "path": "examples/fixtures/invalid/run-result-agent-run-missing-model-status.json",
-      "schema": "schemas/run-result.schema.json",
-      "reason": "Agent-run results must include model execution status.",
-      "expected_keyword": "required",
-      "expected_path": ["execution"],
-      "expected_message_contains": "'model_status'"
-    },
-    {
-      "path": "examples/fixtures/invalid/run-result-agent-run-passed-with-failed-agent.json",
-      "schema": "schemas/run-result.schema.json",
-      "reason": "Passed agent-run results must not contain failed agent execution state.",
-      "expected_keyword": "const",
-      "expected_path": ["execution", "agent_status"]
-    },
-    {
-      "path": "examples/fixtures/invalid/run-result-agent-run-verifier-only-trace.json",
-      "schema": "schemas/run-result.schema.json",
-      "reason": "Agent-run results must link to a real trace artifact.",
-      "expected_keyword": "not",
-      "expected_path": ["trace"]
-    },
-    {
       "path": "examples/fixtures/invalid/run-result-passed-with-failed-verifier.json",
       "schema": "schemas/run-result.schema.json",
-      "reason": "Passed eval run results must not contain failed verifier execution state.",
+      "reason": "Passed evaluation run-result records must not contain failed verifier execution state.",
       "expected_keyword": "const",
       "expected_path": ["execution", "verifier_status"]
     },
     {
       "path": "examples/fixtures/invalid/run-result-error-with-passed-execution.json",
       "schema": "schemas/run-result.schema.json",
-      "reason": "Errored eval run results must not contain fully passed execution state.",
+      "reason": "Errored evaluation run-result records must not contain fully passed execution state.",
       "expected_keyword": "not",
       "expected_path": ["execution"]
     },
     {
       "path": "examples/fixtures/invalid/run-result-failed-with-passed-verifier.json",
       "schema": "schemas/run-result.schema.json",
-      "reason": "Failed eval run results must contain failed verifier execution state.",
+      "reason": "Failed evaluation run-result records must contain failed verifier execution state.",
       "expected_keyword": "const",
       "expected_path": ["execution", "verifier_status"]
     },
@@ -736,7 +619,6 @@
     "credential-missing",
     "agent-failure",
     "model-failure",
-    "model-profile-stub",
     "sandbox-violation",
     "approval-denied"
   ],

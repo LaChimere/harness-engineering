@@ -37,12 +37,12 @@ handoff_artifacts:
     media_type: text/markdown
     description: Execution status for future sessions.
 usage_aggregate:
-  billed_model_id: stub-v1
+  billed_model_id: external-recorded-v1
   input_tokens: 0
   output_tokens: 0
   total_tokens: 0
   requests: 0
   incurred_cost_usd: 0
-  source: stub
+  source: computed
 runs_counted: 0
 unresolved_risks: []

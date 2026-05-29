@@ -1,5 +1,11 @@
 # Todo: Harness Engineering Platform
 
+> Current status: this checklist records historical platform execution. Runner/model execution
+> surfaces from this roadmap (`harness run`, `harness eval run`, `agent-runner`,
+> `model_profiles`, and `agent_runners`) were removed by
+> `plans/agent-cli-plugin-architecture/` PR 2 before release; remaining completed items below are
+> historical evidence, not current product direction.
+
 ## Planning gate readiness
 
 - [x] Confirm Gate 1 decisions in `design.md`.

@@ -3,7 +3,7 @@ environment_id: container-example
 isolation:
   kind: container
   assurance: high
-  image: ghcr.io/lachimere/harness-runner@example
+  image: ghcr.io/lachimere/harness-environment@example
 resources:
   cpu: 2
   memory_mb: 4096

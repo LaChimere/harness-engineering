@@ -9,8 +9,6 @@ import { runLoopCommand } from './commands/loop.ts';
 import { runMigrate } from './commands/migrate.ts';
 import { runProfileCommand } from './commands/profile.ts';
 import { runReport } from './commands/report.ts';
-import { runAgentRunCommand } from './commands/run.ts';
-import { runRunnerCommand } from './commands/runner.ts';
 import { runTraceCommand } from './commands/trace.ts';
 import { runValidate } from './commands/validate.ts';
 import { runVerify } from './commands/verify.ts';
@@ -72,10 +70,6 @@ export async function runCli(
         return await runProfileCommand(commandArgs, commandContext);
       case 'eval':
         return await runEvalCommand(commandArgs, commandContext);
-      case 'run':
-        return await runAgentRunCommand(commandArgs, commandContext);
-      case 'runner':
-        return await runRunnerCommand(commandArgs, commandContext);
       case 'trace':
         return await runTraceCommand(commandArgs, commandContext);
       case 'verify':
@@ -110,9 +104,7 @@ Commands:
   health     Run declared local project health checks.
   gc         Audit or validate deterministic GC evidence.
   profile    Validate or run recurring maintenance profiles.
-  run        Run deterministic stub agent tasks.
-  runner     Check runner readiness without live model execution.
-  eval       Run eval validation or deterministic behavioral evals.
+  eval       Run verifier-only eval validation.
   trace      Validate or import normalized traces.
   verify     Validate explicit self-verification evidence.
   report     Summarize harness artifacts and cite source paths.

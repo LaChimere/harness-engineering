@@ -205,13 +205,6 @@ export function collectHarnessReferences(harness: JsonObject): readonly IHarness
     'approval-policy',
   );
   pushReference(references, getString(harness, 'sandbox'), 'sandbox policy', 'sandbox-policy');
-  pushReferenceMap(
-    references,
-    getObject(harness, 'model_profiles'),
-    'model profile',
-    'model-profile',
-  );
-  pushReferenceMap(references, getObject(harness, 'agent_runners'), 'agent runner', 'agent-runner');
 
   const traces = getObject(harness, 'traces');
   const traceExamples = traces === undefined ? undefined : getArray(traces, 'examples');
@@ -279,22 +272,6 @@ function pushReference(
   references.push(
     schemaName === undefined ? { path, description } : { path, description, schemaName },
   );
-}
-
-function pushReferenceMap(
-  references: IHarnessReference[],
-  map: JsonObject | undefined,
-  description: string,
-  schemaName: string,
-): void {
-  if (map === undefined) {
-    return;
-  }
-  for (const value of Object.values(map)) {
-    if (typeof value === 'string') {
-      pushReference(references, value, description, schemaName);
-    }
-  }
 }
 
 function isExternalReference(reference: string): boolean {

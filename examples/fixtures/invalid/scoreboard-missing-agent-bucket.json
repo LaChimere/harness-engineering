@@ -2,7 +2,7 @@
   "schema_version": "0.1.0",
   "scoreboard_id": "scoreboard-missing-agent-bucket",
   "run_id": "eval-run-schema-smoke-001",
-  "session_id": "harness-agent-runner-example",
+  "session_id": "harness-external-evidence-example",
   "harness_version": "0.1.0",
   "generated_at": "2026-05-21T00:00:00Z",
   "status": "passed",

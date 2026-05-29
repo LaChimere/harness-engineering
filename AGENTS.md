@@ -42,7 +42,6 @@ This repository is the canonical harness-as-code platform for AI coding agents. 
 ## Safety and compatibility
 
 - Do not introduce inline secrets, hidden credential assumptions, or unbounded model spend.
-- Live runner work must require explicit credential references plus cost/token/request budgets.
 - Local checks, eval verifiers, repair actions, and profile inputs must declare trust and sandbox requirements.
 - Schema and harness upgrades must go through previewable, reproducible `harness migrate` flows with evidence.
 
@@ -54,7 +53,7 @@ Capability-mining output belongs in `plans/harness-engineering-platform/capabili
 
 ## Recurring failure modes to avoid
 
-- Do not fabricate provider-backed or live-model evidence. If a result came from deterministic stub execution or `--external-candidate`, label it that way.
+- Do not fabricate provider-backed or live-model evidence. If a result came from an external agent/model, label it as external evidence and cite the artifact.
 - Do not treat `.harness/outputs/**` runtime artifacts as canonical source unless a task explicitly asks to inspect or preserve generated evidence.
 - Do not add roadmap phase or numbering wording outside `plans/harness-engineering-platform/`.
 - Do not let `doctor`, `gc`, `profile`, CI recipes, plugins, or skills enforce rules that are not reconstructable from schemas, `harness.yaml`, and CLI evidence.

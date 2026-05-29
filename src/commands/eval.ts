@@ -1,10 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import {
-  exitCodeForAgentRun,
-  runAgentEvalSuite,
-  writeAgentRunArtifacts,
-  writeScoreboardArtifact,
-} from '../lib/agent-runner.ts';
 import { CliError } from '../lib/errors.ts';
 import {
   discoverEvalTaskPathsFromHarness,
@@ -31,16 +25,6 @@ import type { ICommandContext } from './init.ts';
 
 const validateValueOptions = new Set(['root', 'file', 'task', 'format', 'output', 'run-id']);
 const validateFlagOptions = new Set<string>();
-const runValueOptions = new Set([
-  'root',
-  'file',
-  'task',
-  'runner',
-  'format',
-  'run-id',
-  'session-id',
-]);
-const runFlagOptions = new Set<string>();
 
 export async function runEvalCommand(
   args: readonly string[],
@@ -48,8 +32,6 @@ export async function runEvalCommand(
 ): Promise<ExitCode> {
   const [subcommand, ...subcommandArgs] = args;
   switch (subcommand) {
-    case 'run':
-      return await runEvalRun(subcommandArgs, context);
     case 'validate':
       return await runEvalValidate(subcommandArgs, context);
     case undefined:
@@ -61,79 +43,6 @@ export async function runEvalCommand(
     default:
       throw new CliError(`Unknown eval subcommand: ${subcommand}`, ExitCode.usageError);
   }
-}
-
-async function runEvalRun(args: readonly string[], context: ICommandContext): Promise<ExitCode> {
-  const options = parseOptions(args, runValueOptions, runFlagOptions);
-  if (options.positionals.length > 1) {
-    throw new CliError(
-      'eval run accepts at most one eval task positional argument.',
-      ExitCode.usageError,
-    );
-  }
-  if (options.positionals.length === 1 && optionValue(options, 'task') !== undefined) {
-    throw new CliError(
-      'eval run accepts either a positional task or --task, not both.',
-      ExitCode.usageError,
-    );
-  }
-  const format = optionValue(options, 'format') ?? 'markdown';
-  if (format !== 'markdown' && format !== 'json') {
-    throw new CliError('eval run --format must be markdown or json.', ExitCode.usageError);
-  }
-  const runId = optionValue(options, 'run-id');
-  if (runId !== undefined && !isSafeRunId(runId)) {
-    throw new CliError(
-      'eval run --run-id may contain only letters, numbers, dots, underscores, and hyphens.',
-      ExitCode.usageError,
-    );
-  }
-
-  const root = resolveRootForInspectionCommand(context.cwd, optionValue(options, 'root') ?? '.');
-  const schemas = await loadSchemaRegistry(context.packageRoot);
-  const cliVersion = await readPackageVersion(context.packageRoot);
-  const runnerPath = optionValue(options, 'runner');
-  const sessionId = optionValue(options, 'session-id');
-  if (sessionId !== undefined && sessionId.trim().length === 0) {
-    throw new CliError('eval run --session-id must not be empty.', ExitCode.usageError);
-  }
-  const taskPath = optionValue(options, 'task') ?? options.positionals[0];
-  const evalRun = await runAgentEvalSuite({
-    root,
-    harnessPath: optionValue(options, 'file') ?? 'harness.yaml',
-    cliVersion,
-    schemas,
-    ...(runnerPath === undefined ? {} : { runnerPath }),
-    ...(taskPath === undefined ? {} : { taskPath }),
-    ...(runId === undefined ? {} : { runId }),
-    ...(sessionId === undefined ? {} : { sessionId }),
-  });
-
-  const issues = [
-    ...evalRun.runs.flatMap((run) =>
-      schemas.validate('run-result', run.runResult).map(formatValidationIssue),
-    ),
-    ...evalRun.runs.flatMap((run) =>
-      schemas.validate('trace', run.trace).map(formatValidationIssue),
-    ),
-    ...evalRun.runs.flatMap((run) =>
-      schemas.validate('verifier-result', run.verifierResult).map(formatValidationIssue),
-    ),
-    ...schemas.validate('scoreboard', evalRun.scoreboard).map(formatValidationIssue),
-  ];
-  if (issues.length > 0) {
-    throw new CliError(
-      `Eval run produced invalid artifacts: ${issues.join('; ')}`,
-      ExitCode.internalError,
-    );
-  }
-
-  await writeAgentRunArtifacts(root, evalRun.runs);
-  await writeScoreboardArtifact(root, evalRun.scoreboardPath, evalRun.scoreboard);
-  context.stdout(
-    format === 'json' ? JSON.stringify(evalRun.result, null, 2) : evalRun.markdown.trimEnd(),
-  );
-  return exitCodeForAgentRun(evalRun.status);
 }
 
 async function runEvalValidate(
@@ -301,7 +210,6 @@ function evalHelpText(): string {
   return `harness eval <subcommand>
 
 Subcommands:
-  run        Run deterministic stub behavioral evals and emit evidence.
   validate   Run deterministic verifier-only eval validation.`;
 }
 

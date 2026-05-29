@@ -24,7 +24,7 @@
     },
     "kind": {
       "type": "string",
-      "enum": ["eval", "ad-hoc", "external-import"]
+      "enum": ["eval", "external-import"]
     },
     "suite_id": {
       "$ref": "common.schema.json#/$defs/nonEmptyString"
@@ -44,6 +44,7 @@
       "enum": ["optimization", "holdout"]
     },
     "model_profile": {
+      "description": "Read-only provenance for the model profile or external model associated with this record. `harness eval validate` uses the verifier-only sentinel; host-produced evidence may use a URI. Harness does not resolve this field as configured execution.",
       "$ref": "common.schema.json#/$defs/artifactRef"
     },
     "harness_version": {
@@ -55,26 +56,18 @@
     },
     "execution": {
       "type": "object",
-      "description": "Execution semantics for verifier-only validation and deterministic agent runs.",
+      "description": "Execution semantics for verifier-only validation and imported run records.",
       "required": ["mode", "harness_status", "verifier_status"],
       "properties": {
         "mode": {
           "type": "string",
-          "enum": ["verifier-only", "agent-run", "external-import"]
+          "enum": ["verifier-only", "external-import"]
         },
         "harness_status": {
           "type": "string",
           "enum": ["passed", "failed", "error"]
         },
         "verifier_status": {
-          "type": "string",
-          "enum": ["passed", "failed", "error", "skipped"]
-        },
-        "agent_status": {
-          "type": "string",
-          "enum": ["passed", "failed", "error", "skipped"]
-        },
-        "model_status": {
           "type": "string",
           "enum": ["passed", "failed", "error", "skipped"]
         }
@@ -126,40 +119,6 @@
       "if": {
         "properties": {
           "kind": {
-            "const": "ad-hoc"
-          }
-        },
-        "required": ["kind"]
-      },
-      "then": {
-        "not": {
-          "anyOf": [
-            {
-              "required": ["suite_id"]
-            },
-            {
-              "required": ["task_id"]
-            },
-            {
-              "required": ["task_version"]
-            },
-            {
-              "required": ["dataset_hash"]
-            },
-            {
-              "required": ["split"]
-            },
-            {
-              "required": ["verifier_result"]
-            }
-          ]
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
             "const": "external-import"
           }
         },
@@ -199,66 +158,6 @@
     {
       "if": {
         "properties": {
-          "status": {
-            "const": "passed"
-          },
-          "execution": {
-            "properties": {
-              "mode": {
-                "const": "agent-run"
-              }
-            },
-            "required": ["mode"]
-          }
-        },
-        "required": ["status", "execution"]
-      },
-      "then": {
-        "properties": {
-          "execution": {
-            "properties": {
-              "agent_status": {
-                "const": "passed"
-              },
-              "model_status": {
-                "const": "passed"
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "execution": {
-            "properties": {
-              "mode": {
-                "const": "agent-run"
-              }
-            },
-            "required": ["mode"]
-          }
-        },
-        "required": ["execution"]
-      },
-      "then": {
-        "required": ["trace"],
-        "properties": {
-          "trace": {
-            "not": {
-              "const": "harness://verifier-only/no-agent-trace"
-            }
-          },
-          "execution": {
-            "required": ["agent_status", "model_status"]
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
           "execution": {
             "properties": {
               "mode": {
@@ -281,18 +180,6 @@
               "const": "harness://verifier-only/no-agent-trace"
             }
           },
-          "execution": {
-            "not": {
-              "anyOf": [
-                {
-                  "required": ["agent_status"]
-                },
-                {
-                  "required": ["model_status"]
-                }
-              ]
-            }
-          },
           "usage": {
             "properties": {
               "source": {
@@ -313,37 +200,6 @@
               "incurred_cost_usd": {
                 "const": 0
               }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "execution": {
-            "properties": {
-              "mode": {
-                "const": "verifier-only"
-              }
-            },
-            "required": ["mode"]
-          }
-        },
-        "required": ["execution"]
-      },
-      "then": {
-        "properties": {
-          "execution": {
-            "not": {
-              "anyOf": [
-                {
-                  "required": ["agent_status"]
-                },
-                {
-                  "required": ["model_status"]
-                }
-              ]
             }
           }
         }
@@ -503,24 +359,6 @@
               }
             }
           }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
-            "const": "ad-hoc"
-          },
-          "status": {
-            "const": "passed"
-          }
-        },
-        "required": ["kind", "status"]
-      },
-      "then": {
-        "not": {
-          "required": ["failure_code"]
         }
       }
     }

@@ -607,7 +607,7 @@ function runResultForCase(input: {
       ['total_tokens']: 0,
       requests: 0,
       ['incurred_cost_usd']: 0,
-      source: 'stub',
+      source: 'computed',
     },
     artifacts: [
       {

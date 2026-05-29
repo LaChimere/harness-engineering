@@ -44,10 +44,10 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr3-rerun-json-inventory` | `pr2-verify` | Rerun agent-facing commands with `--format json` against fixtures/test configs. | Current output shapes for `doctor`, `health`, `assess`, `gc audit`, `trace validate`, and `profile run` are confirmed or recorded in the `design.md` current-state inventory table only; approved scope/principles/architecture decisions are not reopened. |
-| [ ] | `pr3-write-migration-plan` | `pr3-rerun-json-inventory` | Create `plans/agent-cli-plugin-architecture/cli-json-migration.md`. | Each schema has field additions/renames/moves, schema version bump, status semantics, and a clean pre-release migration strategy that updates first-party code, fixtures, tests, and docs without dual-field compatibility shims. |
-| [ ] | `pr3-add-contract-base` | `pr3-write-migration-plan` | Add shared contract scaffolding if non-behavioral. | `ICliJsonContract`, `ICliJsonIssue`, and `ICliJsonArtifact` scaffolding exists only if it does not change command outputs prematurely. |
-| [ ] | `pr3-verify` | `pr3-add-contract-base` | Validate PR 3. | `bun run check`, `bun run test:unit`, and `git diff --check` pass. |
+| [x] | `pr3-rerun-json-inventory` | `pr2-verify` | Rerun agent-facing commands with `--format json` against fixtures/test configs. | Current output shapes for `doctor`, `health`, `assess`, `gc audit`, `trace validate`, and `profile run` are confirmed or recorded in the `design.md` current-state inventory table only; approved scope/principles/architecture decisions are not reopened. |
+| [x] | `pr3-write-migration-plan` | `pr3-rerun-json-inventory` | Create `plans/agent-cli-plugin-architecture/cli-json-migration.md`. | Each schema has field additions/renames/moves, schema version bump, status semantics, and a clean pre-release migration strategy that updates first-party code, fixtures, tests, and docs without dual-field compatibility shims. |
+| [x] | `pr3-add-contract-base` | `pr3-write-migration-plan` | Add shared contract scaffolding if non-behavioral. | `ICliJsonContract`, `ICliJsonIssue`, and `ICliJsonArtifact` scaffolding exists only if it does not change command outputs prematurely. |
+| [x] | `pr3-verify` | `pr3-add-contract-base` | Validate PR 3. | `bun run check`, `bun run test:unit`, and `git diff --check` pass. |
 
 ## PR 4A: Structural command JSON hardening
 

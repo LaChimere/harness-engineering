@@ -43,6 +43,7 @@ export interface IProfileRunRequest {
   readonly healthResultPath?: string;
   readonly previousRunPath?: string;
   readonly outputPath?: string;
+  readonly generatedAt?: string;
 }
 
 export interface IProfileRun {
@@ -51,7 +52,7 @@ export interface IProfileRun {
   readonly status: StopStatus;
 }
 
-const schemaVersion = '0.1.0';
+const schemaVersion = '0.2.0';
 
 export async function loadRecurringProfile(input: {
   readonly root: string;
@@ -63,7 +64,7 @@ export async function loadRecurringProfile(input: {
   const capabilityId = getValue(document, 'declared_capability_id');
   if (capabilityId !== undefined && capabilityId !== null) {
     throw new CliError(
-      'Recurring profile MVPs must not declare capability adoption. Leave declared_capability_id null until a separately approved capability adoption exists.',
+      'Recurring profiles must not declare capability adoption. Leave declared_capability_id null until a separately approved capability adoption exists.',
       ExitCode.validationError,
     );
   }
@@ -203,11 +204,19 @@ export async function runProfile(input: IProfileRunRequest): Promise<IProfileRun
   const evidenceInputs = [gcEvidence, healthResult, previousRun]
     .filter((value): value is ILoadedEvidence => value !== undefined)
     .map((value) => hashedArtifact(value));
+  const handoff = {
+    kind: 'profile-run',
+    status,
+    ['next_step']: status === 'met' ? 'stop' : 'continue',
+    summary: handoffSummary(status, metricsWithStreak),
+  };
+  const issues = profileIssues(status, handoff.summary);
   const result: JsonObject = {
     ['schema_version']: schemaVersion,
     ['run_id']: input.runId ?? `profile-${randomUUID()}`,
     ['harness_version']: input.cliVersion,
-    ['generated_at']: new Date().toISOString(),
+    ['generated_at']: input.generatedAt ?? new Date().toISOString(),
+    status,
     ['profile_ref']: await hashedFile(
       input.root,
       profile.path,
@@ -227,19 +236,37 @@ export async function runProfile(input: IProfileRunRequest): Promise<IProfileRun
       ['clean_streak']: cleanStreak,
     },
     ['actions_taken']: actionsForProfile(profile.document, status, metricsWithStreak),
-    handoff: {
-      kind: 'profile-run',
-      status,
-      ['next_step']: status === 'met' ? 'stop' : 'continue',
-      summary: handoffSummary(status, metricsWithStreak),
-    },
-    errors: [],
+    handoff,
+    ...(issues.length === 0 ? {} : { issues }),
   };
   return {
     result,
     markdown: renderProfileRunMarkdown(result),
     status,
   };
+}
+
+function profileIssues(status: StopStatus, summary: string): JsonObject[] {
+  switch (status) {
+    case 'met':
+      return [];
+    case 'not_met':
+      return [
+        {
+          code: 'profile-stop-condition-not-met',
+          severity: 'warning',
+          message: summary,
+        },
+      ];
+    case 'inconclusive':
+      return [
+        {
+          code: 'profile-inconclusive',
+          severity: 'warning',
+          message: summary,
+        },
+      ];
+  }
 }
 
 export function serializeProfileRunJson(result: JsonObject): string {
@@ -293,7 +320,7 @@ function validatePreviousRun(profile: JsonObject, previousRun: JsonObject): void
   }
   if (getValue(previousRun, 'declared_capability_id') !== null) {
     throw new CliError(
-      'previous profile run declared_capability_id must be null for the recurring profile MVP.',
+      'previous profile run declared_capability_id must be null for the current recurring profile contract.',
       ExitCode.validationError,
     );
   }

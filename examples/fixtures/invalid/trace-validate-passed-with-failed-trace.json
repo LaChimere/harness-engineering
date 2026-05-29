@@ -1,0 +1,17 @@
+{
+  "schema_version": "0.1.0",
+  "status": "passed",
+  "traces": [
+    {
+      "path": "examples/fixtures/invalid/trace-missing-session-id.json",
+      "status": "failed",
+      "issues": [
+        {
+          "code": "trace-validation-required",
+          "severity": "error",
+          "message": "must have required property 'session_id'"
+        }
+      ]
+    }
+  ]
+}

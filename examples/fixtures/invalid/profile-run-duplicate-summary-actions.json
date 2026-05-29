@@ -1,15 +1,16 @@
 {
   "schema_version": "0.2.0",
-  "run_id": "invalid-profile-run-capability",
+  "run_id": "invalid-profile-run-duplicate-summary-actions",
   "harness_version": "0.1.0",
-  "generated_at": "2026-05-26T00:00:00Z",
+  "generated_at": "2026-05-29T00:00:00Z",
+  "status": "met",
   "profile_ref": {
     "path": "examples/profiles/gc-stability.yaml",
     "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "profile_id": "gc-stability",
   "profile_version": "0.1.0",
-  "declared_capability_id": "docs-freshness-profile",
+  "declared_capability_id": null,
   "evidence_inputs": [
     {
       "kind": "gc-evidence",
@@ -36,13 +37,21 @@
         "health_status": "passed",
         "clean_streak": 1
       }
+    },
+    {
+      "kind": "summary",
+      "summary": {
+        "status": "met",
+        "gc_findings": 0,
+        "health_status": "passed",
+        "clean_streak": 1
+      }
     }
   ],
   "handoff": {
     "kind": "profile-run",
     "status": "met",
     "next_step": "stop",
-    "summary": "invalid capability adoption"
-  },
-  "status": "met"
+    "summary": "invalid duplicate summary actions"
+  }
 }

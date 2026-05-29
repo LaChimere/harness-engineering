@@ -1,7 +1,7 @@
 schema_version: "0.1.0"
 profile_id: invalid-capability-profile
 profile_version: "0.1.0"
-description: Invalid profile that tries to declare capability adoption during the MVP.
+description: Invalid profile that tries to declare capability adoption before an approved capability contract exists.
 declared_capability_id: docs-freshness-profile
 cadence_hint: advisory-weekly
 inputs:

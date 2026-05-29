@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/trace-validate-result.schema.json",
+  "title": "Trace validate result",
+  "description": "Command-result output for `harness trace validate --format json`. This validates the command result, not trace artifacts themselves.",
+  "type": "object",
+  "required": ["schema_version", "status", "traces"],
+  "properties": {
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed"]
+    },
+    "issues": {
+      "description": "Top-level summary of failed trace entries. Per-trace issues remain canonical for individual validation failures.",
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/cliJsonIssue"
+      }
+    },
+    "traces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "status", "issues"],
+        "properties": {
+          "path": {
+            "$ref": "common.schema.json#/$defs/artifactRef"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed"]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/cliJsonIssue"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "passed"
+                }
+              },
+              "required": ["status"]
+            },
+            "then": {
+              "properties": {
+                "issues": {
+                  "maxItems": 0
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "failed"
+                }
+              },
+              "required": ["status"]
+            },
+            "then": {
+              "properties": {
+                "issues": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "not": {
+          "required": ["issues"]
+        },
+        "properties": {
+          "traces": {
+            "items": {
+              "properties": {
+                "status": {
+                  "const": "passed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "failed"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["issues"],
+        "properties": {
+          "issues": {
+            "minItems": 1
+          },
+          "traces": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": "failed"
+                }
+              },
+              "required": ["status"]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

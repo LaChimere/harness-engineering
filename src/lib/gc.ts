@@ -76,7 +76,7 @@ interface ILoadedEvidenceArtifact {
   readonly document: JsonObject;
 }
 
-const schemaVersion = '0.1.0';
+const schemaVersion = '0.2.0';
 
 export async function runGcAudit(input: IGcAuditInput): Promise<IGcAuditRun> {
   const validation = await validateHarnessConfiguration({
@@ -108,10 +108,13 @@ export async function runGcAudit(input: IGcAuditInput): Promise<IGcAuditRun> {
     ...(await judgeCalibrationFindings(input)),
   ]);
   const findings = findingInputs.map(finding);
+  const status = findings.length === 0 ? 'passed' : 'findings';
   const evidence: JsonObject = {
     ['schema_version']: schemaVersion,
     ['audit_id']: input.auditId ?? defaultAuditId(input.harnessPath, findings),
     ['generated_at']: input.generatedAt ?? new Date().toISOString(),
+    ['harness_version']: input.cliVersion,
+    status,
     findings,
     ...(input.previousAuditRef === undefined
       ? {}
@@ -120,7 +123,7 @@ export async function runGcAudit(input: IGcAuditInput): Promise<IGcAuditRun> {
   return {
     evidence,
     markdown: renderGcMarkdown(evidence),
-    status: findings.length === 0 ? 'passed' : 'findings',
+    status,
   };
 }
 

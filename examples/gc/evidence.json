@@ -1,6 +1,8 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "audit_id": "gc-clean-example",
-  "generated_at": "2026-05-20T00:00:00Z",
+  "generated_at": "2026-05-29T00:00:00.000Z",
+  "harness_version": "0.1.0",
+  "status": "passed",
   "findings": []
 }

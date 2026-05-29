@@ -185,6 +185,14 @@
       "schema": "schemas/trace.schema.json"
     },
     {
+      "path": "examples/trace-validation/pass.json",
+      "schema": "schemas/trace-validate-result.schema.json"
+    },
+    {
+      "path": "examples/trace-validation/fail.json",
+      "schema": "schemas/trace-validate-result.schema.json"
+    },
+    {
       "path": "examples/run-results/run-result.json",
       "schema": "schemas/run-result.schema.json"
     },
@@ -307,6 +315,14 @@
     {
       "path": "examples/gc/evidence.json",
       "schema": "schemas/gc-evidence.schema.json"
+    },
+    {
+      "path": "examples/gc/findings.json",
+      "schema": "schemas/gc-evidence.schema.json"
+    },
+    {
+      "path": "examples/profile-runs/gc-stability-dirty.json",
+      "schema": "schemas/profile-run.schema.json"
     }
   ],
   "referenced_evidence": [
@@ -395,6 +411,55 @@
       "reason": "Profile-run evidence must not declare capability adoption.",
       "expected_keyword": "type",
       "expected_path": ["declared_capability_id"]
+    },
+    {
+      "path": "examples/fixtures/invalid/profile-run-status-mismatch.json",
+      "schema": "schemas/profile-run.schema.json",
+      "reason": "Profile-run top-level status must mirror handoff and evaluation statuses.",
+      "expected_keyword": "const",
+      "expected_path": ["stop_condition_evaluation", "status"]
+    },
+    {
+      "path": "examples/fixtures/invalid/profile-run-missing-summary-action.json",
+      "schema": "schemas/profile-run.schema.json",
+      "reason": "Profile-run evidence records exactly one deterministic summary action.",
+      "expected_keyword": "minItems",
+      "expected_path": ["actions_taken"]
+    },
+    {
+      "path": "examples/fixtures/invalid/profile-run-duplicate-summary-actions.json",
+      "schema": "schemas/profile-run.schema.json",
+      "reason": "Profile-run evidence records exactly one deterministic summary action.",
+      "expected_keyword": "maxItems",
+      "expected_path": ["actions_taken"]
+    },
+    {
+      "path": "examples/fixtures/invalid/trace-validate-passed-with-failed-trace.json",
+      "schema": "schemas/trace-validate-result.schema.json",
+      "reason": "Trace validate passed status requires all trace entries to pass.",
+      "expected_keyword": "const",
+      "expected_path": ["traces", 0, "status"]
+    },
+    {
+      "path": "examples/fixtures/invalid/trace-validate-failed-trace-empty-issues.json",
+      "schema": "schemas/trace-validate-result.schema.json",
+      "reason": "Failed trace entries must include at least one structured issue.",
+      "expected_keyword": "minItems",
+      "expected_path": ["traces", 0, "issues"]
+    },
+    {
+      "path": "examples/fixtures/invalid/gc-evidence-passed-with-findings.json",
+      "schema": "schemas/gc-evidence.schema.json",
+      "reason": "GC evidence status passed requires an empty findings array.",
+      "expected_keyword": "maxItems",
+      "expected_path": ["findings"]
+    },
+    {
+      "path": "examples/fixtures/invalid/gc-evidence-findings-empty.json",
+      "schema": "schemas/gc-evidence.schema.json",
+      "reason": "GC evidence status findings requires at least one finding.",
+      "expected_keyword": "minItems",
+      "expected_path": ["findings"]
     },
     {
       "path": "examples/fixtures/invalid/repair-action-missing-trust.yaml",

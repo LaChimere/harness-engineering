@@ -9,6 +9,7 @@
     "run_id",
     "harness_version",
     "generated_at",
+    "status",
     "profile_ref",
     "profile_id",
     "profile_version",
@@ -16,8 +17,7 @@
     "trigger_evaluation",
     "stop_condition_evaluation",
     "actions_taken",
-    "handoff",
-    "errors"
+    "handoff"
   ],
   "properties": {
     "schema_version": {
@@ -32,6 +32,10 @@
     "generated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["met", "not_met", "inconclusive"]
     },
     "profile_ref": {
       "$ref": "#/$defs/hashedArtifactRef"
@@ -102,6 +106,8 @@
     },
     "actions_taken": {
       "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
       "items": {
         "type": "object",
         "required": ["kind", "summary"],
@@ -157,10 +163,11 @@
       },
       "additionalProperties": false
     },
-    "errors": {
+    "issues": {
+      "description": "Structured command-result issues for non-met or inconclusive profile outcomes. Handoff remains the canonical profile decision detail.",
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/nonEmptyString"
+        "$ref": "common.schema.json#/$defs/cliJsonIssue"
       }
     }
   },
@@ -228,5 +235,178 @@
       "additionalProperties": true
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "met"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "trigger_evaluation": {
+            "properties": {
+              "matched": {
+                "const": true
+              }
+            }
+          },
+          "stop_condition_evaluation": {
+            "properties": {
+              "matched": {
+                "const": true
+              },
+              "status": {
+                "const": "met"
+              }
+            }
+          },
+          "actions_taken": {
+            "items": {
+              "properties": {
+                "summary": {
+                  "properties": {
+                    "status": {
+                      "const": "met"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "handoff": {
+            "properties": {
+              "status": {
+                "const": "met"
+              },
+              "next_step": {
+                "const": "stop"
+              }
+            }
+          },
+          "issues": false
+        },
+        "not": {
+          "required": ["issues"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "not_met"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["issues"],
+        "properties": {
+          "trigger_evaluation": {
+            "properties": {
+              "matched": {
+                "const": true
+              }
+            }
+          },
+          "stop_condition_evaluation": {
+            "properties": {
+              "matched": {
+                "const": false
+              },
+              "status": {
+                "const": "not_met"
+              }
+            }
+          },
+          "actions_taken": {
+            "items": {
+              "properties": {
+                "summary": {
+                  "properties": {
+                    "status": {
+                      "const": "not_met"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "handoff": {
+            "properties": {
+              "status": {
+                "const": "not_met"
+              },
+              "next_step": {
+                "const": "continue"
+              }
+            }
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "inconclusive"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["issues"],
+        "properties": {
+          "trigger_evaluation": {
+            "properties": {
+              "matched": {
+                "const": false
+              }
+            }
+          },
+          "stop_condition_evaluation": {
+            "properties": {
+              "status": {
+                "const": "inconclusive"
+              }
+            }
+          },
+          "actions_taken": {
+            "items": {
+              "properties": {
+                "summary": {
+                  "properties": {
+                    "status": {
+                      "const": "inconclusive"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "handoff": {
+            "properties": {
+              "status": {
+                "const": "inconclusive"
+              },
+              "next_step": {
+                "const": "continue"
+              }
+            }
+          },
+          "issues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

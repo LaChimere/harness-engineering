@@ -15,7 +15,11 @@ import {
   resolveRootForInspectionCommand,
 } from '../lib/paths.ts';
 import { readPackageVersion } from '../lib/project.ts';
-import { formatValidationIssue, loadSchemaRegistry } from '../lib/schema-registry.ts';
+import {
+  formatValidationIssue,
+  type IValidationIssue,
+  loadSchemaRegistry,
+} from '../lib/schema-registry.ts';
 import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set(['root', 'file', 'format', 'input', 'output']);
@@ -70,15 +74,26 @@ async function runTraceValidate(
   const results = [];
   for (const tracePath of tracePaths) {
     const document = await loadDocument(resolveInsideRoot(root, tracePath, 'Trace artifact'));
-    const issues = schemas.validate('trace', document).map(formatValidationIssue);
+    const issues = schemas
+      .validate('trace', document)
+      .map((issue) => traceValidationIssue(issue, tracePath));
     results.push({ path: tracePath, status: issues.length === 0 ? 'passed' : 'failed', issues });
   }
   const status = results.every((result) => result.status === 'passed') ? 'passed' : 'failed';
+  const issues = traceValidationSummaryIssues(results);
   const output: JsonObject = {
     ['schema_version']: '0.1.0',
     status,
+    ...(issues.length === 0 ? {} : { issues }),
     traces: results,
   };
+  const outputIssues = schemas.validate('trace-validate-result', output).map(formatValidationIssue);
+  if (outputIssues.length > 0) {
+    throw new CliError(
+      `Trace validation produced invalid output: ${outputIssues.join('; ')}`,
+      ExitCode.internalError,
+    );
+  }
   context.stdout(
     format === 'json' ? JSON.stringify(output, null, 2) : renderTraceValidationMarkdown(output),
   );
@@ -122,6 +137,68 @@ async function runTraceImport(
     `harness trace import passed: wrote ${relativePathFromRoot(root, absoluteOutput, 'Trace import output')}`,
   );
   return ExitCode.ok;
+}
+
+function traceValidationIssue(issue: IValidationIssue, tracePath: string): JsonObject {
+  return {
+    code: `trace-validation-${schemaKeywordCode(issue.keyword)}`,
+    severity: 'error',
+    message: issue.message,
+    ...(issue.path.length === 0 ? {} : { path: issuePathSegments(issue.path) }),
+    details: {
+      keyword: issue.keyword,
+      ['instance_path']: issue.path,
+      ['schema_path']: issue.schemaPath,
+      params: issue.params,
+    },
+    evidence: [
+      {
+        path: tracePath,
+        ['media_type']: 'application/json',
+        description: 'Trace artifact under validation.',
+      },
+    ],
+  };
+}
+
+function traceValidationSummaryIssues(results: readonly JsonObject[]): JsonObject[] {
+  const failed = results.filter((result) => getString(result, 'status') === 'failed');
+  if (failed.length === 0) {
+    return [];
+  }
+  const issueCount = failed.reduce(
+    (count, result) => count + (getArray(result, 'issues')?.length ?? 0),
+    0,
+  );
+  return [
+    {
+      code: 'trace-validation-failed',
+      severity: 'error',
+      message: `${failed.length} trace(s) failed validation with ${issueCount} issue(s).`,
+      evidence: failed.map((result) => ({
+        path: getString(result, 'path') ?? 'unknown',
+        ['media_type']: 'application/json',
+        description: 'Trace artifact under validation.',
+      })),
+    },
+  ];
+}
+
+function schemaKeywordCode(keyword: string): string {
+  return keyword
+    .replaceAll('_', '-')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase();
+}
+
+function issuePathSegments(path: string): (string | number)[] {
+  return path
+    .split('/')
+    .filter((segment) => segment.length > 0)
+    .map((segment) => {
+      const decoded = segment.replaceAll('~1', '/').replaceAll('~0', '~');
+      return /^[0-9]+$/.test(decoded) ? Number(decoded) : decoded;
+    });
 }
 
 async function traceExamplesFromHarness(

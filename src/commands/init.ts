@@ -137,6 +137,13 @@ const starterPathReplacements: ReadonlyArray<readonly [string, string]> = [
     'destination_hint: .harness/profiles/gc-stability.json',
     'destination_hint: .harness/outputs/profile-runs/gc-stability.json',
   ],
+  [
+    'destination_hint: examples/profile-runs/gc-stability.json',
+    'destination_hint: .harness/outputs/profile-runs/gc-stability.json',
+  ],
+  ['    - examples/gc\n', '    - .harness/outputs/gc\n'],
+  ['    - examples/health/results\n', '    - .harness/outputs/health\n'],
+  ['    - examples/profile-runs\n', '    - .harness/outputs/profile-runs\n'],
   ['    - .harness/profiles\n', '    - .harness/outputs/profile-runs\n'],
   ['output_dir: .harness/profiles', 'output_dir: .harness/outputs/profile-runs'],
   ['.harness/run-results.jsonl', '.harness/outputs/run-results.jsonl'],

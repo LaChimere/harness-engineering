@@ -1,9 +1,9 @@
 {
   "schema_version": "0.2.0",
-  "run_id": "gc-stability-clean",
+  "run_id": "gc-stability-dirty",
   "harness_version": "0.1.0",
   "generated_at": "2026-05-29T00:00:00.000Z",
-  "status": "met",
+  "status": "not_met",
   "profile_ref": {
     "path": "examples/profiles/gc-stability.yaml",
     "sha256": "sha256:e445a9e47c4b1dea82a03efe76f7f33c3d49330adc8fc55a96b4addf86576d18",
@@ -16,8 +16,8 @@
   "evidence_inputs": [
     {
       "kind": "gc-evidence",
-      "path": "examples/gc/evidence.json",
-      "sha256": "sha256:f72d70aad74dd83ba26edaecfea4b1575fcb67bd6a1df7ada78135f17c03e06c",
+      "path": "examples/gc/findings.json",
+      "sha256": "sha256:7358bf1c37953def8fe60286f05f10bd67fea565b9f5efc5de4159f09e9bdb75",
       "media_type": "application/json",
       "description": "gc-evidence evidence input."
     },
@@ -34,7 +34,7 @@
     "observations": [
       {
         "metric": "gc.findings.count",
-        "actual": 0,
+        "actual": 1,
         "comparator": "gte",
         "expected": 0,
         "matched": true
@@ -49,14 +49,14 @@
     ]
   },
   "stop_condition_evaluation": {
-    "matched": true,
+    "matched": false,
     "observations": [
       {
         "metric": "gc.findings.count",
-        "actual": 0,
+        "actual": 1,
         "comparator": "eq",
         "expected": 0,
-        "matched": true
+        "matched": false
       },
       {
         "metric": "health.status",
@@ -66,24 +66,31 @@
         "matched": true
       }
     ],
-    "status": "met",
-    "clean_streak": 1
+    "status": "not_met",
+    "clean_streak": 0
   },
   "actions_taken": [
     {
       "kind": "summary",
       "summary": {
-        "status": "met",
-        "gc_findings": 0,
+        "status": "not_met",
+        "gc_findings": 1,
         "health_status": "passed",
-        "clean_streak": 1
+        "clean_streak": 0
       }
     }
   ],
   "handoff": {
     "kind": "profile-run",
-    "status": "met",
-    "next_step": "stop",
-    "summary": "gc_findings=0; health_status=passed; clean_streak=1; stop_condition=met"
-  }
+    "status": "not_met",
+    "next_step": "continue",
+    "summary": "gc_findings=1; health_status=passed; clean_streak=0; stop_condition=not_met"
+  },
+  "issues": [
+    {
+      "code": "profile-stop-condition-not-met",
+      "severity": "warning",
+      "message": "gc_findings=1; health_status=passed; clean_streak=0; stop_condition=not_met"
+    }
+  ]
 }

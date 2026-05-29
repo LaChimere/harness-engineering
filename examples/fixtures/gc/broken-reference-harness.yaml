@@ -21,9 +21,9 @@ engines:
     scoreboard: ">=0.1 <0.2"
     judge-policy: ">=0.1 <0.2"
     judge-result: ">=0.1 <0.2"
-    gc-evidence: ">=0.1 <0.2"
+    gc-evidence: ">=0.1 <0.3"
     recurring-profile: ">=0.1 <0.2"
-    profile-run: ">=0.1 <0.2"
+    profile-run: ">=0.1 <0.3"
 context:
   maps:
     - README.md

@@ -128,7 +128,7 @@ Target version: `0.2.0`.
 Changes:
 
 - Add required top-level `status` with `passed` or `findings`.
-- Add optional top-level `harness_version`.
+- Add required top-level `harness_version`.
 - Add optional top-level `issues` only for audit/contract problems, not for ordinary GC findings.
 
 Status mapping:
@@ -150,7 +150,7 @@ Changes:
 - Validate the command result itself, not just trace artifacts.
 - Keep top-level `schema_version`, `status`, and `traces[]`.
 - Convert per-trace `issues: string[]` to structured `issues: ICliJsonIssue[]`.
-- Add optional top-level `issues` summarizing failed trace entries.
+- Add optional top-level `issues` summarizing failed trace entries as aggregate command-result issues.
 
 Per-trace issue mapping:
 
@@ -158,6 +158,7 @@ Per-trace issue mapping:
 - `severity`: `error`.
 - `message`: existing issue string.
 - `path`: JSON/schema path segments when the validator provides them.
+- `details`: structured validator metadata such as keyword, instance path, schema path, and validator params.
 - `evidence`: the trace artifact path from the surrounding `traces[]` entry.
 
 Intentional deferrals:
@@ -179,8 +180,11 @@ Issue mapping:
 - Each current `errors[]` string becomes an issue:
   - `code`: `profile-run-error` unless the implementation can choose a more specific stable code at the source.
   - `severity`: `error` for command failures, `warning` for not-met profile conditions that still produce usable handoff evidence.
-  - `severity`: `warning` for `inconclusive` when handoff evidence is still usable but insufficient for a met stop condition.
   - `message`: existing error string.
+- Non-`met` profile outcomes also produce one warning issue:
+  - `code`: `profile-stop-condition-not-met` for `not_met`, or `profile-inconclusive` for `inconclusive`.
+  - `severity`: `warning`.
+  - `message`: the handoff summary.
 
 Implementation notes:
 
@@ -210,4 +214,5 @@ Golden tests should validate:
 - No dual-field compatibility shims for old command-result shapes.
 - Update first-party code, schemas, fixtures, tests, examples, and docs in the same PR that changes a command output.
 - Do not silently upgrade persisted harness/schema versions. Persisted harness upgrades still require previewable `harness migrate` evidence.
+- The command-result and generated evidence schema changes in this plan regenerate checked-in examples and fixtures in place; they do not migrate a persisted `harness.yaml` substrate, so fixture validation and golden parity are the migration evidence for this clean pre-release command-output break.
 - Keep each hardening PR grouped by command family as defined in `plan.md`.

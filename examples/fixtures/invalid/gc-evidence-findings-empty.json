@@ -1,0 +1,8 @@
+{
+  "schema_version": "0.2.0",
+  "audit_id": "invalid-gc-findings-empty",
+  "generated_at": "2026-05-29T00:00:00Z",
+  "harness_version": "0.1.0",
+  "status": "findings",
+  "findings": []
+}

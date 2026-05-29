@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.2.0",
+  "audit_id": "invalid-gc-passed-with-findings",
+  "generated_at": "2026-05-29T00:00:00Z",
+  "harness_version": "0.1.0",
+  "status": "passed",
+  "findings": [
+    {
+      "category": "broken-reference",
+      "severity": "warning",
+      "confidence": 0.5,
+      "evidence_refs": [{ "path": "harness.yaml" }],
+      "proposed_cleanup_slice": {
+        "id": "invalid-gc-passed-with-findings",
+        "description": "Invalid status invariant fixture.",
+        "target_files": ["harness.yaml"]
+      },
+      "blast_radius": "Fixture only.",
+      "atomicity_notes": "Status and findings must agree.",
+      "promotion_decision_refs": [],
+      "retirement_decision_refs": []
+    }
+  ]
+}

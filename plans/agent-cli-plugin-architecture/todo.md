@@ -63,11 +63,11 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr4b-gc-json` | `pr4a-verify` | Apply the migration plan to `harness gc audit --format json`. | GC output has planned top-level status/issues while keeping `findings` separate, and renamed legacy command-result fields are replaced cleanly without dual-field compatibility shims. |
-| [ ] | `pr4b-trace-json` | `pr4a-verify` | Add `schemas/trace-validate-result.schema.json` for `harness trace validate --format json`. | Trace validation command output validates against `schemas/trace-validate-result.schema.json`, which is distinct from `schemas/trace.schema.json`, and string trace validation issues are replaced by structured `issues[]` without dual-field compatibility shims. |
-| [ ] | `pr4b-profile-json` | `pr4a-verify` | Apply the migration plan to `harness profile run --format json`. | Profile output has planned top-level status/issues while keeping `handoff` canonical, and legacy command-result `profile-run.errors[]` is replaced by structured `issues[]` in the same pre-release migration. |
-| [ ] | `pr4b-fixtures-tests` | PR 4B command tasks | Add evidence command golden fixtures and schema validation tests. | Each command has at least one success and one failure/non-passing fixture validated by tests. |
-| [ ] | `pr4b-verify` | `pr4b-fixtures-tests` | Validate PR 4B. | `bun run check`, `bun run test:unit`, `bun run build`, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, and `git diff --check` pass. |
+| [x] | `pr4b-gc-json` | `pr4a-verify` | Apply the migration plan to `harness gc audit --format json`. | GC output has planned top-level status/issues while keeping `findings` separate, and renamed legacy command-result fields are replaced cleanly without dual-field compatibility shims. |
+| [x] | `pr4b-trace-json` | `pr4a-verify` | Add `schemas/trace-validate-result.schema.json` for `harness trace validate --format json`. | Trace validation command output validates against `schemas/trace-validate-result.schema.json`, which is distinct from `schemas/trace.schema.json`, and string trace validation issues are replaced by structured `issues[]` without dual-field compatibility shims. |
+| [x] | `pr4b-profile-json` | `pr4a-verify` | Apply the migration plan to `harness profile run --format json`. | Profile output has planned top-level status/issues while keeping `handoff` canonical, and legacy command-result `profile-run.errors[]` is replaced by structured `issues[]` in the same pre-release migration. |
+| [x] | `pr4b-fixtures-tests` | PR 4B command tasks | Add evidence command golden fixtures and schema validation tests. | Each command has at least one success and one failure/non-passing fixture validated by tests. |
+| [x] | `pr4b-verify` | `pr4b-fixtures-tests` | Validate PR 4B. | `bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, and `git diff --check` pass; code-review, review-pr aspect agents, and rubber-duck report no material remaining comments. |
 
 ## PR 5: Canonical shared skills and skill lint
 

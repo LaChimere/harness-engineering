@@ -3,7 +3,14 @@
   "$id": "https://lachimere.github.io/harness-engineering/schemas/0.1/gc-evidence.schema.json",
   "title": "GC evidence",
   "type": "object",
-  "required": ["schema_version", "audit_id", "generated_at", "findings"],
+  "required": [
+    "schema_version",
+    "audit_id",
+    "generated_at",
+    "harness_version",
+    "status",
+    "findings"
+  ],
   "properties": {
     "schema_version": {
       "$ref": "common.schema.json#/$defs/schemaVersion"
@@ -14,6 +21,20 @@
     "generated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "harness_version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "findings"]
+    },
+    "issues": {
+      "description": "Command or contract problems discovered during audit production. Ordinary cleanup findings stay in findings.",
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/cliJsonIssue"
+      }
     },
     "findings": {
       "type": "array",
@@ -99,5 +120,41 @@
       "$ref": "common.schema.json#/$defs/artifactRef"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "findings"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

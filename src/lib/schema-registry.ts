@@ -6,13 +6,15 @@ import addFormats from 'ajv-formats';
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { loadDocument } from './files.ts';
-import type { JsonValue } from './json.ts';
+import type { JsonObject, JsonValue } from './json.ts';
 import { getString, isObject } from './json.ts';
 
 export interface IValidationIssue {
   readonly path: string;
+  readonly schemaPath: string;
   readonly keyword: string;
   readonly message: string;
+  readonly params: JsonObject;
 }
 
 export interface ISchemaRegistry {
@@ -108,9 +110,41 @@ export function formatValidationIssue(issue: IValidationIssue): string {
 function formatAjvError(error: ErrorObject): IValidationIssue {
   return {
     path: error.instancePath,
+    schemaPath: error.schemaPath,
     keyword: error.keyword,
     message: error.message ?? 'failed validation',
+    params: jsonObjectFromAjvParams(error.params),
   };
+}
+
+function jsonObjectFromAjvParams(params: ErrorObject['params']): JsonObject {
+  const result: JsonObject = {};
+  for (const [key, value] of Object.entries(params)) {
+    result[key] = jsonValueFromUnknown(value);
+  }
+  return result;
+}
+
+function jsonValueFromUnknown(value: unknown): JsonValue {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(jsonValueFromUnknown);
+  }
+  if (isObject(value)) {
+    const result: JsonObject = {};
+    for (const [key, item] of Object.entries(value)) {
+      result[key] = jsonValueFromUnknown(item);
+    }
+    return result;
+  }
+  throw new CliError('AJV validation issue params were not JSON values.', ExitCode.internalError);
 }
 
 function inferSchemaVersion(schemas: readonly ILoadedSchema[]): string {

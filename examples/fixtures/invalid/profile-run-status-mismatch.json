@@ -1,19 +1,20 @@
 {
   "schema_version": "0.2.0",
-  "run_id": "invalid-profile-run-capability",
+  "run_id": "invalid-profile-run-status-mismatch",
   "harness_version": "0.1.0",
-  "generated_at": "2026-05-26T00:00:00Z",
+  "generated_at": "2026-05-29T00:00:00Z",
+  "status": "met",
   "profile_ref": {
     "path": "examples/profiles/gc-stability.yaml",
     "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   },
   "profile_id": "gc-stability",
   "profile_version": "0.1.0",
-  "declared_capability_id": "docs-freshness-profile",
+  "declared_capability_id": null,
   "evidence_inputs": [
     {
       "kind": "gc-evidence",
-      "path": "examples/gc/evidence.json",
+      "path": "examples/gc/findings.json",
       "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
     }
   ],
@@ -24,7 +25,7 @@
   "stop_condition_evaluation": {
     "matched": true,
     "observations": [],
-    "status": "met",
+    "status": "not_met",
     "clean_streak": 1
   },
   "actions_taken": [
@@ -32,9 +33,9 @@
       "kind": "summary",
       "summary": {
         "status": "met",
-        "gc_findings": 0,
+        "gc_findings": 1,
         "health_status": "passed",
-        "clean_streak": 1
+        "clean_streak": 0
       }
     }
   ],
@@ -42,7 +43,6 @@
     "kind": "profile-run",
     "status": "met",
     "next_step": "stop",
-    "summary": "invalid capability adoption"
-  },
-  "status": "met"
+    "summary": "invalid status mismatch"
+  }
 }

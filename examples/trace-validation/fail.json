@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.1.0",
+  "status": "failed",
+  "issues": [
+    {
+      "code": "trace-validation-failed",
+      "severity": "error",
+      "message": "1 trace(s) failed validation with 1 issue(s).",
+      "evidence": [
+        {
+          "path": "examples/fixtures/invalid/trace-missing-session-id.json",
+          "media_type": "application/json",
+          "description": "Trace artifact under validation."
+        }
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "path": "examples/fixtures/invalid/trace-missing-session-id.json",
+      "status": "failed",
+      "issues": [
+        {
+          "code": "trace-validation-required",
+          "severity": "error",
+          "message": "must have required property 'session_id'",
+          "details": {
+            "keyword": "required",
+            "instance_path": "",
+            "schema_path": "#/required",
+            "params": {
+              "missingProperty": "session_id"
+            }
+          },
+          "evidence": [
+            {
+              "path": "examples/fixtures/invalid/trace-missing-session-id.json",
+              "media_type": "application/json",
+              "description": "Trace artifact under validation."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

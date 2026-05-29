@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.2.0",
+  "audit_id": "gc-findings-example",
+  "generated_at": "2026-05-29T00:00:00.000Z",
+  "harness_version": "0.1.0",
+  "status": "findings",
+  "findings": [
+    {
+      "category": "broken-reference",
+      "severity": "error",
+      "confidence": 1,
+      "evidence_refs": [
+        {
+          "path": "examples/fixtures/gc/broken-reference-harness.yaml",
+          "media_type": "application/yaml",
+          "description": "failure taxonomy not found: examples/missing-taxonomy.yaml"
+        }
+      ],
+      "proposed_cleanup_slice": {
+        "id": "fix-broken-reference-1",
+        "description": "failure taxonomy not found: examples/missing-taxonomy.yaml",
+        "target_files": ["examples/fixtures/gc/broken-reference-harness.yaml"]
+      },
+      "blast_radius": "Harness references and their target artifact validation.",
+      "atomicity_notes": "Fix the broken reference or target artifact only; do not mix with schema or behavior changes.",
+      "promotion_decision_refs": [],
+      "retirement_decision_refs": []
+    }
+  ]
+}

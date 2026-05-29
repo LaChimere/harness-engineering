@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1.0",
+  "status": "passed",
+  "traces": [
+    {
+      "path": "examples/traces/recorded-external-trace.json",
+      "status": "passed",
+      "issues": []
+    },
+    {
+      "path": "examples/traces/external-import.json",
+      "status": "passed",
+      "issues": []
+    }
+  ]
+}

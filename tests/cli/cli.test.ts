@@ -7,7 +7,14 @@ import { runCli } from '../../src/cli.ts';
 import { computeEvalTaskDatasetHash } from '../../src/lib/eval.ts';
 import { ExitCode } from '../../src/lib/exit-codes.ts';
 import { loadDocument } from '../../src/lib/files.ts';
-import { getArray, getObject, getString, isObject, type JsonObject } from '../../src/lib/json.ts';
+import {
+  getArray,
+  getObject,
+  getString,
+  isObject,
+  type JsonObject,
+  type JsonValue,
+} from '../../src/lib/json.ts';
 import { loadSchemaRegistry } from '../../src/lib/schema-registry.ts';
 
 interface IRunResult {
@@ -1738,9 +1745,11 @@ test('profile validates and runs gc stability evidence', async () => {
     join(root, '.harness/outputs/gc/clean.json'),
     JSON.stringify(
       {
-        ['schema_version']: '0.1.0',
+        ['schema_version']: '0.2.0',
         ['audit_id']: 'profile-clean-gc',
         ['generated_at']: '2026-05-26T00:00:00Z',
+        ['harness_version']: '0.1.0',
+        status: 'passed',
         findings: [],
       },
       null,
@@ -1790,6 +1799,10 @@ test('profile validates and runs gc stability evidence', async () => {
   );
   const schemas = await loadSchemaRegistry(process.cwd());
   expect(schemas.validate('profile-run', profileRun)).toEqual([]);
+  expect(getString(profileRun, 'schema_version')).toBe('0.2.0');
+  expect(getString(profileRun, 'status')).toBe('met');
+  expect('errors' in profileRun).toBe(false);
+  expect(getArray(profileRun, 'issues')).toBeUndefined();
   expect(getString(profileRun, 'profile_id')).toBe('gc-stability');
   expect(getString(getObject(profileRun, 'handoff') ?? {}, 'next_step')).toBe('stop');
   expect(getString(getObject(profileRun, 'handoff') ?? {}, 'status')).toBe('met');
@@ -1994,9 +2007,11 @@ test('profile run reports not-met without cleanup for dirty gc evidence', async 
     join(root, '.harness/outputs/gc/dirty.json'),
     JSON.stringify(
       {
-        ['schema_version']: '0.1.0',
+        ['schema_version']: '0.2.0',
         ['audit_id']: 'profile-dirty-gc',
         ['generated_at']: '2026-05-26T00:00:00Z',
+        ['harness_version']: '0.1.0',
+        status: 'findings',
         findings: [
           {
             category: 'broken-reference',
@@ -2057,8 +2072,15 @@ test('profile run reports not-met without cleanup for dirty gc evidence', async 
   );
   expect(result.code).toBe(ExitCode.ok);
   const profileRun = JSON.parse(result.stdout);
+  expect(getString(profileRun, 'schema_version')).toBe('0.2.0');
+  expect(getString(profileRun, 'status')).toBe('not_met');
   expect(getString(getObject(profileRun, 'handoff') ?? {}, 'status')).toBe('not_met');
   expect(getString(getObject(profileRun, 'handoff') ?? {}, 'next_step')).toBe('continue');
+  const issues = jsonObjects(getArray(profileRun, 'issues'));
+  expect(issues.length).toBe(1);
+  expect(getString(issues[0] ?? {}, 'code')).toBe('profile-stop-condition-not-met');
+  expect(getString(issues[0] ?? {}, 'severity')).toBe('warning');
+  expect('errors' in profileRun).toBe(false);
   expect(
     getString(
       getObject(jsonObjects(getArray(profileRun, 'actions_taken'))[0] ?? {}, 'summary') ?? {},
@@ -2082,7 +2104,11 @@ test('gc audit emits schema-valid JSON for a healthy harness', async () => {
   ]);
   expect(result.code).toBe(ExitCode.ok);
   const evidence = JSON.parse(result.stdout);
+  expect(getString(evidence, 'schema_version')).toBe('0.2.0');
   expect(getString(evidence, 'audit_id')).toBe('test-gc-clean');
+  expect(getString(evidence, 'harness_version')).toBe('0.1.0');
+  expect(getString(evidence, 'status')).toBe('passed');
+  expect(getArray(evidence, 'issues')).toBeUndefined();
   expect(getArray(evidence, 'findings')).toEqual([]);
   const schemas = await loadSchemaRegistry(process.cwd());
   expect(schemas.validate('gc-evidence', evidence)).toEqual([]);
@@ -2235,9 +2261,11 @@ test('gc validate accepts schema-valid evidence and rejects semantic gaps', asyn
     invalidPath,
     JSON.stringify(
       {
-        ['schema_version']: '0.1.0',
+        ['schema_version']: '0.2.0',
         ['audit_id']: 'invalid-gc',
         ['generated_at']: '2026-05-24T00:00:00Z',
+        ['harness_version']: '0.1.0',
+        status: 'findings',
         findings: [
           {
             category: 'broken-reference',
@@ -2292,9 +2320,11 @@ test('gc validate checks local references and supports reference-only escapes', 
   const root = await tempRoot();
   await run(['init'], root);
   const validEvidence = {
-    ['schema_version']: '0.1.0',
+    ['schema_version']: '0.2.0',
     ['audit_id']: 'gc-reference-valid',
     ['generated_at']: '2026-05-24T00:00:00Z',
+    ['harness_version']: '0.1.0',
+    status: 'findings',
     ['previous_audit_ref']: 'harness://gc/previous',
     findings: [
       {
@@ -2355,9 +2385,11 @@ test('gc validate rejects symlinked local refs', async () => {
     join(root, 'symlink-gc.json'),
     JSON.stringify(
       {
-        ['schema_version']: '0.1.0',
+        ['schema_version']: '0.2.0',
         ['audit_id']: 'gc-symlink',
         ['generated_at']: '2026-05-24T00:00:00Z',
+        ['harness_version']: '0.1.0',
+        status: 'findings',
         findings: [
           {
             category: 'broken-reference',
@@ -2645,6 +2677,180 @@ test('doctor, health, and assess JSON fixtures match normalized command output',
   expect(assessNeedsWork.code).toBe(ExitCode.ok);
   expect(normalizeGeneratedAt(JSON.parse(assessNeedsWork.stdout))).toEqual(
     normalizeGeneratedAt(await loadJsonFixture('examples/assessments/repair-action-routing.json')),
+  );
+});
+
+test('gc, trace, and profile JSON fixtures match normalized command output', async () => {
+  const gcClean = await run([
+    'gc',
+    'audit',
+    '--file',
+    'examples/harness.yaml',
+    '--audit-id',
+    'gc-clean-example',
+    '--generated-at',
+    '2026-05-29T00:00:00.000Z',
+    '--format',
+    'json',
+  ]);
+  expect(gcClean.code).toBe(ExitCode.ok);
+  expect(JSON.parse(gcClean.stdout)).toEqual(await loadJsonFixture('examples/gc/evidence.json'));
+
+  const gcFindings = await run([
+    'gc',
+    'audit',
+    '--file',
+    'examples/fixtures/gc/broken-reference-harness.yaml',
+    '--audit-id',
+    'gc-findings-example',
+    '--generated-at',
+    '2026-05-29T00:00:00.000Z',
+    '--format',
+    'json',
+  ]);
+  expect(gcFindings.code).toBe(ExitCode.ok);
+  expect(JSON.parse(gcFindings.stdout)).toEqual(await loadJsonFixture('examples/gc/findings.json'));
+
+  const tracePass = await run([
+    'trace',
+    'validate',
+    '--file',
+    'examples/harness.yaml',
+    '--format',
+    'json',
+  ]);
+  expect(tracePass.code).toBe(ExitCode.ok);
+  expect(JSON.parse(tracePass.stdout)).toEqual(
+    await loadJsonFixture('examples/trace-validation/pass.json'),
+  );
+
+  const traceFail = await run([
+    'trace',
+    'validate',
+    'examples/fixtures/invalid/trace-missing-session-id.json',
+    '--format',
+    'json',
+  ]);
+  expect(traceFail.code).toBe(ExitCode.validationError);
+  expect(JSON.parse(traceFail.stdout)).toEqual(
+    await loadJsonFixture('examples/trace-validation/fail.json'),
+  );
+
+  const root = await tempRoot();
+  await run(['init'], root);
+  const health = await run(
+    [
+      'health',
+      '--accept-unsandboxed-execution',
+      '--format',
+      'json',
+      '--output',
+      '.harness/outputs/health/profile-health.json',
+    ],
+    root,
+  );
+  expect(health.code).toBe(ExitCode.ok);
+  await writeFile(
+    join(root, '.harness/outputs/gc/clean.json'),
+    await readFile('examples/gc/evidence.json', 'utf8'),
+  );
+  await writeFile(
+    join(root, '.harness/outputs/gc/dirty.json'),
+    await readFile('examples/gc/findings.json', 'utf8'),
+  );
+
+  const profileClean = await run(
+    [
+      'profile',
+      'run',
+      '.harness/profiles/gc-stability.yaml',
+      '--run-id',
+      'gc-stability-clean',
+      '--gc-evidence',
+      '.harness/outputs/gc/clean.json',
+      '--health-result',
+      '.harness/outputs/health/profile-health.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(profileClean.code).toBe(ExitCode.ok);
+  const profileCleanJson = parseJsonObject(profileClean.stdout);
+  expect(profileArtifactPaths(profileCleanJson)).toEqual([
+    '.harness/profiles/gc-stability.yaml',
+    '.harness/outputs/gc/clean.json',
+    '.harness/outputs/health/profile-health.json',
+  ]);
+  expect(normalizeProfileGolden(profileCleanJson)).toEqual(
+    normalizeProfileGolden(await loadJsonFixture('examples/profile-runs/gc-stability-clean.json')),
+  );
+
+  const profileDirty = await run(
+    [
+      'profile',
+      'run',
+      '.harness/profiles/gc-stability.yaml',
+      '--run-id',
+      'gc-stability-dirty',
+      '--gc-evidence',
+      '.harness/outputs/gc/dirty.json',
+      '--health-result',
+      '.harness/outputs/health/profile-health.json',
+      '--format',
+      'json',
+    ],
+    root,
+  );
+  expect(profileDirty.code).toBe(ExitCode.ok);
+  const profileDirtyJson = parseJsonObject(profileDirty.stdout);
+  expect(profileArtifactPaths(profileDirtyJson)).toEqual([
+    '.harness/profiles/gc-stability.yaml',
+    '.harness/outputs/gc/dirty.json',
+    '.harness/outputs/health/profile-health.json',
+  ]);
+  expect(normalizeProfileGolden(profileDirtyJson)).toEqual(
+    normalizeProfileGolden(await loadJsonFixture('examples/profile-runs/gc-stability-dirty.json')),
+  );
+
+  const sourceProfileClean = await run([
+    'profile',
+    'run',
+    'examples/profiles/gc-stability.yaml',
+    '--file',
+    'examples/harness.yaml',
+    '--run-id',
+    'gc-stability-clean',
+    '--gc-evidence',
+    'examples/gc/evidence.json',
+    '--health-result',
+    'examples/health/results/pass.json',
+    '--format',
+    'json',
+  ]);
+  expect(sourceProfileClean.code).toBe(ExitCode.ok);
+  expect(normalizeGeneratedAt(parseJsonObject(sourceProfileClean.stdout))).toEqual(
+    normalizeGeneratedAt(await loadJsonFixture('examples/profile-runs/gc-stability-clean.json')),
+  );
+
+  const sourceProfileDirty = await run([
+    'profile',
+    'run',
+    'examples/profiles/gc-stability.yaml',
+    '--file',
+    'examples/harness.yaml',
+    '--run-id',
+    'gc-stability-dirty',
+    '--gc-evidence',
+    'examples/gc/findings.json',
+    '--health-result',
+    'examples/health/results/pass.json',
+    '--format',
+    'json',
+  ]);
+  expect(sourceProfileDirty.code).toBe(ExitCode.ok);
+  expect(normalizeGeneratedAt(parseJsonObject(sourceProfileDirty.stdout))).toEqual(
+    normalizeGeneratedAt(await loadJsonFixture('examples/profile-runs/gc-stability-dirty.json')),
   );
 });
 
@@ -3292,6 +3498,55 @@ test('trace validates configured examples and imports normalized traces', async 
   const validation = JSON.parse(validate.stdout);
   expect(getString(validation, 'status')).toBe('passed');
   expect(jsonObjects(getArray(validation, 'traces')).length).toBe(2);
+  const schemas = await loadSchemaRegistry(process.cwd());
+  expect(schemas.validate('trace-validate-result', validation)).toEqual([]);
+  expect(
+    hasValidationIssue(
+      schemas.validate('trace-validate-result', {
+        ['schema_version']: '0.1.0',
+        status: 'passed',
+        traces: [
+          {
+            path: 'examples/traces/recorded-external-trace.json',
+            status: 'failed',
+            issues: [
+              {
+                code: 'trace-validation-required',
+                severity: 'error',
+                message: "must have required property 'session_id'",
+              },
+            ],
+          },
+        ],
+      }),
+      'const',
+      '/traces/0/status',
+    ),
+  ).toBe(true);
+  expect(
+    hasValidationIssue(
+      schemas.validate('trace-validate-result', {
+        ['schema_version']: '0.1.0',
+        status: 'failed',
+        issues: [
+          {
+            code: 'trace-validation-failed',
+            severity: 'error',
+            message: '1 trace(s) failed validation with 0 issue(s).',
+          },
+        ],
+        traces: [
+          {
+            path: 'examples/traces/recorded-external-trace.json',
+            status: 'failed',
+            issues: [],
+          },
+        ],
+      }),
+      'minItems',
+      '/traces/0/issues',
+    ),
+  ).toBe(true);
 
   const root = await tempRoot();
   await run(['init'], root);
@@ -3311,7 +3566,6 @@ test('trace validates configured examples and imports normalized traces', async 
   const trace = JSON.parse(
     await readFile(join(root, '.harness/outputs/traces/imported.json'), 'utf8'),
   );
-  const schemas = await loadSchemaRegistry(process.cwd());
   expect(schemas.validate('trace', trace)).toEqual([]);
   expect(getString(trace, 'determinism_level')).toBe('external-import');
 
@@ -3443,6 +3697,14 @@ function jsonObjects(values: ReturnType<typeof getArray>): JsonObject[] {
   return (values ?? []).filter(isObject);
 }
 
+function hasValidationIssue(
+  issues: readonly { readonly keyword: string; readonly path: string }[],
+  keyword: string,
+  path: string,
+): boolean {
+  return issues.some((issue) => issue.keyword === keyword && issue.path === path);
+}
+
 function objectWithString(
   objects: readonly JsonObject[],
   key: string,
@@ -3452,11 +3714,34 @@ function objectWithString(
 }
 
 async function loadJsonFixture(path: string): Promise<JsonObject> {
-  const parsed: unknown = JSON.parse(await readFile(path, 'utf8'));
+  const parsed = parseJsonObject(await readFile(path, 'utf8'));
+  return parsed;
+}
+
+function parseJsonObject(text: string): JsonObject {
+  const parsed: unknown = JSON.parse(text);
   if (!isObject(parsed)) {
-    throw new Error(`${path} must contain a JSON object`);
+    throw new Error('Expected JSON object');
   }
   return parsed;
+}
+
+function profileArtifactPaths(profileRun: JsonObject): string[] {
+  const paths: string[] = [];
+  const profileRef = getObject(profileRun, 'profile_ref');
+  if (profileRef !== undefined) {
+    const path = getString(profileRef, 'path');
+    if (path !== undefined) {
+      paths.push(path);
+    }
+  }
+  for (const input of jsonObjects(getArray(profileRun, 'evidence_inputs'))) {
+    const path = getString(input, 'path');
+    if (path !== undefined) {
+      paths.push(path);
+    }
+  }
+  return paths;
 }
 
 function normalizeGeneratedAt(object: JsonObject): JsonObject {
@@ -3471,6 +3756,50 @@ function normalizeHealthGolden(object: JsonObject): JsonObject {
     check['duration_ms'] = 0;
   }
   return normalized;
+}
+
+function normalizeProfileGolden(object: JsonObject): JsonObject {
+  const normalized = normalizeGeneratedAt(object);
+  replaceSha256Values(normalized);
+  replaceHashedArtifactPaths(normalized);
+  return normalized;
+}
+
+function replaceSha256Values(value: JsonValue): void {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      replaceSha256Values(item);
+    }
+    return;
+  }
+  if (!isObject(value)) {
+    return;
+  }
+  for (const [key, item] of Object.entries(value)) {
+    if (key === 'sha256' && typeof item === 'string') {
+      value[key] = 'sha256:<normalized>';
+      continue;
+    }
+    replaceSha256Values(item);
+  }
+}
+
+function replaceHashedArtifactPaths(value: JsonValue): void {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      replaceHashedArtifactPaths(item);
+    }
+    return;
+  }
+  if (!isObject(value)) {
+    return;
+  }
+  if (typeof value['sha256'] === 'string' && typeof value['path'] === 'string') {
+    value['path'] = '<normalized-path>';
+  }
+  for (const item of Object.values(value)) {
+    replaceHashedArtifactPaths(item);
+  }
 }
 
 function cloneJsonObject(object: JsonObject): JsonObject {

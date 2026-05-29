@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 
+import type { IAssessmentJsonContract } from './cli-json-contract.ts';
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
@@ -54,6 +55,8 @@ type ScorecardItem = JsonObject & {
   summary: string;
   evidence: ArtifactRead[];
 };
+
+type AssessmentStatus = 'ready' | 'needs-work' | 'missing-harness';
 
 interface IRepairActionCandidate {
   readonly path: string;
@@ -151,7 +154,7 @@ export async function buildAssessment(request: IAssessmentRequest): Promise<Json
   });
 
   const sortedArtifactsRead = sortedArtifacts(artifactsRead);
-  return {
+  const result = {
     ['schema_version']: schemaVersion,
     'x-stability': 'provisional',
     ['assessment_id']: assessmentIdFor({
@@ -186,7 +189,8 @@ export async function buildAssessment(request: IAssessmentRequest): Promise<Json
     recommendations,
     ['implementation_routing']: implementationRouting,
     ['artifacts_read']: sortedArtifactsRead,
-  };
+  } satisfies IAssessmentJsonContract;
+  return result;
 }
 
 export function renderAssessmentMarkdown(assessment: JsonObject): string {
@@ -1260,7 +1264,10 @@ function rolloutPlan(scorecard: readonly ScorecardItem[]): JsonObject[] {
   });
 }
 
-function statusFor(harness: ILoadedArtifact, scorecard: readonly ScorecardItem[]): string {
+function statusFor(
+  harness: ILoadedArtifact,
+  scorecard: readonly ScorecardItem[],
+): AssessmentStatus {
   if (harness.status === 'missing') {
     return 'missing-harness';
   }

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 
+import type { ICliJsonArtifact, ICliJsonIssue, IHealthJsonContract } from './cli-json-contract.ts';
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
@@ -41,10 +42,16 @@ interface IHealthCheckRun {
   readonly stderr?: string;
   readonly stdoutTruncated: boolean;
   readonly stderrTruncated: boolean;
-  readonly evidence: readonly JsonObject[];
+  readonly evidence: readonly HealthArtifact[];
   readonly artifacts: readonly JsonObject[];
   readonly trustRequirements: JsonObject;
 }
+
+type HealthArtifact = {
+  readonly path: string;
+  readonly ['media_type']?: string;
+  readonly description?: string;
+};
 
 export interface IHealthRunInput {
   readonly root: string;
@@ -113,13 +120,15 @@ export async function runHealth(input: IHealthRunInput): Promise<IHealthRun> {
   }
   const status = healthStatusForChecks(checks);
   const issues = healthIssues(checks);
-  const result: JsonObject = {
+  const issueFields =
+    issues.length === 0 ? {} : ({ issues } satisfies Pick<IHealthJsonContract, 'issues'>);
+  const result = {
     ['schema_version']: schemaVersion,
     ['run_id']: input.runId ?? defaultRunId(input.harnessPath, input.cliVersion, checks),
     ['harness_version']: input.cliVersion,
     ['generated_at']: input.generatedAt ?? new Date().toISOString(),
     status,
-    ...(issues.length === 0 ? {} : { issues }),
+    ...issueFields,
     ['sandbox_enforcement']: 'declarative',
     ['runtime_enforced']: false,
     source: {
@@ -128,7 +137,7 @@ export async function runHealth(input: IHealthRunInput): Promise<IHealthRun> {
       ['sandbox_policy']: sandboxPolicyPath,
     },
     checks: checks.map(healthCheckJson),
-  };
+  } satisfies IHealthJsonContract;
   return {
     result,
     markdown: renderHealthMarkdown(result),
@@ -328,7 +337,7 @@ function validateHealthCheckTrust(
   | {
       readonly failureCode: string;
       readonly message: string;
-      readonly evidence: readonly JsonObject[];
+      readonly evidence: readonly HealthArtifact[];
     }
   | undefined {
   const trust = declaration.trustRequirements;
@@ -407,12 +416,12 @@ function validateHealthCheckTrust(
 
 async function validateHealthArtifacts(
   root: string,
-  artifacts: readonly JsonObject[],
+  artifacts: readonly HealthArtifact[],
 ): Promise<
   | {
       readonly failureCode: string;
       readonly message: string;
-      readonly evidence: readonly JsonObject[];
+      readonly evidence: readonly HealthArtifact[];
     }
   | undefined
 > {
@@ -516,15 +525,18 @@ function healthCheckJson(check: IHealthCheckRun): JsonObject {
   };
 }
 
-function healthIssues(checks: readonly IHealthCheckRun[]): JsonObject[] {
+function healthIssues(checks: readonly IHealthCheckRun[]) {
   return checks
     .filter((check) => check.status !== 'passed')
-    .map((check) => ({
-      code: check.failureCode ?? check.id,
-      severity: check.status === 'skipped' ? 'warning' : 'error',
-      message: check.summary,
-      evidence: [...check.evidence],
-    }));
+    .map(
+      (check) =>
+        ({
+          code: check.failureCode ?? check.id,
+          severity: check.status === 'skipped' ? 'warning' : 'error',
+          message: check.summary,
+          evidence: [...check.evidence],
+        }) satisfies ICliJsonIssue,
+    );
 }
 
 function renderHealthMarkdown(result: JsonObject): string {
@@ -571,15 +583,23 @@ function defaultRunId(
   return `health-${digest}`;
 }
 
-function declaredArtifacts(artifacts: readonly JsonObject[]): readonly JsonObject[] {
+function declaredArtifacts(artifacts: readonly JsonObject[]): readonly HealthArtifact[] {
   return artifacts.map((artifactRef) => {
     const mediaType = getString(artifactRef, 'media_type');
     const description = getString(artifactRef, 'description');
+    const mediaTypeField =
+      mediaType === undefined
+        ? {}
+        : ({ ['media_type']: mediaType } satisfies Pick<ICliJsonArtifact, 'media_type'>);
+    const descriptionField =
+      description === undefined
+        ? {}
+        : ({ description } satisfies Pick<ICliJsonArtifact, 'description'>);
     return {
       path: requiredString(artifactRef, 'path', 'health check artifact path'),
-      ...(mediaType === undefined ? {} : { ['media_type']: mediaType }),
-      ...(description === undefined ? {} : { description }),
-    };
+      ...mediaTypeField,
+      ...descriptionField,
+    } satisfies ICliJsonArtifact;
   });
 }
 

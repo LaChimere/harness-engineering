@@ -3,6 +3,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import semver from 'semver';
 
+import type { IGcAuditJsonContract } from './cli-json-contract.ts';
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
@@ -109,17 +110,21 @@ export async function runGcAudit(input: IGcAuditInput): Promise<IGcAuditRun> {
   ]);
   const findings = findingInputs.map(finding);
   const status = findings.length === 0 ? 'passed' : 'findings';
-  const evidence: JsonObject = {
+  const previousAuditField =
+    input.previousAuditRef === undefined
+      ? {}
+      : ({
+          ['previous_audit_ref']: input.previousAuditRef,
+        } satisfies Pick<IGcAuditJsonContract, 'previous_audit_ref'>);
+  const evidence = {
     ['schema_version']: schemaVersion,
     ['audit_id']: input.auditId ?? defaultAuditId(input.harnessPath, findings),
     ['generated_at']: input.generatedAt ?? new Date().toISOString(),
     ['harness_version']: input.cliVersion,
     status,
     findings,
-    ...(input.previousAuditRef === undefined
-      ? {}
-      : { ['previous_audit_ref']: input.previousAuditRef }),
-  };
+    ...previousAuditField,
+  } satisfies IGcAuditJsonContract;
   return {
     evidence,
     markdown: renderGcMarkdown(evidence),

@@ -283,6 +283,55 @@ Validation commands:
 
 Mergeability notes: This PR starts only after PR 4A is merged and verified. It may reuse shared contract/test helpers from PR 4A but must not revise them beyond the frozen `cli-json-migration.md` without a focused follow-up plan.
 
+### PR 4C: Shared JSON contract type enforcement
+
+Goal: Wire the stabilized agent-facing JSON outputs through the shared TypeScript contract so future drift fails type-checking before skill authoring begins.
+
+Likely directories/files:
+
+- `src/lib/cli-json-contract.ts`
+- `src/lib/doctor.ts`
+- `src/lib/health.ts`
+- `src/lib/assessment.ts`
+- `src/lib/gc.ts`
+- `src/lib/profile.ts`
+- `src/commands/trace.ts`
+- `plans/agent-cli-plugin-architecture/**`
+
+Dependencies: PR 4A and PR 4B.
+
+Allowed changes:
+
+- Make the shared `ICliJsonContract` status requirement match the completed PR 4A/4B command-output migration.
+- Add command-specific TypeScript contract interfaces for the six agent-facing JSON outputs inventoried in `design.md`.
+- Apply TypeScript `satisfies` checks at the output assembly sites that mint `schema_version` so command-specific status and issue shapes are type-checked without changing emitted JSON.
+- Add narrow type guards only where needed to type existing artifact links as shared CLI JSON artifacts.
+- Update slug-local plan/status docs to record this serial PR 4C insertion before skill work.
+
+Prohibited changes:
+
+- Wire-shape changes to the JSON outputs hardened in PR 4A/PR 4B.
+- Runtime builder wrappers whose purpose is only type enforcement.
+- Canonical skill authoring, skill linting, host adapter packaging, or plugin/skill distribution changes.
+- Treating helper JSON outputs outside the agent-facing inventory, such as `harness gc validate` or migration previews, as part of this contract-hardening slice.
+
+Acceptance criteria:
+
+- `ICliJsonContract`, `ICliJsonIssue`, and `ICliJsonArtifact` are consumed by the six agent-facing command-result assemblers from the design inventory.
+- Command-specific interfaces preserve existing domain identifiers such as `assessment_id` and `audit_id` rather than forcing a universal `run_id`.
+- Golden fixture tests show there is no unintended wire-output drift.
+- PR 5 depends on this type-enforcement slice before canonical skills parse the contract.
+
+Validation commands:
+
+- `bun run check`
+- `bun run test:unit`
+- `bun run build`
+- `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`
+- `git diff --check`
+
+Mergeability notes: This PR is serial after PR 4B and before PR 5. It is intentionally type-enforcement-only so canonical skill authoring starts from a contract that both schemas and TypeScript enforce.
+
 ### PR 5: Canonical shared skills and skill lint
 
 Goal: Author the canonical host-agnostic skill set against the stabilized CLI JSON contract.
@@ -301,7 +350,7 @@ Likely directories/files:
 - `package.json`
 - `tests/**`
 
-Dependencies: PR 4A and PR 4B.
+Dependencies: PR 4C.
 
 Allowed changes:
 
@@ -556,8 +605,8 @@ Must stay serial:
 1. PR 1 interface naming cleanup.
 2. PR 2 runner/model cleanup.
 3. PR 3 CLI JSON migration plan and shared contract base.
-4. PR 4A depends on PR 3; PR 4B depends on the merged and verified PR 4A. The JSON hardening PRs are intentionally serial because tests, schemas, and shared contract helpers are conflict hotspots.
-5. PR 5 canonical shared skills.
+4. PR 4A depends on PR 3; PR 4B depends on the merged and verified PR 4A; PR 4C depends on the merged and verified PR 4B. The JSON hardening PRs are intentionally serial because tests, schemas, and shared contract helpers are conflict hotspots.
+5. PR 5 canonical shared skills depends on PR 4C.
 6. PR 6 parity/check infrastructure and Claude Code adapter.
 7. PR 8 convergence.
 

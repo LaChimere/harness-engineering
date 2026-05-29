@@ -69,11 +69,20 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 | [x] | `pr4b-fixtures-tests` | PR 4B command tasks | Add evidence command golden fixtures and schema validation tests. | Each command has at least one success and one failure/non-passing fixture validated by tests. |
 | [x] | `pr4b-verify` | `pr4b-fixtures-tests` | Validate PR 4B. | `bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, and `git diff --check` pass; code-review, review-pr aspect agents, and rubber-duck report no material remaining comments. |
 
+## PR 4C: Shared JSON contract type enforcement
+
+| Status | ID | Depends on | Task | Done when |
+|---|---|---|---|---|
+| [x] | `pr4c-contract-types` | `pr4b-verify` | Finalize shared CLI JSON contract interfaces for migrated outputs. | `ICliJsonContract` requires top-level status, exposes typed issue/artifact links, and adds command-specific interfaces for the six agent-facing JSON outputs from the design inventory. |
+| [x] | `pr4c-wire-assemblers` | `pr4c-contract-types` | Wire migrated JSON output assemblers through shared contract types. | Doctor, health, assess, GC audit, trace validate, and profile run result objects use `satisfies` against the shared command-specific interfaces at the sites that mint `schema_version`, without runtime builder wrappers or wire-shape changes. |
+| [x] | `pr4c-status-docs` | `pr4c-wire-assemblers` | Update slug status and PR dependency docs. | The plan records PR 4C as the serial bridge between PR 4B and PR 5, and PR 5 depends on PR 4C before canonical skills parse the JSON contract. |
+| [x] | `pr4c-verify` | `pr4c-status-docs` | Validate PR 4C. | `bun run check`, `bun run test:unit`, `bun run build`, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, and `git diff --check` pass; review-pr aspect agents and rubber-duck report no material remaining comments. |
+
 ## PR 5: Canonical shared skills and skill lint
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr5-skills-readme` | `pr4a-verify`, `pr4b-verify` | Add `skills/README.md`. | README documents canonical skill structure, invocation policies, safety rules, evidence citation, and review expectations. |
+| [ ] | `pr5-skills-readme` | `pr4c-verify` | Add `skills/README.md`. | README documents canonical skill structure, invocation policies, safety rules, evidence citation, and review expectations. |
 | [ ] | `pr5-author-skills` | `pr5-skills-readme` | Author seven canonical skills under `skills/`. | `harness-quickstart`, `harness-doctor`, `harness-health`, `harness-assess`, `harness-evidence-loop`, `harness-gc-review`, and `harness-profile` exist with required frontmatter and sections. |
 | [ ] | `pr5-skill-safety-review` | `pr5-author-skills` | Check skill content against design boundaries. | Skills call CLI, parse JSON, cite evidence, never edit `.harness/outputs/**`, and require approval for consequential commands. |
 | [ ] | `pr5-lint-skills` | `pr5-author-skills` | Implement `scripts/lint-skills.ts`. | High-confidence forbidden patterns, including `next_actions`, fail CI; narrow ignore markers require reasons. |

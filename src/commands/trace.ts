@@ -1,3 +1,8 @@
+import type {
+  ICliJsonArtifact,
+  ICliJsonIssue,
+  ITraceValidateJsonContract,
+} from '../lib/cli-json-contract.ts';
 import { CliError } from '../lib/errors.ts';
 import { ExitCode } from '../lib/exit-codes.ts';
 import {
@@ -24,6 +29,14 @@ import type { ICommandContext } from './init.ts';
 
 const valueOptions = new Set(['root', 'file', 'format', 'input', 'output']);
 const flagOptions = new Set<string>();
+
+type TraceValidationIssue = ReturnType<typeof traceValidationIssue>;
+
+type TraceValidationEntry = {
+  readonly path: string;
+  readonly status: 'passed' | 'failed';
+  readonly issues: TraceValidationIssue[];
+};
 
 export async function runTraceCommand(
   args: readonly string[],
@@ -71,7 +84,7 @@ async function runTraceValidate(
           context,
         )
       : [await canonicalTracePath(root, options.positionals[0])];
-  const results = [];
+  const results: TraceValidationEntry[] = [];
   for (const tracePath of tracePaths) {
     const document = await loadDocument(resolveInsideRoot(root, tracePath, 'Trace artifact'));
     const issues = schemas
@@ -81,12 +94,14 @@ async function runTraceValidate(
   }
   const status = results.every((result) => result.status === 'passed') ? 'passed' : 'failed';
   const issues = traceValidationSummaryIssues(results);
-  const output: JsonObject = {
+  const issueFields =
+    issues.length === 0 ? {} : ({ issues } satisfies Pick<ITraceValidateJsonContract, 'issues'>);
+  const output = {
     ['schema_version']: '0.1.0',
     status,
-    ...(issues.length === 0 ? {} : { issues }),
+    ...issueFields,
     traces: results,
-  };
+  } satisfies ITraceValidateJsonContract;
   const outputIssues = schemas.validate('trace-validate-result', output).map(formatValidationIssue);
   if (outputIssues.length > 0) {
     throw new CliError(
@@ -139,12 +154,16 @@ async function runTraceImport(
   return ExitCode.ok;
 }
 
-function traceValidationIssue(issue: IValidationIssue, tracePath: string): JsonObject {
+function traceValidationIssue(issue: IValidationIssue, tracePath: string) {
+  const pathField =
+    issue.path.length === 0
+      ? {}
+      : ({ path: issuePathSegments(issue.path) } satisfies Pick<ICliJsonIssue, 'path'>);
   return {
     code: `trace-validation-${schemaKeywordCode(issue.keyword)}`,
     severity: 'error',
     message: issue.message,
-    ...(issue.path.length === 0 ? {} : { path: issuePathSegments(issue.path) }),
+    ...pathField,
     details: {
       keyword: issue.keyword,
       ['instance_path']: issue.path,
@@ -156,12 +175,12 @@ function traceValidationIssue(issue: IValidationIssue, tracePath: string): JsonO
         path: tracePath,
         ['media_type']: 'application/json',
         description: 'Trace artifact under validation.',
-      },
+      } satisfies ICliJsonArtifact,
     ],
-  };
+  } satisfies ICliJsonIssue;
 }
 
-function traceValidationSummaryIssues(results: readonly JsonObject[]): JsonObject[] {
+function traceValidationSummaryIssues(results: readonly TraceValidationEntry[]) {
   const failed = results.filter((result) => getString(result, 'status') === 'failed');
   if (failed.length === 0) {
     return [];
@@ -170,17 +189,21 @@ function traceValidationSummaryIssues(results: readonly JsonObject[]): JsonObjec
     (count, result) => count + (getArray(result, 'issues')?.length ?? 0),
     0,
   );
+  const evidence = failed.map(
+    (result) =>
+      ({
+        path: getString(result, 'path') ?? 'unknown',
+        ['media_type']: 'application/json',
+        description: 'Trace artifact under validation.',
+      }) satisfies ICliJsonArtifact,
+  );
   return [
     {
       code: 'trace-validation-failed',
       severity: 'error',
       message: `${failed.length} trace(s) failed validation with ${issueCount} issue(s).`,
-      evidence: failed.map((result) => ({
-        path: getString(result, 'path') ?? 'unknown',
-        ['media_type']: 'application/json',
-        description: 'Trace artifact under validation.',
-      })),
-    },
+      evidence,
+    } satisfies ICliJsonIssue,
   ];
 }
 

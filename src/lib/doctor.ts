@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import type { ICliJsonArtifact, ICliJsonIssue, IDoctorJsonContract } from './cli-json-contract.ts';
 import { validateHarnessConfiguration } from './harness.ts';
 import type { JsonObject, JsonValue } from './json.ts';
 import { getArray, getObject, getString, isObject } from './json.ts';
@@ -77,7 +78,9 @@ export async function runDoctor(input: IDoctorRunInput): Promise<IDoctorRun> {
   ];
   const status = statusForChecks(checks);
   const issues = doctorIssues(checks);
-  const result: JsonObject = {
+  const issueFields =
+    issues.length === 0 ? {} : ({ issues } satisfies Pick<IDoctorJsonContract, 'issues'>);
+  const result = {
     ['schema_version']: schemaVersion,
     ['run_id']:
       input.runId ??
@@ -85,9 +88,9 @@ export async function runDoctor(input: IDoctorRunInput): Promise<IDoctorRun> {
     ['harness_version']: input.cliVersion,
     ['generated_at']: input.generatedAt ?? new Date().toISOString(),
     status,
-    ...(issues.length === 0 ? {} : { issues }),
+    ...issueFields,
     checks,
-  };
+  } satisfies IDoctorJsonContract;
   return {
     result,
     markdown: renderDoctorMarkdown(result),
@@ -99,7 +102,9 @@ export function serializeDoctorJson(result: JsonObject): string {
   return `${JSON.stringify(result, null, 2)}\n`;
 }
 
-function schemaValidityCheck(harnessPath: string, issues: readonly string[]): JsonObject {
+type DoctorCheckJson = ReturnType<typeof doctorCheck>;
+
+function schemaValidityCheck(harnessPath: string, issues: readonly string[]): DoctorCheckJson {
   const passed = issues.length === 0;
   return doctorCheck({
     id: 'schema-validity',
@@ -122,7 +127,7 @@ function engineCompatibilityCheck(
   harnessPath: string,
   schemaIssues: readonly string[],
   issues: readonly string[],
-): JsonObject {
+): DoctorCheckJson {
   if (schemaIssues.length > 0) {
     return doctorCheck({
       id: 'engine-compatibility',
@@ -160,7 +165,7 @@ function referenceExistsCheck(
   schemaIssues: readonly string[],
   issues: readonly string[],
   checkedReferences: readonly string[],
-): JsonObject {
+): DoctorCheckJson {
   const inputs = unique([harnessPath, ...checkedReferences]);
   if (schemaIssues.length > 0) {
     return doctorCheck({
@@ -198,7 +203,7 @@ function builtinSupportCheck(
   harnessPath: string,
   schemaIssues: readonly string[],
   declarations: readonly IDoctorDeclaration[],
-): JsonObject {
+): DoctorCheckJson {
   if (schemaIssues.length > 0) {
     return doctorCheck({
       id: 'builtin-check-supported',
@@ -240,7 +245,7 @@ function builtinSupportCheck(
 function localCheckDeclarations(
   schemaIssues: readonly string[],
   declarations: readonly IDoctorDeclaration[],
-): readonly JsonObject[] {
+): readonly DoctorCheckJson[] {
   if (schemaIssues.length > 0) {
     return [];
   }
@@ -281,7 +286,14 @@ function doctorCheck(input: {
   readonly remediation: string;
   readonly fixtures: readonly string[];
   readonly trustRequirements?: JsonObject;
-}): JsonObject {
+}) {
+  const evidence = [
+    {
+      path: input.evidencePath,
+      ['media_type']: mediaTypeForPath(input.evidencePath),
+      description: input.evidenceDescription,
+    } satisfies ICliJsonArtifact,
+  ];
   return {
     id: input.id,
     version: schemaVersion,
@@ -290,13 +302,7 @@ function doctorCheck(input: {
     determinism: 'deterministic',
     severity: input.severity,
     outcome: input.outcome,
-    evidence: [
-      {
-        path: input.evidencePath,
-        ['media_type']: mediaTypeForPath(input.evidencePath),
-        description: input.evidenceDescription,
-      },
-    ],
+    evidence,
     remediation: input.remediation,
     fixtures: [...input.fixtures],
     ['false_positive_policy']:
@@ -336,13 +342,13 @@ function collectDoctorDeclarations(harness: JsonObject): readonly IDoctorDeclara
   return declarations;
 }
 
-function statusForChecks(checks: readonly JsonObject[]): DoctorStatus {
+function statusForChecks(checks: readonly DoctorCheckJson[]): DoctorStatus {
   let hasWarning = false;
   for (const check of checks) {
-    if (getString(check, 'outcome') !== 'failed') {
+    if (check.outcome !== 'failed') {
       continue;
     }
-    const severity = getString(check, 'severity');
+    const severity = check.severity;
     if (severity === 'warning' || severity === 'info') {
       hasWarning = true;
       continue;
@@ -354,17 +360,18 @@ function statusForChecks(checks: readonly JsonObject[]): DoctorStatus {
   return hasWarning ? 'warning' : 'passed';
 }
 
-function doctorIssues(checks: readonly JsonObject[]): JsonObject[] {
+function doctorIssues(checks: readonly DoctorCheckJson[]) {
   return checks
-    .filter((check) => getString(check, 'outcome') === 'failed')
-    .map((check) => ({
-      code: getString(check, 'id') ?? 'doctor-check',
-      severity: getString(check, 'severity') ?? 'error',
-      message:
-        getString(check, 'remediation') ??
-        `Doctor check ${getString(check, 'id') ?? 'unknown'} did not pass.`,
-      evidence: (getArray(check, 'evidence') ?? []).filter(isObject),
-    }));
+    .filter((check) => check.outcome === 'failed')
+    .map(
+      (check) =>
+        ({
+          code: check.id,
+          severity: check.severity,
+          message: check.remediation,
+          evidence: [...check.evidence],
+        }) satisfies ICliJsonIssue,
+    );
 }
 
 function defaultRunId(

@@ -176,42 +176,38 @@ interface ICliJsonArtifact {}
 interface ICommandJsonContractInventory {}
 ```
 
-Initial interface sketches should be derived after the JSON inventory. A likely minimal shape is:
+After the JSON inventory and PR 4A/4B migrations, the implemented shared envelope shape is:
 
 ```ts
 interface ICliJsonContract {
   schema_version: string;
   status: string;
-  run_id?: string;
-  harness_version?: string;
-  generated_at?: string;
   issues?: ICliJsonIssue[];
 }
 
 interface ICliJsonIssue {
   code: string;
-  severity: 'error' | 'warning' | 'info';
+  severity?: 'error' | 'warning' | 'info' | 'critical';
   message: string;
-  path?: string;
+  path?: (string | number)[];
+  details?: JsonObject;
   evidence?: ICliJsonArtifact[];
 }
 
 interface ICliJsonArtifact {
   path: string;
-  media_type: string;
-  role: 'input-evidence' | 'generated-output' | 'source-reference';
+  media_type?: string;
   description?: string;
-  sha256?: string;
-  schema_name?: string;
 }
 ```
 
-Notes on the sketches:
+Notes on the implemented contract:
 
 - `status` is intentionally an opaque string at the shared envelope level. Each command's schema defines its own closed status enum and is the source of truth for that vocabulary.
-- `ICliJsonArtifact.role` is a required closed enum. Use `input-evidence` for evidence consumed by the command, `generated-output` for command-produced artifacts, `source-reference` for cited repo files. If a new role is needed, it must go through a documented schema version bump; do not leave `role` open. The TypeScript enum forces skill authors to handle all artifact types explicitly.
-- The shared envelope deliberately has no `details` escape hatch on `ICliJsonIssue`. If a command needs structured command-specific issue metadata, define it in the command's schema as a structured extension; never add an unconstrained `Record<string, unknown>` or `details?: any`. If an escape hatch is unavoidable, it must be `details?: JsonObject` (structured, not primitive/array) and skill docs must warn that agents must not rely on `details` shape for core decisions.
-- These are sketches, not approved final contracts. The inventory must validate or update them before any command is migrated.
+- Command-specific interfaces declare their own provenance and identity fields such as `run_id`, `assessment_id`, `audit_id`, `harness_version`, and `generated_at`; the base envelope does not pretend those fields are universal.
+- Artifact links intentionally mirror `common.schema.json` artifact links (`path`, optional `media_type`, optional `description`) so command issues can cite existing evidence without inventing adapter-only artifact roles.
+- `details` is allowed only as a `JsonObject` for structured validator metadata; agents should use command status, issue code/severity/message, and evidence links for core decisions rather than relying on command-specific details shapes.
+- PR 4C enforces this shared envelope through command-specific TypeScript interfaces at the six agent-facing output assembly sites before canonical skills are authored.
 
 ## Canonical shared skills
 

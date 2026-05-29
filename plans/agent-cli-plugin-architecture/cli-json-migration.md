@@ -16,6 +16,7 @@ Agent-facing commands in scope:
 Out of scope:
 
 - `harness validate` JSON output; agents should use `doctor --format json`.
+- `harness gc validate` JSON output; it is a GC evidence schema/semantic/reference validation helper, while skills should consume `gc audit --format json`.
 - Universal `success` flags.
 - `next_actions`.
 - Collapsing command-specific details such as doctor `checks`, health check details, assessment `missing_primitives` / `recommendations`, GC `findings`, trace validation entries, or profile `handoff`.
@@ -43,7 +44,7 @@ The shared TypeScript contract scaffold lives in `src/lib/cli-json-contract.ts`:
 - `ICliJsonIssue`
 - `ICliJsonArtifact`
 
-The base contract intentionally treats `status` as an opaque string. Closed status vocabularies remain schema-specific. The interfaces are scaffolding only in PR 3; command handlers should adopt them in the command-hardening PRs that change output behavior.
+The base contract intentionally treats `status` as an opaque string. Closed status vocabularies remain schema-specific. PR 3 added the initial scaffolding, PR 4A/4B stabilized the command wire shapes, and PR 4C wires the six agent-facing output assemblers through command-specific TypeScript interfaces before canonical skills depend on the JSON contract.
 
 ## Status semantics for skills
 

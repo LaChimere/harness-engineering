@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
+import type { ICliJsonIssue, IProfileRunJsonContract } from './cli-json-contract.ts';
 import { CliError } from './errors.ts';
 import { ExitCode } from './exit-codes.ts';
 import { assertNoSymlinkWithinRoot, loadDocument, pathKind } from './files.ts';
@@ -211,7 +212,15 @@ export async function runProfile(input: IProfileRunRequest): Promise<IProfileRun
     summary: handoffSummary(status, metricsWithStreak),
   };
   const issues = profileIssues(status, handoff.summary);
-  const result: JsonObject = {
+  const previousRunField =
+    previousRun === undefined
+      ? {}
+      : ({
+          ['previous_run_ref']: hashedArtifactRef(previousRun),
+        } satisfies Pick<IProfileRunJsonContract, 'previous_run_ref'>);
+  const issueFields =
+    issues.length === 0 ? {} : ({ issues } satisfies Pick<IProfileRunJsonContract, 'issues'>);
+  const result = {
     ['schema_version']: schemaVersion,
     ['run_id']: input.runId ?? `profile-${randomUUID()}`,
     ['harness_version']: input.cliVersion,
@@ -226,7 +235,7 @@ export async function runProfile(input: IProfileRunRequest): Promise<IProfileRun
     ['profile_id']: requiredString(profile.document, 'profile_id'),
     ['profile_version']: requiredString(profile.document, 'profile_version'),
     ['declared_capability_id']: null,
-    ...(previousRun === undefined ? {} : { ['previous_run_ref']: hashedArtifactRef(previousRun) }),
+    ...previousRunField,
     ['evidence_inputs']: evidenceInputs,
     ['trigger_evaluation']: conditionResultJson(trigger),
     ['stop_condition_evaluation']: {
@@ -237,8 +246,8 @@ export async function runProfile(input: IProfileRunRequest): Promise<IProfileRun
     },
     ['actions_taken']: actionsForProfile(profile.document, status, metricsWithStreak),
     handoff,
-    ...(issues.length === 0 ? {} : { issues }),
-  };
+    ...issueFields,
+  } satisfies IProfileRunJsonContract;
   return {
     result,
     markdown: renderProfileRunMarkdown(result),
@@ -246,7 +255,7 @@ export async function runProfile(input: IProfileRunRequest): Promise<IProfileRun
   };
 }
 
-function profileIssues(status: StopStatus, summary: string): JsonObject[] {
+function profileIssues(status: StopStatus, summary: string) {
   switch (status) {
     case 'met':
       return [];
@@ -256,7 +265,7 @@ function profileIssues(status: StopStatus, summary: string): JsonObject[] {
           code: 'profile-stop-condition-not-met',
           severity: 'warning',
           message: summary,
-        },
+        } satisfies ICliJsonIssue,
       ];
     case 'inconclusive':
       return [
@@ -264,7 +273,7 @@ function profileIssues(status: StopStatus, summary: string): JsonObject[] {
           code: 'profile-inconclusive',
           severity: 'warning',
           message: summary,
-        },
+        } satisfies ICliJsonIssue,
       ];
   }
 }

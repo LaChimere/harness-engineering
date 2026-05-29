@@ -62,7 +62,7 @@ bun run build
 bun pm pack --dry-run --ignore-scripts
 ```
 
-The package should include `dist`, `schemas`, `examples`, `docs`, `README.md`, and `LICENSE`. It should not include source, tests, plans, or `.harness` runtime artifacts.
+The package should include `dist`, `schemas`, `examples`, `skills`, `docs`, `README.md`, and `LICENSE`. It should not include source, tests, plans, or `.harness` runtime artifacts.
 
 ## Fixture validation
 

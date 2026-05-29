@@ -82,23 +82,23 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr5-skills-readme` | `pr4c-verify` | Add `skills/README.md`. | README documents canonical skill structure, invocation policies, safety rules, evidence citation, and review expectations. |
-| [ ] | `pr5-author-skills` | `pr5-skills-readme` | Author seven canonical skills under `skills/`. | `harness-quickstart`, `harness-doctor`, `harness-health`, `harness-assess`, `harness-evidence-loop`, `harness-gc-review`, and `harness-profile` exist with required frontmatter and sections. |
-| [ ] | `pr5-skill-safety-review` | `pr5-author-skills` | Check skill content against design boundaries. | Skills call CLI, parse JSON, cite evidence, never edit `.harness/outputs/**`, and require approval for consequential commands. |
-| [ ] | `pr5-lint-skills` | `pr5-author-skills` | Implement `scripts/lint-skills.ts`. | High-confidence forbidden patterns, including `next_actions`, fail CI; narrow ignore markers require reasons. |
-| [ ] | `pr5-verify` | `pr5-lint-skills` | Validate PR 5. | `bun run check`, `bun run test:unit`, `bun run build`, and `git diff --check` pass. |
-| [ ] | `pr5-skills-freeze` | `pr5-verify` | Freeze canonical skills before adapter work. | All seven canonical skill bodies and `skills/README.md` are reviewed and stable; no further skill body changes are planned before adapter packaging except through a deliberate follow-up that refreshes every packaged copy and hash. |
+| [x] | `pr5-skills-readme` | `pr4c-verify` | Add `skills/README.md`. | README documents canonical skill structure, invocation policies, safety rules, evidence citation, and review expectations. |
+| [x] | `pr5-author-skills` | `pr5-skills-readme` | Author seven canonical skills under `skills/`. | `harness-quickstart`, `harness-doctor`, `harness-health`, `harness-assess`, `harness-evidence-loop`, `harness-gc-review`, and `harness-profile` exist with required frontmatter and sections. |
+| [x] | `pr5-skill-safety-review` | `pr5-author-skills` | Check skill content against design boundaries. | Skills call CLI, prefer JSON where available, cite evidence, never edit `.harness/outputs/**`, and require approval for consequential commands; review-pr aspect agents and rubber-duck reported no material remaining comments. |
+| [x] | `pr5-lint-skills` | `pr5-author-skills` | Implement `scripts/lint-skills.ts`. | High-confidence forbidden patterns, including `next_actions`, fail CI; narrow ignore markers require reasons; frontmatter, required sections, approved skill set, invocation policies, and known Harness command/subcommand examples are covered by tests. |
+| [x] | `pr5-verify` | `pr5-lint-skills` | Validate PR 5. | `bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, and `git diff --check` pass. |
+| [x] | `pr5-skills-freeze` | `pr5-verify` | Freeze canonical skills before adapter work. | All seven canonical skill bodies and `skills/README.md` are reviewed and stable; no further skill body changes are planned before adapter packaging except through a deliberate follow-up that refreshes every packaged copy and hash. |
 
 ## PR 6: Adapter packaging base, parity checks, and Claude Code adapter
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr6-parity-check` | `pr5-skills-freeze` | Implement copied skill parity checking. | `scripts/check-skill-parity.ts` validates canonical skill body hashes and `plugins/<host>/skill-hashes.json`, records the canonical SHA256 set, and documents the supported host metadata prelude normalization interface or the convergence-owner path for future prelude changes. |
-| [ ] | `pr6-hook-safety-check` | `pr5-skills-freeze` | Implement hook safety checking. | Hook checks fail on mutating filesystem APIs, `.harness/outputs/**` writes, or child-process execution. |
-| [ ] | `pr6-plugins-readme` | `pr6-parity-check` | Add shared plugin adapter documentation. | `plugins/README.md` documents parity, packaging, hook safety, and install evidence rules. |
-| [ ] | `pr6-claude-adapter` | `pr6-parity-check`, `pr6-hook-safety-check` | Implement Claude Code adapter. | Claude manifest, packaged skills, `skill-hashes.json`, optional read-only agent/hook, and README exist. |
-| [ ] | `pr6-claude-install-evidence` | `pr6-claude-adapter` | Capture Claude Code installation evidence. | README has install procedure, smoke check, check date, and host CLI version. |
-| [ ] | `pr6-verify` | `pr6-claude-install-evidence` | Validate PR 6. | `bun run check`, `bun run test:unit`, `bun run build`, Claude smoke evidence with install output/skill visibility/invocation output/date/host CLI version, parity negative-control failure, hook-safety negative-control failure, and `git diff --check` pass; throwaway negative-control mutations are reverted before commit. |
+| [x] | `pr6-parity-check` | `pr5-skills-freeze` | Implement copied skill parity checking. | `scripts/check-skill-parity.ts` validates canonical skill body hashes and `plugins/<host>/skill-hashes.json`, records the canonical SHA256 set, and documents the supported host metadata prelude normalization interface or the convergence-owner path for future prelude changes. |
+| [x] | `pr6-hook-safety-check` | `pr5-skills-freeze` | Implement hook safety checking. | Hook checks fail on mutating filesystem APIs, `.harness/outputs/**` writes, child-process/dynamic execution, generated evidence paths, shell writes, and network commands. |
+| [x] | `pr6-plugins-readme` | `pr6-parity-check` | Add shared plugin adapter documentation. | `plugins/README.md` documents parity, packaging, hook safety, normalization, and install evidence rules. |
+| [x] | `pr6-claude-adapter` | `pr6-parity-check`, `pr6-hook-safety-check` | Implement Claude Code adapter. | Claude manifest, packaged skills, `skill-hashes.json`, README, and inert hook documentation exist; `claude plugin validate plugins/claude-code --strict` and `claude --plugin-dir plugins/claude-code plugin details harness-engineering` pass locally. |
+| [!] | `pr6-claude-install-evidence` | `pr6-claude-adapter` | Capture Claude Code installation evidence. | Blocked on explicit approval for provider/model skill invocation smoke; README records local package validation, host CLI version, skill visibility, check date, and the remaining install/invocation evidence requirement without claiming marketplace or global installability. |
+| [!] | `pr6-verify` | `pr6-claude-install-evidence` | Validate PR 6. | Deterministic validation passed (`bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, `bun run check:skill-parity`, `bun run check:hook-safety`, `claude plugin validate plugins/claude-code --strict`, `claude --plugin-dir plugins/claude-code plugin details harness-engineering`, and `git diff --check`); full PR 6 verification remains blocked on Claude install/invocation smoke evidence with explicit approval. |
 
 ## PR 7A: OpenAI Codex adapter
 

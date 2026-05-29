@@ -11,9 +11,10 @@ The product gives a repository a versioned `harness.yaml`, machine-checkable sch
 - Run structural doctor checks and declared local health checks.
 - Run verifier-only evals, trace validation, reports, and evidence assessment.
 - Run GC audits and recurring GC-stability profiles over existing evidence.
+- Use canonical shared skill source files that guide agents to call the CLI and cite schema-backed evidence.
 - Use an optional GitHub Actions recipe that calls the same CLI and uploads `.harness/outputs/**` evidence.
 
-Current limits are explicit: the package is not published to a registry, no host plugin or native skill package is shipped, no scheduler daemon is included, and model execution is outside the Harness CLI boundary.
+Current limits are explicit: the package is not published to a registry, no host plugin package is shipped, no scheduler daemon is included, and model execution is outside the Harness CLI boundary.
 
 ## Prerequisites
 
@@ -107,10 +108,10 @@ Adapters must not create separate rule systems or source-of-truth state. CI reci
 - Runtime target: Node-compatible CLI bundle
 - Published package status: not published
 
-Package metadata includes `dist`, `schemas`, `examples`, `docs`, `README.md`, and `LICENSE`. End users and adapters should not need Bun after a package is published, but this repository currently uses Bun for development, tests, and packaging smoke checks.
+Package metadata includes `dist`, `schemas`, `examples`, `skills`, `docs`, `README.md`, and `LICENSE`. End users and adapters should not need Bun after a package is published, but this repository currently uses Bun for development, tests, and packaging smoke checks.
 
 ## If you came from external workflow skills
 
-Harness Engineering does not install or run external skill packs such as `LaChimere/agent-coding`. Those workflows may inform future harness-native capabilities, but this repository currently provides only the CLI, schemas, examples, and evidence artifacts described above.
+Harness Engineering does not install or run external skill packs such as `LaChimere/agent-coding`. Those workflows may inform future harness-native capabilities, but this repository currently provides only the CLI, schemas, examples, canonical shared skills, and evidence artifacts described above.
 
 If you want to use an external agent workflow today, run it separately and pass its explicit evidence artifacts to Harness commands such as `verify`, `trace validate`, `report`, and `assess`. Adapter design rules for that path live in [docs/dev/architecture.md](docs/dev/architecture.md).

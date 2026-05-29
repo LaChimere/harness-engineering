@@ -1,0 +1,56 @@
+{
+  "schema_version": "0.1.0",
+  "host": "claude-code",
+  "normalization": "claude-code-skill-prelude-v1",
+  "skills": [
+    {
+      "id": "harness-quickstart",
+      "canonical_path": "skills/harness-quickstart/SKILL.md",
+      "packaged_path": "plugins/claude-code/skills/harness-quickstart/SKILL.md",
+      "canonical_sha256": "sha256:f40053aa1d3a55b31d56302b8a2de98de5e9bef0223ff74bc3c373869a6a7417",
+      "packaged_normalized_sha256": "sha256:f40053aa1d3a55b31d56302b8a2de98de5e9bef0223ff74bc3c373869a6a7417"
+    },
+    {
+      "id": "harness-doctor",
+      "canonical_path": "skills/harness-doctor/SKILL.md",
+      "packaged_path": "plugins/claude-code/skills/harness-doctor/SKILL.md",
+      "canonical_sha256": "sha256:80044dd07b0fa0abee360b2dbc605fe75f282812f8da5fce6906c82c496ce479",
+      "packaged_normalized_sha256": "sha256:80044dd07b0fa0abee360b2dbc605fe75f282812f8da5fce6906c82c496ce479"
+    },
+    {
+      "id": "harness-health",
+      "canonical_path": "skills/harness-health/SKILL.md",
+      "packaged_path": "plugins/claude-code/skills/harness-health/SKILL.md",
+      "canonical_sha256": "sha256:b888b7dc0ea75836e5cc23003afb87862a706d2fed6feaf7809e71db884d8652",
+      "packaged_normalized_sha256": "sha256:b888b7dc0ea75836e5cc23003afb87862a706d2fed6feaf7809e71db884d8652"
+    },
+    {
+      "id": "harness-assess",
+      "canonical_path": "skills/harness-assess/SKILL.md",
+      "packaged_path": "plugins/claude-code/skills/harness-assess/SKILL.md",
+      "canonical_sha256": "sha256:a29730610e947f84b3b523db3a2c1235207a2621cbf87b794628cb30a832e9f4",
+      "packaged_normalized_sha256": "sha256:a29730610e947f84b3b523db3a2c1235207a2621cbf87b794628cb30a832e9f4"
+    },
+    {
+      "id": "harness-evidence-loop",
+      "canonical_path": "skills/harness-evidence-loop/SKILL.md",
+      "packaged_path": "plugins/claude-code/skills/harness-evidence-loop/SKILL.md",
+      "canonical_sha256": "sha256:295226a6d49078595c390b465728df8932f2d755753f150977b39b616cee65fa",
+      "packaged_normalized_sha256": "sha256:295226a6d49078595c390b465728df8932f2d755753f150977b39b616cee65fa"
+    },
+    {
+      "id": "harness-gc-review",
+      "canonical_path": "skills/harness-gc-review/SKILL.md",
+      "packaged_path": "plugins/claude-code/skills/harness-gc-review/SKILL.md",
+      "canonical_sha256": "sha256:9fac3968b6ee7e8dcdb4c14911cec601ff1465c6de0f147aba213b62822e55ec",
+      "packaged_normalized_sha256": "sha256:9fac3968b6ee7e8dcdb4c14911cec601ff1465c6de0f147aba213b62822e55ec"
+    },
+    {
+      "id": "harness-profile",
+      "canonical_path": "skills/harness-profile/SKILL.md",
+      "packaged_path": "plugins/claude-code/skills/harness-profile/SKILL.md",
+      "canonical_sha256": "sha256:ed0352bd888776f98b56d2ceedf702099bf4d32c230cfbc7331f14d02560af37",
+      "packaged_normalized_sha256": "sha256:ed0352bd888776f98b56d2ceedf702099bf4d32c230cfbc7331f14d02560af37"
+    }
+  ]
+}

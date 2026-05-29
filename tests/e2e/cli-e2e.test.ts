@@ -41,6 +41,7 @@ test(
       'dist',
       'schemas',
       'examples',
+      'skills',
       'docs',
       'README.md',
       'LICENSE',
@@ -62,6 +63,7 @@ test(
       'schemas/profile-run.schema.json',
       'examples/harness.yaml',
       'examples/profiles/gc-stability.yaml',
+      'skills/harness-doctor/SKILL.md',
       'docs/guides/cli.md',
       'README.md',
     ]) {

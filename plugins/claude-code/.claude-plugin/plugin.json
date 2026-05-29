@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "harness-engineering",
+  "version": "0.1.0",
+  "description": "Claude Code packaging for canonical Harness skills that call the deterministic harness CLI and cite schema-backed evidence.",
+  "author": {
+    "name": "LaChimere"
+  },
+  "license": "MIT",
+  "keywords": ["harness", "ai-agents", "evidence", "skills"]
+}

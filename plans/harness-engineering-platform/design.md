@@ -199,7 +199,7 @@ plugins/
   <stage8-selected-agent-cli-host>/   # created only after Stage 8 selects a feasible target
 
 skills/
-  harness-engineering/        # optional native portable adapter after substrate exists
+  <canonical-skill-id>/       # optional portable skill adapters over CLI/schema artifacts
 
 optional-adapters/
   github-actions/
@@ -602,7 +602,7 @@ Stage 13 should not copy, vendor, rewrite, merge, or deprecate any skill. It sho
 
 - **Goal:** Add portable agent UX after the substrate and execution loop exist.
 - **Dependencies:** Stage 10. Stage 9 integration is optional because skills must remain usable when no adapter target is feasible.
-- **Likely files:** `skills/harness-engineering/*` or another explicitly chosen adapter path, README.
+- **Likely files:** `skills/<canonical-skill-id>/SKILL.md` or another explicitly chosen adapter path, README.
 - **Allowed changes:**
   - Add read-only assessment/design workflow for downstream repositories.
   - Read `harness.yaml`, doctor output, eval plans, traces, run results, and reports when available.
@@ -613,6 +613,8 @@ Stage 13 should not copy, vendor, rewrite, merge, or deprecate any skill. It sho
   - The adapter emits a maturity scorecard, missing primitives, rollout stage plan, and policy/eval/trace/continuity recommendations from substrate artifacts while preserving CLI/schema as source of truth.
   - The adapter does not assume `agent-coding` skills are installed or vendored in this repo.
   - The adapter demonstrates routing implementation requests to trusted applicable repair actions, native execution-loop adapters, or a clear fallback when no implementation route is configured.
+
+Follow-up adapter work may add canonical shared skill source files under `skills/<id>/`, but those skills remain adapters over `harness` CLI JSON and schema-backed evidence. They do not replace `harness assess` as the native assessment surface and must not define skill-only product rules.
 
 ### Stage 13: Agent-practice mining for harness-native capabilities
 

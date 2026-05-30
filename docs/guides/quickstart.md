@@ -79,7 +79,7 @@ Unpack the tarball in a scratch directory and invoke the bundled `dist/index.js`
 ## Not included yet
 
 - published registry package
-- installable host plugin
+- public marketplace/global host plugin distribution (repo-local adapter packages exist under `plugins/`)
 - CI enforcement package
 - scheduler daemon
 - model execution inside the Harness CLI

@@ -38,6 +38,7 @@ git diff --check
 - `src/lib/` — shared CLI primitives (schemas, evidence, paths, exit codes).
 - `schemas/` — versioned JSON Schemas.
 - `examples/` — packaged examples, fixtures, and this repository's CI recipe.
+- `plugins/` — repo-local host adapter packages that consume canonical skills and CLI/schema evidence.
 - `examples/fixtures/` — schema-valid and intentionally invalid fixtures, indexed by `manifest.json`.
 - `tests/cli/`, `tests/schemas/`, `tests/ci-tests/`, `tests/e2e/`, `tests/unit-tests/` — corresponding test suites.
 - `plans/harness-engineering-platform/` — roadmap, decisions, execution status, and capability ledger.
@@ -49,6 +50,7 @@ git diff --check
 | Schema shape | schema, examples, fixtures, validation tests, evidence guide |
 | CLI behavior | unit/e2e tests, CLI guide, evidence guide if artifacts change |
 | Package contents | package smoke/e2e, distribution section of README |
+| Host adapter package | `plugins/README.md`, host README, parity/manifest/hook checks |
 | CI recipe (`examples/ci/*`) | `tests/ci-tests/`, CI guide |
 | Judge policy | calibration evidence, thresholds, sample count, freshness, policy digest tests |
 | Capability ledger | `plans/harness-engineering-platform/capability-ledger.yaml`, related plan/todo entries |
@@ -62,7 +64,7 @@ bun run build
 bun pm pack --dry-run --ignore-scripts
 ```
 
-The package should include `dist`, `schemas`, `examples`, `skills`, `docs`, `README.md`, and `LICENSE`. It should not include source, tests, plans, or `.harness` runtime artifacts.
+The package should include `dist`, `schemas`, `examples`, `skills`, `docs`, `README.md`, and `LICENSE`. It should not include source, tests, plans, repo-local `plugins/`, or `.harness` runtime artifacts unless package metadata is intentionally changed with matching smoke evidence.
 
 ## Fixture validation
 

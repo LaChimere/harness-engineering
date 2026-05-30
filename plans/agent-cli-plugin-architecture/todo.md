@@ -131,10 +131,10 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr8-reconcile-adapters` | `pr7a-verify`, `pr7b-verify`, `pr7c-verify` | Reconcile adapter READMEs, manifests, hash manifests, and smoke evidence. | Host docs use consistent terminology and every host passes parity/hook checks. |
-| [ ] | `pr8-update-public-docs` | `pr8-reconcile-adapters` | Update public docs for shipped adapter paths only. | README and guides describe current capabilities directly and do not promise unverified marketplace installability. |
-| [ ] | `pr8-stale-wording-search` | `pr8-update-public-docs` | Search for stale or forbidden wording. | `rg -n "(model_profiles|agent_runners|model-profile|agent-runner|runner-readiness|\\bharness runner\\b|\\bharness run\\b|live-runner|provider-backed|deterministic stub runner|MCP tool|MCP server|marketplace installability|Phase [0-9]|Stage [0-9])" README.md AGENTS.md docs src schemas examples tests` and `rg -n "(next_actions|\"success\"[[:space:]]*:)" src schemas examples tests skills plugins README.md AGENTS.md docs` return no unexpected matches; approved exceptions are recorded with rationale. |
-| [ ] | `pr8-final-validation` | `pr8-stale-wording-search` | Run final validation. | `bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, adapter checks, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, both PR 8 `rg` commands from `pr8-stale-wording-search`, and `git diff --check` pass. |
+| [x] | `pr8-reconcile-adapters` | `pr7a-verify`, `pr7b-verify`, `pr7c-verify` | Reconcile adapter READMEs, manifests, hash manifests, and smoke evidence. | Host docs use consistent repo-local/package-validation terminology; Codex, Copilot CLI, and Gemini evidence boundaries remain explicitly scoped; `bun run check:skill-parity`, `bun run check:hook-safety`, and `bun run check:plugin-manifests` pass. |
+| [x] | `pr8-update-public-docs` | `pr8-reconcile-adapters` | Update public docs for shipped adapter paths only. | README, quickstart, architecture, and development docs describe repo-local host adapter packages directly and do not promise unverified public marketplace/global installability. |
+| [x] | `pr8-stale-wording-search` | `pr8-update-public-docs` | Search for stale or forbidden wording. | Exact PR 8 stale searches were run. Remaining matches are approved exceptions: AGENTS/schema text forbids or scopes provider-backed evidence rather than promising a runner, and skill-lint tests/README intentionally contain `next_actions` and `"success"` as forbidden-pattern fixtures. |
+| [x] | `pr8-final-validation` | `pr8-stale-wording-search` | Run final validation. | `bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, adapter checks, `PYTHONPATH="${HARNESS_SCHEMA_VALIDATION_DEPS:-.harness/schema-validation-deps}" python3 examples/fixtures/validate.py`, both PR 8 `rg` commands from `pr8-stale-wording-search`, and `git diff --check` pass. |
 
 ## Parallel execution checklist
 
@@ -142,7 +142,8 @@ Historical parallelization note: the approved implementation proceeded in one
 worktree with a convergence-owner shared-script update because PR 6 full host
 invocation evidence remained blocked by user decision. These parallel fan-out
 items are retained as the original alternative plan and are not current execution
-state.
+state; their pending markers mean "not executed in this historical alternative,"
+not remaining PR 8 work.
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|

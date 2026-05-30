@@ -12,9 +12,10 @@ The product gives a repository a versioned `harness.yaml`, machine-checkable sch
 - Run verifier-only evals, trace validation, reports, and evidence assessment.
 - Run GC audits and recurring GC-stability profiles over existing evidence.
 - Use canonical shared skill source files that guide agents to call the CLI and cite schema-backed evidence.
+- Use repo-local host adapter packages for Claude Code, Codex, Copilot CLI, and Gemini CLI that package the canonical skills without creating a separate source of truth.
 - Use an optional GitHub Actions recipe that calls the same CLI and uploads `.harness/outputs/**` evidence.
 
-Current limits are explicit: the package is not published to a registry, no host plugin package is shipped, no scheduler daemon is included, and model execution is outside the Harness CLI boundary.
+Current limits are explicit: the package is not published to a registry, host adapters are repo-local packages rather than public marketplace/global installs, no scheduler daemon is included, and model execution is outside the Harness CLI boundary.
 
 ## Prerequisites
 
@@ -97,7 +98,24 @@ Planning and execution status live under `plans/harness-engineering-platform/`.
 | CLI | `harness` commands | Deterministic implementation surface |
 | Adapters | CI recipes, plugins, skills, profiles | Consumers over CLI/schema artifacts |
 
-Adapters must not create separate rule systems or source-of-truth state. CI recipes and future host integrations should call the CLI and preserve schema-backed artifacts.
+Adapters must not create separate rule systems or source-of-truth state. CI recipes and host adapter packages should call the CLI and preserve schema-backed artifacts.
+
+## Host adapters
+
+Repo-local adapter packages live under `plugins/` for Claude Code, Codex,
+Copilot CLI, and Gemini CLI. They package the canonical `skills/` bodies with
+host metadata, hash manifests, and host-specific README evidence. These packages
+are validated by parity, hook-safety, and plugin-manifest checks.
+
+The current evidence boundary is intentionally narrow:
+
+- Claude Code is locally package-validated; full skill invocation smoke remains blocked until explicitly approved.
+- Codex and Copilot CLI have repo-local install and/or invocation smoke evidence.
+- Copilot CLI has real temporary-project diagnosis, repair, explicit-health, and negative-health smoke evidence.
+- Gemini CLI remains package-validated only because the host CLI is unavailable in this environment.
+- Public marketplace/global installability is not claimed.
+
+See [`plugins/README.md`](plugins/README.md) for per-host policy and evidence status.
 
 ## Distribution
 
@@ -108,10 +126,10 @@ Adapters must not create separate rule systems or source-of-truth state. CI reci
 - Runtime target: Node-compatible CLI bundle
 - Published package status: not published
 
-Package metadata includes `dist`, `schemas`, `examples`, `skills`, `docs`, `README.md`, and `LICENSE`. End users and adapters should not need Bun after a package is published, but this repository currently uses Bun for development, tests, and packaging smoke checks.
+Package metadata includes `dist`, `schemas`, `examples`, `skills`, `docs`, `README.md`, and `LICENSE`. Repo-local host adapter packages under `plugins/` are not included in the published CLI package unless package metadata explicitly adds them. End users and adapters should not need Bun after a package is published, but this repository currently uses Bun for development, tests, and packaging smoke checks.
 
 ## If you came from external workflow skills
 
-Harness Engineering does not install or run external skill packs such as `LaChimere/agent-coding`. Those workflows may inform future harness-native capabilities, but this repository currently provides only the CLI, schemas, examples, canonical shared skills, and evidence artifacts described above.
+Harness Engineering does not install or run external skill packs such as `LaChimere/agent-coding`. Those workflows may inform future harness-native capabilities, but this repository currently provides only the CLI, schemas, examples, canonical shared skills, repo-local host adapters, and evidence artifacts described above.
 
 If you want to use an external agent workflow today, run it separately and pass its explicit evidence artifacts to Harness commands such as `verify`, `trace validate`, `report`, and `assess`. Adapter design rules for that path live in [docs/dev/architecture.md](docs/dev/architecture.md).

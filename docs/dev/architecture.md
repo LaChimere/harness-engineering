@@ -7,9 +7,13 @@ Harness Engineering is organized around one source of truth: `harness.yaml` plus
 - Schemas define artifact shapes.
 - `harness.yaml` composes repository-local artifacts.
 - The `harness` CLI validates and produces evidence.
-- Adapters, CI recipes, profiles, and future host integrations consume CLI/schema artifacts.
+- Adapters, CI recipes, profiles, and host integrations consume CLI/schema artifacts.
 
 No adapter should maintain authoritative rules that cannot be reconstructed from harness artifacts.
+
+Repo-local host adapter packages live under `plugins/` and package canonical
+skills for specific hosts. They are validated adapter artifacts, not source of
+truth and not a promise of public marketplace availability.
 
 ## Command boundaries
 
@@ -44,7 +48,7 @@ Every machine-readable output includes `schema_version`. Commands that write fil
 ## Current non-goals
 
 - no model execution inside the Harness CLI;
-- no host plugin package;
+- no public marketplace/global host plugin distribution;
 - no CI enforcement package;
 - no scheduler daemon;
 - no automatic cleanup;

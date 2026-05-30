@@ -30,5 +30,6 @@ Invoke when the user asks to initialize Harness, bootstrap a harness baseline, o
 
 - Do not run `harness init` without explicit user approval because it writes files.
 - Do not infer harness state from chat; inspect the repository and run the CLI.
+- Use `harness doctor --format json` for agent-facing structural inspection; do not substitute the human-facing validation command unless the user explicitly asks for it.
 - Do not hand-edit generated evidence.
 - Do not call provider/model APIs or suggest that Harness executed a model.

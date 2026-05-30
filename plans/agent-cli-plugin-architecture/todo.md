@@ -104,28 +104,28 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr7a-codex-adapter` | `pr6-verify` | Implement Codex plugin package under `plugins/codex/**`. | Codex manifest, `agents/openai.yaml`, copied skills, hash manifest, optional read-only hook, and README exist. |
-| [ ] | `pr7a-codex-policy-map` | `pr7a-codex-adapter` | Map canonical invocation policies to Codex metadata. | Consequential skills are not implicitly model-invoked when Codex supports that control. |
-| [ ] | `pr7a-codex-install-evidence` | `pr7a-codex-adapter` | Capture Codex installation evidence. | README documents repo/user-scoped install path, smoke check, check date, and host CLI version. |
-| [ ] | `pr7a-verify` | `pr7a-codex-install-evidence` | Validate PR 7A. | `bun run check`, `bun run test:unit`, ownership diff check from the frozen PR 6 base, Codex smoke evidence or manual checklist with install output/skill visibility/invocation output/date/host CLI version, and `git diff --check` pass. |
+| [x] | `pr7a-codex-adapter` | `pr6-verify` | Implement Codex plugin package under `plugins/codex/**`. | Codex manifest, per-skill `agents/openai.yaml`, copied skills, hash manifest, inert hook docs, and README exist; implemented on the deterministic PR 6 base while full PR 6 provider/model invocation remains blocked by user decision. |
+| [x] | `pr7a-codex-policy-map` | `pr7a-codex-adapter` | Map canonical invocation policies to Codex metadata. | Per-skill Codex `agents/openai.yaml` maps canonical `invocation_policy` to `allow_implicit_invocation`; `harness-health` is false and parity tests fail if the policy drifts, but host enforcement of this declaration remains unverified until smoke evidence proves implicit `harness-health` invocation is refused. |
+| [!] | `pr7a-codex-install-evidence` | `pr7a-codex-adapter` | Capture Codex installation evidence. | README documents repo marketplace path, check date, host CLI version (`codex-cli 0.135.0`), reproducible single-temp-home marketplace add/install/list smoke showing `installed, enabled`, and current-auth live/model-backed explicit `harness-doctor` invocation output; interactive `/skills` visibility and negative `harness-health` implicit-invocation smoke remain unverified. |
+| [!] | `pr7a-verify` | `pr7a-codex-install-evidence` | Validate PR 7A. | Deterministic validation passed (`bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, `bun run check:skill-parity`, `bun run check:hook-safety`, `bun run check:plugin-manifests`, ownership diff from PR 6 base reviewed, and `git diff --check`); comprehensive code/docs/tests/security/types/simplify review plus rubber-duck converged with no material comments after tightening prelude, path/symlink, marketplace, and health-guidance checks; Codex repo-local marketplace install/list and live/model-backed explicit invocation smoke pass; full verification remains blocked on interactive `/skills` visibility, negative `harness-health` implicit-invocation smoke, and PR 6 full invocation evidence. |
 
 ## PR 7B: GitHub Copilot CLI adapter
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr7b-copilot-adapter` | `pr6-verify` | Implement Copilot CLI plugin package under `plugins/copilot-cli/**`. | Copilot `plugin.json`, harness agent, copied skills, hash manifest, optional hooks, and README exist. |
-| [ ] | `pr7b-copilot-policy-map` | `pr7b-copilot-adapter` | Map canonical invocation policies to Copilot CLI capabilities. | README documents any host limitation or manual enforcement gap. |
-| [ ] | `pr7b-copilot-install-evidence` | `pr7b-copilot-adapter` | Capture Copilot CLI installation evidence. | README documents install command, smoke check, check date, and host CLI version. |
-| [ ] | `pr7b-verify` | `pr7b-copilot-install-evidence` | Validate PR 7B. | `bun run check`, `bun run test:unit`, ownership diff check from the frozen PR 6 base, Copilot smoke evidence or manual checklist with install output/skill visibility/invocation output/date/host CLI version, and `git diff --check` pass. |
+| [x] | `pr7b-copilot-adapter` | `pr6-verify` | Implement Copilot CLI plugin package under `plugins/copilot-cli/**`. | Copilot `plugin.json`, harness agent, copied skills, hash manifest, inert hook docs, and README exist; implemented on the deterministic PR 6 base while full PR 6 provider/model invocation remains blocked by user decision. |
+| [x] | `pr7b-copilot-policy-map` | `pr7b-copilot-adapter` | Map canonical invocation policies to Copilot CLI capabilities. | README and `agents/harness.agent.md` document that Copilot policy parity is description/guidance-only for now and preserve explicit `harness-health` user intent guidance in the packaged skill description and agent routing guidance. |
+| [x] | `pr7b-copilot-install-evidence` | `pr7b-copilot-adapter` | Capture Copilot CLI installation evidence. | README documents install command, smoke check, check date, host CLI version (`GitHub Copilot CLI 1.0.57-2`), same-temporary-home install/list output reporting seven installed skills and plugin visibility, current-auth live/model-backed installed-plugin `harness-doctor` invocation output, and cleanup of the temporary user install. |
+| [x] | `pr7b-verify` | `pr7b-copilot-install-evidence` | Validate PR 7B. | Deterministic validation passed (`bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, `bun run check:skill-parity`, `bun run check:hook-safety`, `bun run check:plugin-manifests`, same-temporary-home `copilot plugin install/list`, cleanup check, and `git diff --check`); comprehensive code/docs/tests/security/types/simplify review plus rubber-duck converged with no material comments after tightening prelude, path/symlink, manifest, and health-guidance checks; live/model-backed installed-plugin `harness-doctor` invocation passed; real-temp-project explicit and negative `harness-health` smoke passed for the repo-local adapter path. |
 
 ## PR 7C: Gemini CLI adapter
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|
-| [ ] | `pr7c-gemini-adapter` | `pr6-verify` | Implement Gemini extension package under `plugins/gemini-cli/**`. | Gemini manifest, `GEMINI.md`, copied skills, hash manifest, optional commands/policies, and README exist. |
-| [ ] | `pr7c-gemini-policy-map` | `pr7c-gemini-adapter` | Map canonical invocation policies to Gemini policy behavior. | README documents policy behavior and any required explicit approval path. |
-| [ ] | `pr7c-gemini-install-evidence` | `pr7c-gemini-adapter` | Capture Gemini installation evidence. | README documents install/link command, smoke check, check date, host CLI version, and required settings/env vars. |
-| [ ] | `pr7c-verify` | `pr7c-gemini-install-evidence` | Validate PR 7C. | `bun run check`, `bun run test:unit`, ownership diff check from the frozen PR 6 base, Gemini smoke evidence or manual checklist with install/link output/skill visibility or equivalent/invocation output/date/host CLI version, and `git diff --check` pass. |
+| [x] | `pr7c-gemini-adapter` | `pr6-verify` | Implement Gemini extension package under `plugins/gemini-cli/**`. | Gemini manifest, `GEMINI.md`, copied skills, hash manifest, and README exist; no commands, policies, MCP servers, settings, env vars, or executable hooks are shipped. |
+| [x] | `pr7c-gemini-policy-map` | `pr7c-gemini-adapter` | Map canonical invocation policies to Gemini policy behavior. | README documents Gemini skill activation consent and that Gemini policy parity is description/guidance-only until host smoke evidence exists; packaged `harness-health` description and `GEMINI.md` preserve explicit user intent guidance. |
+| [!] | `pr7c-gemini-install-evidence` | `pr7c-gemini-adapter` | Capture Gemini installation evidence. | README documents the manual install/link checklist, check date, host CLI unavailable on PATH, and no required settings/env vars; the concrete install/link command, full install output, skill visibility, and invocation output remain blocked because Gemini CLI is unavailable in this environment. |
+| [!] | `pr7c-verify` | `pr7c-gemini-install-evidence` | Validate PR 7C. | Deterministic validation passed (`bun run check`, `bun run test:unit`, `bun run build`, `bun run test:e2e`, `bun run check:skill-parity`, `bun run check:hook-safety`, `bun run check:plugin-manifests`, and `git diff --check`); comprehensive code/docs/tests/security/types/simplify review plus rubber-duck converged with no material comments after tightening prelude, path/symlink, manifest, and health-guidance checks; full Gemini install/invocation smoke remains blocked because Gemini CLI is unavailable and no provider/model skill invocation was approved. |
 
 ## PR 8: Adapter convergence and documentation cleanup
 
@@ -138,7 +138,11 @@ Gate 2 is approved, and PR 1 is complete. These todos track execution after the 
 
 ## Parallel execution checklist
 
-Do not fan out before `pr6-verify` is complete.
+Historical parallelization note: the approved implementation proceeded in one
+worktree with a convergence-owner shared-script update because PR 6 full host
+invocation evidence remained blocked by user decision. These parallel fan-out
+items are retained as the original alternative plan and are not current execution
+state.
 
 | Status | ID | Depends on | Task | Done when |
 |---|---|---|---|---|

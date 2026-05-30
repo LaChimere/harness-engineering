@@ -1,0 +1,56 @@
+{
+  "schema_version": "0.1.0",
+  "host": "copilot-cli",
+  "normalization": "agent-skill-prelude-v1",
+  "skills": [
+    {
+      "id": "harness-assess",
+      "canonical_path": "skills/harness-assess/SKILL.md",
+      "packaged_path": "plugins/copilot-cli/skills/harness-assess/SKILL.md",
+      "canonical_sha256": "sha256:ba277666facb9a42e07224ebe07c960379f346b7cf37d5fef5b5d8ad47c40fe1",
+      "packaged_normalized_sha256": "sha256:ba277666facb9a42e07224ebe07c960379f346b7cf37d5fef5b5d8ad47c40fe1"
+    },
+    {
+      "id": "harness-doctor",
+      "canonical_path": "skills/harness-doctor/SKILL.md",
+      "packaged_path": "plugins/copilot-cli/skills/harness-doctor/SKILL.md",
+      "canonical_sha256": "sha256:d21c5d88adb44f8fef9bb5b14d5474a70bd2ef882d874599d036d4c43797a8c7",
+      "packaged_normalized_sha256": "sha256:d21c5d88adb44f8fef9bb5b14d5474a70bd2ef882d874599d036d4c43797a8c7"
+    },
+    {
+      "id": "harness-evidence-loop",
+      "canonical_path": "skills/harness-evidence-loop/SKILL.md",
+      "packaged_path": "plugins/copilot-cli/skills/harness-evidence-loop/SKILL.md",
+      "canonical_sha256": "sha256:295226a6d49078595c390b465728df8932f2d755753f150977b39b616cee65fa",
+      "packaged_normalized_sha256": "sha256:295226a6d49078595c390b465728df8932f2d755753f150977b39b616cee65fa"
+    },
+    {
+      "id": "harness-gc-review",
+      "canonical_path": "skills/harness-gc-review/SKILL.md",
+      "packaged_path": "plugins/copilot-cli/skills/harness-gc-review/SKILL.md",
+      "canonical_sha256": "sha256:9fac3968b6ee7e8dcdb4c14911cec601ff1465c6de0f147aba213b62822e55ec",
+      "packaged_normalized_sha256": "sha256:9fac3968b6ee7e8dcdb4c14911cec601ff1465c6de0f147aba213b62822e55ec"
+    },
+    {
+      "id": "harness-health",
+      "canonical_path": "skills/harness-health/SKILL.md",
+      "packaged_path": "plugins/copilot-cli/skills/harness-health/SKILL.md",
+      "canonical_sha256": "sha256:d2ee3f1e7cba7c47d4981c860120de82d745612bfcdb4ee2ec98de1838fb86ec",
+      "packaged_normalized_sha256": "sha256:d2ee3f1e7cba7c47d4981c860120de82d745612bfcdb4ee2ec98de1838fb86ec"
+    },
+    {
+      "id": "harness-profile",
+      "canonical_path": "skills/harness-profile/SKILL.md",
+      "packaged_path": "plugins/copilot-cli/skills/harness-profile/SKILL.md",
+      "canonical_sha256": "sha256:ed0352bd888776f98b56d2ceedf702099bf4d32c230cfbc7331f14d02560af37",
+      "packaged_normalized_sha256": "sha256:ed0352bd888776f98b56d2ceedf702099bf4d32c230cfbc7331f14d02560af37"
+    },
+    {
+      "id": "harness-quickstart",
+      "canonical_path": "skills/harness-quickstart/SKILL.md",
+      "packaged_path": "plugins/copilot-cli/skills/harness-quickstart/SKILL.md",
+      "canonical_sha256": "sha256:6d9ca878eb94d25af6932873a771768d83b9feaf6abd211d9f86017db9e8f9c7",
+      "packaged_normalized_sha256": "sha256:6d9ca878eb94d25af6932873a771768d83b9feaf6abd211d9f86017db9e8f9c7"
+    }
+  ]
+}

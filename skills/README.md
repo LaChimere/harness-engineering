@@ -33,6 +33,8 @@ Skills call the deterministic `harness` CLI and prefer JSON output when a comman
 
 When reporting results, cite the command that produced the evidence, the JSON `status` when available, relevant `issues` or domain-specific detail arrays, and artifact paths when the CLI output includes them. Keep command-specific details canonical: doctor uses `checks`, health uses check details, assess uses scorecard/recommendations, GC uses `findings`, trace validation uses per-trace issues, and profile uses `handoff`.
 
+For structural readiness, prefer doctor-first routing: produce or request `harness doctor --format json` before broader assessment when schema, engine, reference, or builtin registration state is unknown. Health findings that show missing executables such as `bun`, `npm`, or `node` should be reported as host PATH/toolchain issues until command evidence proves a project test failed.
+
 ## Lint rules
 
 Run `bun run lint:skills` or `bun run test:unit` after editing skills. The linter checks the approved skill set, required frontmatter, required sections, invocation policy expectations, known Harness commands, and high-confidence forbidden patterns such as generated-output shell writes, direct model calls, `next_actions`, and universal `"success"` fields.

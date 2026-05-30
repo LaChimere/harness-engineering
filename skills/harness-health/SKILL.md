@@ -20,11 +20,14 @@ Invoke only when the user explicitly asks to run health checks or confirms that 
 2. Run `harness health --accept-unsandboxed-execution --format json`.
 3. Parse the JSON `status`, `issues`, `sandbox_enforcement`, `runtime_enforced`, and `checks`.
 4. For failed or refused checks, cite check `id`, `failure_code`, `summary`, and evidence links.
-5. Recommend changes to declarations or project commands only from the health result evidence.
+5. If a check exits with command-not-found behavior such as exit code `127` or stderr naming a missing executable, classify it as a host PATH/toolchain issue until evidence shows the project command itself is wrong.
+6. Cross-check the missing executable against the declared command in `harness.yaml`; if the declaration itself names a typo or stale binary, report it as a declaration issue instead of asking the user to install a tool.
+7. Recommend changes to declarations, project commands, or host toolchain setup only from the health result evidence.
 
 ## Safety
 
 - Do not run health checks without explicit user intent.
 - Do not claim runtime sandbox enforcement beyond the JSON fields reported by the CLI.
+- Do not conflate missing host tools such as `bun`, `npm`, or `node` with failing project tests.
 - Do not hand-edit generated evidence.
 - Do not run provider/model APIs or commands outside the declared health checks.

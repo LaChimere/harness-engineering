@@ -1,0 +1,6 @@
+{
+  "name": "harness-engineering",
+  "version": "0.1.0",
+  "description": "Harness-as-code skills for deterministic CLI evidence.",
+  "contextFileName": "GEMINI.md"
+}

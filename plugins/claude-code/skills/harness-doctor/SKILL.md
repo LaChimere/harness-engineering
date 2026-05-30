@@ -24,10 +24,12 @@ Invoke when the user asks whether the harness configuration is valid for agent c
 3. If `status` is `passed`, report that structural inspection passed and cite relevant `checks`.
 4. If `status` is `warning` or `failed`, cite `issues` and the failing entries from `checks`.
 5. Recommend fixes only from the doctor `remediation` and evidence paths; do not invent new product rules.
+6. Use doctor evidence before broader readiness assessment when structural state is unknown.
 
 ## Safety
 
 - Use `harness doctor --format json` for agent-facing structural inspection.
+- Do not substitute the human-facing validation command for agent-facing structural evidence.
 - Do not infer structure from chat or filenames alone.
 - Do not hand-edit generated evidence.
 - Do not treat skipped local doctor checks as executed local commands.

@@ -1,0 +1,11 @@
+{
+  "name": "harness-engineering",
+  "version": "0.1.0",
+  "description": "Harness-as-code workflows for deterministic CLI evidence, verification, and handoff.",
+  "author": {
+    "name": "Harness Engineering"
+  },
+  "license": "MIT",
+  "keywords": ["harness", "evidence", "verification", "skills"],
+  "skills": "./skills/"
+}

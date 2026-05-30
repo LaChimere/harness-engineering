@@ -29,11 +29,12 @@
     "lint": "biome check .",
     "lint:skills": "bun scripts/lint-skills.ts",
     "check:hook-safety": "bun scripts/check-hook-safety.ts",
+    "check:plugin-manifests": "bun scripts/check-plugin-manifests.ts",
     "check:skill-parity": "bun scripts/check-skill-parity.ts",
     "prepublishOnly": "bun run build",
     "test:all": "bun run check && bun run test:unit && bun run test:e2e",
     "test:e2e": "bun run build && bun test tests/e2e --test-concurrency 1",
-    "test:unit": "bun test tests/cli tests/schemas tests/unit-tests tests/ci-tests && bun run lint:skills && bun run check:skill-parity && bun run check:hook-safety",
+    "test:unit": "bun test tests/cli tests/schemas tests/unit-tests tests/ci-tests && bun run lint:skills && bun run check:skill-parity && bun run check:hook-safety && bun run check:plugin-manifests",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

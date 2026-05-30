@@ -1,0 +1,14 @@
+{
+  "name": "harness-engineering",
+  "description": "Harness-as-code skills and agent guidance for deterministic CLI evidence.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Harness Engineering"
+  },
+  "license": "MIT",
+  "keywords": ["harness", "evidence", "verification", "skills"],
+  "category": "Productivity",
+  "tags": ["harness", "cli", "skills"],
+  "agents": "agents/",
+  "skills": "skills/"
+}
